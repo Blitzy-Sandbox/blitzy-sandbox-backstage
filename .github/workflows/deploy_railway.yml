@@ -4,15 +4,16 @@ on:
   push:
     branches:
       - master
+  pull_request:
 
   workflow_dispatch:
 
 concurrency:
-  group: deploy-railway
+  group: deploy-railway-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     env:
@@ -41,9 +42,11 @@ jobs:
         run: yarn build:backend
 
       - name: install Railway CLI
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch'
         run: npm install -g @railway/cli
 
       - name: deploy to Railway
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master' || github.event_name == 'workflow_dispatch'
         run: bash scripts/deploy-railway.sh --skip-build
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
