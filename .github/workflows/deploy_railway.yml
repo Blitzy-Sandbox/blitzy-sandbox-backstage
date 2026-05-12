@@ -19,6 +19,7 @@ jobs:
     env:
       CI: true
       NODE_OPTIONS: --max-old-space-size=8192
+      YARN_IGNORE_SCRIPTS: true
 
     steps:
       - name: Harden Runner
