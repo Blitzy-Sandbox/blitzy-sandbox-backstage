@@ -1,7 +1,7 @@
-# Exclude everything by default
+# Exclude everything, then allowlist only what the Dockerfile needs
 **
 
-# Yarn
+# Yarn (needed for `yarn workspaces focus --production`)
 !.yarn/
 !.yarn/releases/
 !.yarn/releases/**
