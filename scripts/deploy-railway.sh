@@ -16,36 +16,43 @@ for arg in "$@"; do
   [[ "$arg" == "--skip-build" ]] && SKIP_BUILD=true
 done
 
-# ── 1. Resolve Railway project from the linked config ────────────────────────
-RAILWAY_CONFIG="$HOME/.railway/config.json"
-if [[ ! -f "$RAILWAY_CONFIG" ]]; then
-  echo "ERROR: No Railway config found at $RAILWAY_CONFIG. Run 'railway link' first." >&2
-  exit 1
-fi
+# ── 1. Resolve Railway project (env vars take precedence over linked config) ──
+PROJECT_ID="${RAILWAY_PROJECT_ID:-}"
+SERVICE_ID="${RAILWAY_SERVICE_ID:-}"
+ENVIRONMENT_ID="${RAILWAY_ENVIRONMENT_ID:-}"
 
-PROJECT_ID=$(python3 -c "
-import json, sys
+if [[ -z "$PROJECT_ID" || -z "$SERVICE_ID" || -z "$ENVIRONMENT_ID" ]]; then
+  RAILWAY_CONFIG="$HOME/.railway/config.json"
+  if [[ ! -f "$RAILWAY_CONFIG" ]]; then
+    echo "ERROR: No Railway config found at $RAILWAY_CONFIG. Run 'railway link' first," >&2
+    echo "       or set RAILWAY_PROJECT_ID, RAILWAY_SERVICE_ID, RAILWAY_ENVIRONMENT_ID." >&2
+    exit 1
+  fi
+
+  PROJECT_ID=$(python3 -c "
+import json
 c = json.load(open('$RAILWAY_CONFIG'))
 p = c.get('projects', {}).get('$ROOT', {})
 print(p.get('project', ''))
 ")
-SERVICE_ID=$(python3 -c "
-import json, sys
+  SERVICE_ID=$(python3 -c "
+import json
 c = json.load(open('$RAILWAY_CONFIG'))
 p = c.get('projects', {}).get('$ROOT', {})
 print(p.get('service', ''))
 ")
-ENVIRONMENT_ID=$(python3 -c "
-import json, sys
+  ENVIRONMENT_ID=$(python3 -c "
+import json
 c = json.load(open('$RAILWAY_CONFIG'))
 p = c.get('projects', {}).get('$ROOT', {})
 print(p.get('environment', ''))
 ")
 
-if [[ -z "$PROJECT_ID" || -z "$SERVICE_ID" || -z "$ENVIRONMENT_ID" ]]; then
-  echo "ERROR: Could not read project/service/environment IDs from $RAILWAY_CONFIG." >&2
-  echo "       Make sure you have run 'railway link' inside this repository." >&2
-  exit 1
+  if [[ -z "$PROJECT_ID" || -z "$SERVICE_ID" || -z "$ENVIRONMENT_ID" ]]; then
+    echo "ERROR: Could not read project/service/environment IDs from $RAILWAY_CONFIG." >&2
+    echo "       Make sure you have run 'railway link' inside this repository." >&2
+    exit 1
+  fi
 fi
 
 echo "→ Project:     $PROJECT_ID"
