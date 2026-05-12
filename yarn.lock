@@ -5275,7 +5275,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@backstage/plugin-catalog-backend-module-scaffolder-entity-model@workspace:plugins/catalog-backend-module-scaffolder-entity-model":
+"@backstage/plugin-catalog-backend-module-scaffolder-entity-model@workspace:^, @backstage/plugin-catalog-backend-module-scaffolder-entity-model@workspace:plugins/catalog-backend-module-scaffolder-entity-model":
   version: 0.0.0-use.local
   resolution: "@backstage/plugin-catalog-backend-module-scaffolder-entity-model@workspace:plugins/catalog-backend-module-scaffolder-entity-model"
   dependencies:
@@ -5289,7 +5289,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@backstage/plugin-catalog-backend-module-unprocessed@workspace:plugins/catalog-backend-module-unprocessed":
+"@backstage/plugin-catalog-backend-module-unprocessed@workspace:^, @backstage/plugin-catalog-backend-module-unprocessed@workspace:plugins/catalog-backend-module-unprocessed":
   version: 0.0.0-use.local
   resolution: "@backstage/plugin-catalog-backend-module-unprocessed@workspace:plugins/catalog-backend-module-unprocessed"
   dependencies:
@@ -6993,7 +6993,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@backstage/plugin-scaffolder-backend@workspace:plugins/scaffolder-backend":
+"@backstage/plugin-scaffolder-backend@workspace:^, @backstage/plugin-scaffolder-backend@workspace:plugins/scaffolder-backend":
   version: 0.0.0-use.local
   resolution: "@backstage/plugin-scaffolder-backend@workspace:plugins/scaffolder-backend"
   dependencies:
@@ -32874,6 +32874,9 @@ __metadata:
     "@backstage/plugin-catalog-backend-module-github": "workspace:^"
     "@backstage/plugin-catalog-backend-module-github-org": "workspace:^"
     "@backstage/plugin-catalog-backend-module-openapi": "workspace:^"
+    "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "workspace:^"
+    "@backstage/plugin-catalog-backend-module-unprocessed": "workspace:^"
+    "@backstage/plugin-catalog-node": "workspace:^"
     "@backstage/plugin-events-backend": "workspace:^"
     "@backstage/plugin-notifications-backend": "workspace:^"
     "@backstage/plugin-permission-backend": "workspace:^"
@@ -32881,6 +32884,7 @@ __metadata:
     "@backstage/plugin-permission-common": "workspace:^"
     "@backstage/plugin-permission-node": "workspace:^"
     "@backstage/plugin-proxy-backend": "workspace:^"
+    "@backstage/plugin-scaffolder-backend": "workspace:^"
     "@backstage/plugin-search-backend": "workspace:^"
     "@backstage/plugin-search-backend-module-catalog": "workspace:^"
     "@backstage/plugin-search-backend-module-elasticsearch": "workspace:^"
@@ -33749,14 +33753,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"flatted@npm:^3.1.0, flatted@npm:^3.2.7":
-  version: 3.3.3
-  resolution: "flatted@npm:3.3.3"
-  checksum: 10/8c96c02fbeadcf4e8ffd0fa24983241e27698b0781295622591fc13585e2f226609d95e422bcf2ef044146ffacb6b68b1f20871454eddf75ab3caa6ee5f4a1fe
-  languageName: node
-  linkType: hard
-
-"flatted@npm:^3.4.2":
+"flatted@npm:^3.1.0, flatted@npm:^3.2.7, flatted@npm:^3.4.2":
   version: 3.4.2
   resolution: "flatted@npm:3.4.2"
   checksum: 10/a9e78fe5c2c1fcd98209a015ccee3a6caa953e01729778e83c1fe92e68601a63e1e69cd4e573010ca99eaf585a581b80ccf1018b99283e6cbc2117bcba1e030f
