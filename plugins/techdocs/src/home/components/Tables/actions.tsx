@@ -42,7 +42,6 @@ export const actionFactories = {
       const entity = row.entity;
       const isStarred = isStarredEntity(entity);
       return {
-        cellStyle: { paddingLeft: '1em' },
         icon: () => <FavoriteToggleIcon isFavorite={isStarred} />,
         tooltip: isStarred ? 'Remove from favorites' : 'Add to favorites',
         onClick: () => toggleStarredEntity(entity),
