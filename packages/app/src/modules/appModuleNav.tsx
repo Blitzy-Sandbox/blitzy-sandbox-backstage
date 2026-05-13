@@ -169,7 +169,6 @@ export const appModuleNav = createFrontendModule({
                 icon={<FontAwesomeIcon icon={faBars} />}
               >
                 {nav.take('page:catalog')}
-                {nav.take('page:scaffolder')}
                 {nav.take('page:api-docs')}
                 <SidebarItem
                   icon={() => <FontAwesomeIcon icon={faBook} />}

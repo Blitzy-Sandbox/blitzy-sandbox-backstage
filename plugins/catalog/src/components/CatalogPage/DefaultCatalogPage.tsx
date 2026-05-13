@@ -17,13 +17,12 @@
 import {
   Content,
   ContentHeader,
-  CreateButton,
   PageWithHeader,
   SupportButton,
   TableColumn,
   TableProps,
 } from '@backstage/core-components';
-import { configApiRef, useApi, useRouteRef } from '@backstage/core-plugin-api';
+import { configApiRef, useApi } from '@backstage/core-plugin-api';
 import {
   CatalogFilterLayout,
   DefaultFilters,
@@ -32,13 +31,10 @@ import {
   UserListFilterKind,
 } from '@backstage/plugin-catalog-react';
 import { ReactNode } from 'react';
-import { createComponentRouteRef } from '../../routes';
 import { CatalogTable, CatalogTableRow } from '../CatalogTable';
 import { catalogTranslationRef } from '../../alpha/translation';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { CatalogTableColumnsFunc } from '../CatalogTable/types';
-import { catalogEntityCreatePermission } from '@backstage/plugin-catalog-common/alpha';
-import { usePermission } from '@backstage/plugin-permission-react';
 
 /** @internal */
 export type BaseCatalogPageProps = {
@@ -52,22 +48,12 @@ export function BaseCatalogPage(props: BaseCatalogPageProps) {
   const { filters, content = <CatalogTable />, pagination } = props;
   const orgName =
     useApi(configApiRef).getOptionalString('organization.name') ?? 'Backstage';
-  const createComponentLink = useRouteRef(createComponentRouteRef);
   const { t } = useTranslationRef(catalogTranslationRef);
-  const { allowed } = usePermission({
-    permission: catalogEntityCreatePermission,
-  });
 
   return (
     <PageWithHeader title={t('indexPage.title', { orgName })} themeId="home">
       <Content>
         <ContentHeader title="">
-          {allowed && (
-            <CreateButton
-              title={t('indexPage.createButtonTitle')}
-              to={createComponentLink && createComponentLink()}
-            />
-          )}
           <SupportButton>{t('indexPage.supportButtonContent')}</SupportButton>
         </ContentHeader>
         <EntityListProvider pagination={pagination}>
