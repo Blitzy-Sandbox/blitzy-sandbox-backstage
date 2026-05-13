@@ -29,7 +29,6 @@ import {
   DefaultFilters,
   EntityListPagination,
   EntityListProvider,
-  EntityOwnerPickerProps,
   UserListFilterKind,
 } from '@backstage/plugin-catalog-react';
 import { ReactNode } from 'react';
@@ -91,12 +90,9 @@ export interface DefaultCatalogPageProps {
   initiallySelectedFilter?: UserListFilterKind;
   columns?: TableColumn<CatalogTableRow>[] | CatalogTableColumnsFunc;
   actions?: TableProps<CatalogTableRow>['actions'];
-  initialKind?: string;
   tableOptions?: TableProps<CatalogTableRow>['options'];
   emptyContent?: ReactNode;
-  ownerPickerMode?: EntityOwnerPickerProps['mode'];
   filters?: ReactNode;
-  initiallySelectedNamespaces?: string[];
   pagination?: EntityListPagination;
 }
 
@@ -105,25 +101,17 @@ export function DefaultCatalogPage(props: DefaultCatalogPageProps) {
     columns,
     actions,
     initiallySelectedFilter = 'owned',
-    initialKind = 'component',
     tableOptions = {},
     emptyContent,
     pagination,
-    ownerPickerMode,
     filters,
-    initiallySelectedNamespaces,
   } = props;
 
   return (
     <BaseCatalogPage
       filters={
         filters ?? (
-          <DefaultFilters
-            initialKind={initialKind}
-            initiallySelectedFilter={initiallySelectedFilter}
-            ownerPickerMode={ownerPickerMode}
-            initiallySelectedNamespaces={initiallySelectedNamespaces}
-          />
+          <DefaultFilters initiallySelectedFilter={initiallySelectedFilter} />
         )
       }
       content={

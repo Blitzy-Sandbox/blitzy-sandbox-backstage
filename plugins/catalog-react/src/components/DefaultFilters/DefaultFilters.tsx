@@ -15,14 +15,6 @@
  */
 
 import { UserListFilterKind } from '../../types';
-import { EntityKindPicker } from '../EntityKindPicker';
-import { EntityLifecyclePicker } from '../EntityLifecyclePicker';
-import { EntityNamespacePicker } from '../EntityNamespacePicker';
-import {
-  EntityOwnerPickerProps,
-  EntityOwnerPicker,
-} from '../EntityOwnerPicker';
-import { EntityProcessingStatusPicker } from '../EntityProcessingStatusPicker';
 import { EntityTagPicker } from '../EntityTagPicker';
 import { EntityTypePicker } from '../EntityTypePicker';
 import { UserListPicker } from '../UserListPicker';
@@ -33,32 +25,17 @@ import { UserListPicker } from '../UserListPicker';
  * @public
  */
 export type DefaultFiltersProps = {
-  initialKind?: string;
   initiallySelectedFilter?: UserListFilterKind;
-  ownerPickerMode?: EntityOwnerPickerProps['mode'];
-  initiallySelectedNamespaces?: string[];
 };
 
 /** @public */
 export const DefaultFilters = (props: DefaultFiltersProps) => {
-  const {
-    initialKind,
-    initiallySelectedFilter,
-    ownerPickerMode,
-    initiallySelectedNamespaces,
-  } = props;
+  const { initiallySelectedFilter } = props;
   return (
     <>
-      <EntityKindPicker initialFilter={initialKind} />
       <EntityTypePicker />
       <UserListPicker initialFilter={initiallySelectedFilter} />
-      <EntityOwnerPicker mode={ownerPickerMode} />
-      <EntityLifecyclePicker />
       <EntityTagPicker />
-      <EntityProcessingStatusPicker />
-      <EntityNamespacePicker
-        initiallySelectedNamespaces={initiallySelectedNamespaces}
-      />
     </>
   );
 };
