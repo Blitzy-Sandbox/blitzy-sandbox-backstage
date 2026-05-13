@@ -110,6 +110,7 @@ metadata:
     - typescript
     - web-app
     - refactor
+    - migration
   labels:
     blitzy.com/language: typescript
   annotations:
