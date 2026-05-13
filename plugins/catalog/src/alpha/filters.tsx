@@ -63,22 +63,20 @@ const catalogTypeCatalogFilter = CatalogFilterBlueprint.make({
   },
 });
 
-const catalogListCatalogFilter = CatalogFilterBlueprint.makeWithOverrides({
+const catalogListCatalogFilter = CatalogFilterBlueprint.make({
   name: 'list',
-  config: {
-    schema: {
-      initialFilter: z => z.enum(['owned', 'starred', 'all']).default('owned'),
+  params: {
+    loader: async () => {
+      const { UserListPicker } = await import(
+        '@backstage/plugin-catalog-react'
+      );
+      return (
+        <UserListPicker
+          initialFilter="starred"
+          availableFilters={['starred']}
+        />
+      );
     },
-  },
-  factory(originalFactory, { config }) {
-    return originalFactory({
-      loader: async () => {
-        const { UserListPicker } = await import(
-          '@backstage/plugin-catalog-react'
-        );
-        return <UserListPicker initialFilter={config.initialFilter} />;
-      },
-    });
   },
 });
 

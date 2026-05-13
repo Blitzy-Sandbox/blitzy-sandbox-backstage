@@ -23,9 +23,7 @@ import {
 import {
   CatalogFilterLayout,
   EntityListProvider,
-  EntityOwnerPicker,
   EntityTagPicker,
-  UserListPicker,
 } from '@backstage/plugin-catalog-react';
 import { TechDocsPageWrapper } from './TechDocsPageWrapper';
 import { TechDocsPicker } from './TechDocsPicker';
@@ -46,16 +44,8 @@ export type DefaultTechDocsHomeProps = TechDocsIndexPageProps;
  * @public
  */
 export const DefaultTechDocsHome = (props: TechDocsIndexPageProps) => {
-  const {
-    initialFilter = 'owned',
-    columns,
-    actions,
-    ownerPickerMode,
-    pagination,
-    options,
-    PageWrapper,
-    CustomHeader,
-  } = props;
+  const { columns, actions, pagination, options, PageWrapper, CustomHeader } =
+    props;
   const Wrapper: FC<{
     children: ReactNode;
   }> = PageWrapper ? PageWrapper : TechDocsPageWrapper;
@@ -74,8 +64,6 @@ export const DefaultTechDocsHome = (props: TechDocsIndexPageProps) => {
           <CatalogFilterLayout>
             <CatalogFilterLayout.Filters>
               <TechDocsPicker />
-              <UserListPicker initialFilter={initialFilter} />
-              <EntityOwnerPicker mode={ownerPickerMode} />
               <EntityTagPicker />
             </CatalogFilterLayout.Filters>
             <CatalogFilterLayout.Content>
