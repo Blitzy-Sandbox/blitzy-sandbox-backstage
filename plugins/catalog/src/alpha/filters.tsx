@@ -16,18 +16,6 @@
 
 import { CatalogFilterBlueprint } from '@backstage/plugin-catalog-react/alpha';
 
-const catalogTagCatalogFilter = CatalogFilterBlueprint.make({
-  name: 'tag',
-  params: {
-    loader: async () => {
-      const { EntityTagPicker } = await import(
-        '@backstage/plugin-catalog-react'
-      );
-      return <EntityTagPicker />;
-    },
-  },
-});
-
 const catalogKindCatalogFilter = CatalogFilterBlueprint.makeWithOverrides({
   name: 'kind',
   config: {
@@ -41,9 +29,25 @@ const catalogKindCatalogFilter = CatalogFilterBlueprint.makeWithOverrides({
         const { EntityKindPicker } = await import(
           '@backstage/plugin-catalog-react'
         );
-        return <EntityKindPicker initialFilter={config.initialFilter} />;
+        return (
+          <div style={{ display: 'none' }}>
+            <EntityKindPicker initialFilter={config.initialFilter} />
+          </div>
+        );
       },
     });
+  },
+});
+
+const catalogTagCatalogFilter = CatalogFilterBlueprint.make({
+  name: 'tag',
+  params: {
+    loader: async () => {
+      const { EntityTagPicker } = await import(
+        '@backstage/plugin-catalog-react'
+      );
+      return <EntityTagPicker />;
+    },
   },
 });
 
@@ -55,61 +59,6 @@ const catalogTypeCatalogFilter = CatalogFilterBlueprint.make({
         '@backstage/plugin-catalog-react'
       );
       return <EntityTypePicker />;
-    },
-  },
-});
-
-const catalogModeCatalogFilter = CatalogFilterBlueprint.makeWithOverrides({
-  name: 'mode',
-  config: {
-    schema: {
-      mode: z => z.enum(['owners-only', 'all']).optional(),
-    },
-  },
-  factory(originalFactory, { config }) {
-    return originalFactory({
-      loader: async () => {
-        const { EntityOwnerPicker } = await import(
-          '@backstage/plugin-catalog-react'
-        );
-        return <EntityOwnerPicker mode={config.mode} />;
-      },
-    });
-  },
-});
-
-const catalogNamespaceCatalogFilter = CatalogFilterBlueprint.make({
-  name: 'namespace',
-  params: {
-    loader: async () => {
-      const { EntityNamespacePicker } = await import(
-        '@backstage/plugin-catalog-react'
-      );
-      return <EntityNamespacePicker />;
-    },
-  },
-});
-
-const catalogLifecycleCatalogFilter = CatalogFilterBlueprint.make({
-  name: 'lifecycle',
-  params: {
-    loader: async () => {
-      const { EntityLifecyclePicker } = await import(
-        '@backstage/plugin-catalog-react'
-      );
-      return <EntityLifecyclePicker />;
-    },
-  },
-});
-
-const catalogProcessingStatusCatalogFilter = CatalogFilterBlueprint.make({
-  name: 'processing-status',
-  params: {
-    loader: async () => {
-      const { EntityProcessingStatusPicker } = await import(
-        '@backstage/plugin-catalog-react'
-      );
-      return <EntityProcessingStatusPicker />;
     },
   },
 });
@@ -138,9 +87,5 @@ export default [
   catalogKindCatalogFilter,
   catalogTypeCatalogFilter,
   catalogListCatalogFilter,
-  catalogModeCatalogFilter,
-  catalogLifecycleCatalogFilter,
   catalogTagCatalogFilter,
-  catalogProcessingStatusCatalogFilter,
-  catalogNamespaceCatalogFilter,
 ];
