@@ -59,7 +59,7 @@ export const catalogReactTranslationRef = createTranslationRef({
     entityTypePicker: {
       title: 'Type',
       errorMessage: 'Failed to load entity types',
-      optionAllTitle: 'all',
+      optionAllTitle: 'All',
     },
     favoriteEntity: {
       addToFavorites: 'Add to favorites',

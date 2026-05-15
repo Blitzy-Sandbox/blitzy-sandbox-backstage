@@ -52,6 +52,7 @@ export type EntityAutocompletePickerProps<
   initialSelectedOptions?: string[];
   filtersForAvailableValues?: Array<keyof T>;
   hidden?: boolean;
+  inline?: boolean;
 };
 
 /** @public */
@@ -72,6 +73,7 @@ export function EntityAutocompletePicker<
     initialSelectedOptions = [],
     filtersForAvailableValues = ['kind'],
     hidden,
+    inline,
   } = props;
 
   const {
@@ -152,15 +154,18 @@ export function EntityAutocompletePicker<
   }
 
   return hidden ? null : (
-    <div className={cn('py-2')}>
+    <div className={cn(!inline && 'py-2')}>
       <CatalogAutocomplete<string, true>
         multiple
         disableCloseOnSelect
-        label={label}
+        label={inline ? undefined : label}
         name={`${String(name)}-picker`}
         options={availableOptions}
         value={selectedOptions}
-        TextFieldProps={InputProps}
+        TextFieldProps={
+          inline ? { ...InputProps, placeholder: label } : InputProps
+        }
+        className={inline ? 'my-0' : undefined}
         onChange={(_event: object, options: string[]) =>
           setSelectedOptions(options)
         }

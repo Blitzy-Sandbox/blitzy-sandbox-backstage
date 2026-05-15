@@ -19,6 +19,7 @@ import { useEntityTypeFilter } from '../../hooks/useEntityTypeFilter';
 
 import { alertApiRef, useApi } from '@backstage/core-plugin-api';
 import {
+  cn,
   ShadcnSelect,
   SelectTrigger,
   SelectContent,
@@ -36,11 +37,12 @@ import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 export interface EntityTypePickerProps {
   initialFilter?: string;
   hidden?: boolean;
+  inline?: boolean;
 }
 
 /** @public */
 export const EntityTypePicker = (props: EntityTypePickerProps) => {
-  const { hidden, initialFilter } = props;
+  const { hidden, initialFilter, inline } = props;
   const alertApi = useApi(alertApiRef);
   const { error, availableTypes, selectedTypes, setSelectedTypes } =
     useEntityTypeFilter();
@@ -68,32 +70,43 @@ export const EntityTypePicker = (props: EntityTypePickerProps) => {
     { value: 'all', label: t('entityTypePicker.optionAllTitle') },
     ...availableTypes.map((type: string) => ({
       value: type,
-      label: type,
+      label: type.charAt(0).toUpperCase() + type.slice(1),
     })),
   ];
 
-  return hidden ? null : (
+  const select = (
+    <ShadcnSelect
+      value={(items.length > 1 ? selectedTypes[0] : undefined) ?? 'all'}
+      onValueChange={value =>
+        setSelectedTypes(value === 'all' ? [] : [String(value)])
+      }
+    >
+      <SelectTrigger
+        className={cn(
+          inline ? 'w-36' : 'w-full',
+          'text-muted-foreground font-normal',
+        )}
+      >
+        <SelectValue placeholder={t('entityTypePicker.title')} />
+      </SelectTrigger>
+      <SelectContent>
+        {items.map(item => (
+          <ShadcnSelectItem key={item.value} value={item.value}>
+            {item.label}
+          </ShadcnSelectItem>
+        ))}
+      </SelectContent>
+    </ShadcnSelect>
+  );
+
+  if (hidden) return null;
+  if (inline) return select;
+  return (
     <div className="py-2">
       <label className="text-sm font-medium text-muted-foreground mb-1 block">
         {t('entityTypePicker.title')}
       </label>
-      <ShadcnSelect
-        value={(items.length > 1 ? selectedTypes[0] : undefined) ?? 'all'}
-        onValueChange={value =>
-          setSelectedTypes(value === 'all' ? [] : [String(value)])
-        }
-      >
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder={t('entityTypePicker.title')} />
-        </SelectTrigger>
-        <SelectContent>
-          {items.map(item => (
-            <ShadcnSelectItem key={item.value} value={item.value}>
-              {item.label}
-            </ShadcnSelectItem>
-          ))}
-        </SelectContent>
-      </ShadcnSelect>
+      {select}
     </div>
   );
 };

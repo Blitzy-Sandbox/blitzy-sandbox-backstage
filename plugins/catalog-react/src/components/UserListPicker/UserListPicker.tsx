@@ -104,11 +104,18 @@ export type UserListPickerProps = {
   availableFilters?: UserListFilterKind[];
   hidden?: boolean;
   alwaysKeepFilters?: boolean;
+  showGroupName?: boolean;
 };
 
 /** @public */
 export const UserListPicker = (props: UserListPickerProps) => {
-  const { initialFilter, availableFilters, hidden, alwaysKeepFilters } = props;
+  const {
+    initialFilter,
+    availableFilters,
+    hidden,
+    alwaysKeepFilters,
+    showGroupName = true,
+  } = props;
   const configApi = useApi(configApiRef);
   const { t } = useTranslationRef(catalogReactTranslationRef);
   const orgName =
@@ -225,13 +232,15 @@ export const UserListPicker = (props: UserListPickerProps) => {
     <div className={cn('rounded-lg bg-muted/60 shadow-none my-2')}>
       {filterGroups.map(group => (
         <Fragment key={group.name}>
-          <span
-            className={cn(
-              'block mt-2 ml-2 uppercase text-xs font-bold text-foreground',
-            )}
-          >
-            {group.name}
-          </span>
+          {showGroupName && (
+            <span
+              className={cn(
+                'block mt-2 ml-2 uppercase text-xs font-bold text-foreground',
+              )}
+            >
+              {group.name}
+            </span>
+          )}
           <div className={cn('rounded-md bg-background m-2 mb-4')}>
             <ul
               role="menu"

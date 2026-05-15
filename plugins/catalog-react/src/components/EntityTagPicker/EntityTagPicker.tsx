@@ -28,6 +28,7 @@ export type EntityTagPickerProps = {
   showCounts?: boolean;
   initialFilter?: string[];
   hidden?: boolean;
+  inline?: boolean;
 };
 
 /** @public */
@@ -44,6 +45,7 @@ export const EntityTagPicker = (props: EntityTagPickerProps) => {
       InputProps={{ className: cn('') }}
       initialSelectedOptions={props.initialFilter ? props.initialFilter : []}
       hidden={props.hidden}
+      inline={props.inline}
     />
   );
 };

@@ -69,10 +69,10 @@ export const EntitySearchBar = () => {
           aria-label="search"
           id="input-with-icon-adornment"
           className={cn(
-            'flex h-9 w-full rounded-md border border-input bg-transparent py-1 text-base shadow-sm transition-colors',
+            'flex h-9 w-full rounded-lg border border-input bg-background py-2 text-sm shadow-sm transition-colors',
             'pl-8 pr-8',
             'placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
-            'disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
+            'disabled:cursor-not-allowed disabled:opacity-50',
           )}
           placeholder={t('entitySearchBar.placeholder')}
           autoComplete="off"

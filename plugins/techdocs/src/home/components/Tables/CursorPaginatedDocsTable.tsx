@@ -16,6 +16,7 @@
 
 import { Table, TableProps } from '@backstage/core-components';
 import { DocsTableRow } from './types';
+import { DocsTableToolbar } from './DocsTableToolbar';
 
 type PaginatedDocsTableProps = {
   prev?(): void;
@@ -46,6 +47,7 @@ export function CursorPaginatedDocsTable(props: PaginatedDocsTableProps) {
         }}
         actions={actions}
         isLoading={isLoading}
+        components={{ Toolbar: DocsTableToolbar }}
       />
       {/* Custom cursor-based pagination controls */}
       <div

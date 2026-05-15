@@ -928,8 +928,9 @@ export function Table<T extends object = {}>(props: TableProps<T>) {
   const isDense = options?.padding === 'dense';
   const cellPadding = isDense ? 'px-2 py-1' : 'px-2.5 py-2';
 
-  /* -- Custom Row component ----------------------------------------------- */
+  /* -- Custom Row / Toolbar components --------------------------------------- */
   const CustomRow = customComponents?.Row;
+  const CustomToolbar = customComponents?.Toolbar;
 
   return (
     <div className={cn('flex items-start', className)}>
@@ -945,16 +946,20 @@ export function Table<T extends object = {}>(props: TableProps<T>) {
       {/* Main table area */}
       <div className="flex-1 min-w-0 overflow-hidden rounded-lg border border-border bg-card shadow-sm">
         {/* Toolbar */}
-        <TableToolbar
-          setSearch={setSearch}
-          hasFilters={hasFilters}
-          selectedFiltersLength={selectedFiltersLength}
-          toggleFilters={toggleFilters}
-          searchText={search}
-          showSearch={enableSearch}
-          title={title}
-          subtitle={subtitle}
-        />
+        {CustomToolbar ? (
+          <CustomToolbar title={title} />
+        ) : (
+          <TableToolbar
+            setSearch={setSearch}
+            hasFilters={hasFilters}
+            selectedFiltersLength={selectedFiltersLength}
+            toggleFilters={toggleFilters}
+            searchText={search}
+            showSearch={enableSearch}
+            title={title}
+            subtitle={subtitle}
+          />
+        )}
 
         {/* Table element — uses shadcn/ui Table primitives */}
         <ShadcnTable className="border-collapse" style={style}>

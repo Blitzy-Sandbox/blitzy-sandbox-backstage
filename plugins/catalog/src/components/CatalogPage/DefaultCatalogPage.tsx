@@ -24,11 +24,9 @@ import {
 } from '@backstage/core-components';
 import { configApiRef, useApi } from '@backstage/core-plugin-api';
 import {
-  CatalogFilterLayout,
-  DefaultFilters,
+  EntityKindPicker,
   EntityListPagination,
   EntityListProvider,
-  UserListFilterKind,
 } from '@backstage/plugin-catalog-react';
 import { ReactNode } from 'react';
 import { CatalogTable, CatalogTableRow } from '../CatalogTable';
@@ -38,14 +36,13 @@ import { CatalogTableColumnsFunc } from '../CatalogTable/types';
 
 /** @internal */
 export type BaseCatalogPageProps = {
-  filters: ReactNode;
   content?: ReactNode;
   pagination?: EntityListPagination;
 };
 
 /** @internal */
 export function BaseCatalogPage(props: BaseCatalogPageProps) {
-  const { filters, content = <CatalogTable />, pagination } = props;
+  const { content = <CatalogTable />, pagination } = props;
   const orgName =
     useApi(configApiRef).getOptionalString('organization.name') ?? 'Backstage';
   const { t } = useTranslationRef(catalogTranslationRef);
@@ -57,10 +54,10 @@ export function BaseCatalogPage(props: BaseCatalogPageProps) {
           <SupportButton>{t('indexPage.supportButtonContent')}</SupportButton>
         </ContentHeader>
         <EntityListProvider pagination={pagination}>
-          <CatalogFilterLayout>
-            <CatalogFilterLayout.Filters>{filters}</CatalogFilterLayout.Filters>
-            <CatalogFilterLayout.Content>{content}</CatalogFilterLayout.Content>
-          </CatalogFilterLayout>
+          <div style={{ display: 'none' }}>
+            <EntityKindPicker initialFilter="component" />
+          </div>
+          {content}
         </EntityListProvider>
       </Content>
     </PageWithHeader>
@@ -73,12 +70,10 @@ export function BaseCatalogPage(props: BaseCatalogPageProps) {
  * @public
  */
 export interface DefaultCatalogPageProps {
-  initiallySelectedFilter?: UserListFilterKind;
   columns?: TableColumn<CatalogTableRow>[] | CatalogTableColumnsFunc;
   actions?: TableProps<CatalogTableRow>['actions'];
   tableOptions?: TableProps<CatalogTableRow>['options'];
   emptyContent?: ReactNode;
-  filters?: ReactNode;
   pagination?: EntityListPagination;
 }
 
@@ -86,20 +81,13 @@ export function DefaultCatalogPage(props: DefaultCatalogPageProps) {
   const {
     columns,
     actions,
-    initiallySelectedFilter = 'owned',
     tableOptions = {},
     emptyContent,
     pagination,
-    filters,
   } = props;
 
   return (
     <BaseCatalogPage
-      filters={
-        filters ?? (
-          <DefaultFilters initiallySelectedFilter={initiallySelectedFilter} />
-        )
-      }
       content={
         <CatalogTable
           columns={columns}

@@ -593,7 +593,7 @@ export function CatalogAutocomplete<
           if (!open && selectedCount > 0) {
             return (
               <div className="flex items-center gap-1.5 overflow-hidden flex-1 min-w-0">
-                <span className="truncate text-sm text-foreground">
+                <span className="truncate text-sm text-muted-foreground font-normal">
                   {selectedCount === 1
                     ? getOptionLabel((value as T[])[0])
                     : `${selectedCount} selected`}

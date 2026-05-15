@@ -20,11 +20,7 @@ import {
   ContentHeader,
   SupportButton,
 } from '@backstage/core-components';
-import {
-  CatalogFilterLayout,
-  EntityListProvider,
-  EntityTagPicker,
-} from '@backstage/plugin-catalog-react';
+import { EntityListProvider } from '@backstage/plugin-catalog-react';
 import { TechDocsPageWrapper } from './TechDocsPageWrapper';
 import { TechDocsPicker } from './TechDocsPicker';
 import { EntityListDocsTable } from './Tables';
@@ -61,19 +57,12 @@ export const DefaultTechDocsHome = (props: TechDocsIndexPageProps) => {
       <Content>
         <Header />
         <EntityListProvider pagination={pagination}>
-          <CatalogFilterLayout>
-            <CatalogFilterLayout.Filters>
-              <TechDocsPicker />
-              <EntityTagPicker />
-            </CatalogFilterLayout.Filters>
-            <CatalogFilterLayout.Content>
-              <EntityListDocsTable
-                actions={actions}
-                columns={columns}
-                options={options}
-              />
-            </CatalogFilterLayout.Content>
-          </CatalogFilterLayout>
+          <TechDocsPicker />
+          <EntityListDocsTable
+            actions={actions}
+            columns={columns}
+            options={options}
+          />
         </EntityListProvider>
       </Content>
     </Wrapper>

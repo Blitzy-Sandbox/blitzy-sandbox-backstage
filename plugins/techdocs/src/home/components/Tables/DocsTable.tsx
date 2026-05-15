@@ -31,6 +31,7 @@ import { actionFactories } from './actions';
 import { columnFactories, defaultColumns } from './columns';
 import { DocsTableRow } from './types';
 import { entitiesToDocsMapper } from './helpers';
+import { DocsTableToolbar } from './DocsTableToolbar';
 
 /**
  * Props for {@link DocsTable}.
@@ -91,6 +92,7 @@ export const DocsTable = (props: DocsTableProps) => {
               ? `${title} (${documents.length})`
               : `All (${documents.length})`
           }
+          components={{ Toolbar: DocsTableToolbar }}
         />
       ) : (
         <EmptyState
