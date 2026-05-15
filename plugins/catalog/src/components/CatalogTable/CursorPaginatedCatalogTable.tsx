@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Table, TableProps } from '@backstage/core-components';
 import { CatalogTableRow } from './types';
 import { CatalogTableToolbar } from './CatalogTableToolbar';
@@ -44,25 +45,27 @@ export function CursorPaginatedCatalogTable(props: PaginatedCatalogTableProps) {
         {...restProps}
       />
       {(prev || next) && (
-        <div className="flex justify-end items-center gap-2 px-4 py-2 border-t border-border">
-          <button
-            type="button"
-            aria-label="Previous page"
-            disabled={!prev}
-            onClick={() => prev?.()}
-            className="inline-flex items-center rounded-md px-3 py-1.5 text-sm border border-input bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Previous
-          </button>
-          <button
-            type="button"
-            aria-label="Next page"
-            disabled={!next}
-            onClick={() => next?.()}
-            className="inline-flex items-center rounded-md px-3 py-1.5 text-sm border border-input bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Next
-          </button>
+        <div className="flex items-center justify-end border-t border-border px-4 py-2">
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              aria-label="Previous page"
+              disabled={!prev}
+              onClick={() => prev?.()}
+              className="inline-flex items-center justify-center h-8 w-8 rounded-full hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              aria-label="Next page"
+              disabled={!next}
+              onClick={() => next?.()}
+              className="inline-flex items-center justify-center h-8 w-8 rounded-full hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       )}
     </div>
