@@ -165,6 +165,7 @@ export const CatalogTable = (props: CatalogTableProps) => {
         icon: () => <FavoriteToggleIcon isFavorite={isStarred} />,
         tooltip: title,
         onClick: () => toggleStarredEntity(entity),
+        active: isStarred,
       };
     },
   ];

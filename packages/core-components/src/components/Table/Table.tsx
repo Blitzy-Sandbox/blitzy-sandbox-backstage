@@ -300,6 +300,8 @@ export interface TableActionEntry<T extends object = {}> {
   isFreeAction?: boolean;
   disabled?: boolean;
   hidden?: boolean;
+  /** When true the action button stays fully visible regardless of row hover state. */
+  active?: boolean;
   cellStyle?: CSSProperties;
   [key: string]: any;
 }
@@ -1111,7 +1113,7 @@ export function Table<T extends object = {}>(props: TableProps<T>) {
                       <TableCell
                         className={cn(cellPadding, 'whitespace-nowrap')}
                       >
-                        <div className="flex items-center gap-0.5 opacity-40 transition-opacity duration-150 group-hover/row:opacity-100">
+                        <div className="flex items-center gap-0.5">
                           {actions
                             .map(a =>
                               typeof a === 'function' ? a(row.original) : a,
@@ -1124,7 +1126,12 @@ export function Table<T extends object = {}>(props: TableProps<T>) {
                                   key={actionIdx}
                                   variant="ghost"
                                   size="icon"
-                                  className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground"
+                                  className={cn(
+                                    'h-7 w-7 rounded-full transition-opacity duration-150',
+                                    action.active
+                                      ? 'opacity-100'
+                                      : 'text-muted-foreground hover:text-foreground opacity-40 group-hover/row:opacity-100',
+                                  )}
                                   title={action.tooltip}
                                   disabled={action.disabled}
                                   style={action.cellStyle}

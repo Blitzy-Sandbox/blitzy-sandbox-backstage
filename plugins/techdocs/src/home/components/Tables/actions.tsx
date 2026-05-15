@@ -45,6 +45,7 @@ export const actionFactories = {
         icon: () => <FavoriteToggleIcon isFavorite={isStarred} />,
         tooltip: isStarred ? 'Remove from favorites' : 'Add to favorites',
         onClick: () => toggleStarredEntity(entity),
+        active: isStarred,
       };
     };
   },
