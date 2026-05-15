@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-import useCopyToClipboard from 'react-use/esm/useCopyToClipboard';
-
-import { configApiRef, useApi, useRouteRef } from '@backstage/core-plugin-api';
+import {
+  alertApiRef,
+  configApiRef,
+  useApi,
+  useRouteRef,
+} from '@backstage/core-plugin-api';
 import { Entity } from '@backstage/catalog-model';
 import { rootDocsRouteRef } from '../../../routes';
 import {
@@ -54,7 +57,7 @@ export type DocsTableProps = {
  */
 export const DocsTable = (props: DocsTableProps) => {
   const { entities, title, loading, columns, actions, options } = props;
-  const [, copyToClipboard] = useCopyToClipboard();
+  const alertApi = useApi(alertApiRef);
   const getRouteToReaderPageFor = useRouteRef(rootDocsRouteRef);
   const config = useApi(configApiRef);
   if (!entities) return null;
@@ -66,7 +69,7 @@ export const DocsTable = (props: DocsTableProps) => {
   );
 
   const defaultActions: TableProps<DocsTableRow>['actions'] = [
-    actionFactories.createCopyDocsUrlAction(copyToClipboard),
+    actionFactories.createCopyDocsUrlAction(alertApi),
   ];
 
   const pageSize = 20;

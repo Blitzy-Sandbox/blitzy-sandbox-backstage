@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import useCopyToClipboard from 'react-use/esm/useCopyToClipboard';
 import { capitalize } from 'lodash';
 import {
   CodeSnippet,
@@ -23,7 +22,12 @@ import {
   TableProps,
   WarningPanel,
 } from '@backstage/core-components';
-import { configApiRef, useApi, useRouteRef } from '@backstage/core-plugin-api';
+import {
+  alertApiRef,
+  configApiRef,
+  useApi,
+  useRouteRef,
+} from '@backstage/core-plugin-api';
 import {
   useEntityList,
   useStarredEntities,
@@ -58,14 +62,14 @@ export const EntityListDocsTable = (props: EntityListDocsTableProps) => {
   const { loading, error, entities, filters, paginationMode, pageInfo } =
     useEntityList();
   const { isStarredEntity, toggleStarredEntity } = useStarredEntities();
-  const [, copyToClipboard] = useCopyToClipboard();
+  const alertApi = useApi(alertApiRef);
   const getRouteToReaderPageFor = useRouteRef(rootDocsRouteRef);
   const config = useApi(configApiRef);
 
   const title = capitalize(filters.user?.value ?? 'all');
 
   const defaultActions = [
-    actionFactories.createCopyDocsUrlAction(copyToClipboard),
+    actionFactories.createCopyDocsUrlAction(alertApi),
     actionFactories.createStarEntityAction(
       isStarredEntity,
       toggleStarredEntity,
