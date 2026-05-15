@@ -35,7 +35,6 @@ import React from 'react';
 import { createFrontendModule } from '@backstage/frontend-plugin-api';
 import { NavContentBlueprint } from '@backstage/plugin-app-react';
 import { SidebarSearchModal } from '@backstage/plugin-search';
-import { NotificationsSidebarItem } from '@backstage/plugin-notifications';
 import {
   Settings,
   UserSettingsSignInAvatar,
@@ -188,7 +187,6 @@ export const appModuleNav = createFrontendModule({
                 icon={<UserSettingsSignInAvatar />}
                 to="/settings"
               >
-                <NotificationsSidebarItem />
                 <Settings />
               </SidebarGroup>
             </Sidebar>
