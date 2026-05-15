@@ -19,6 +19,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Table, TableProps } from '@backstage/core-components';
 import { DocsTableRow } from './types';
 import { useEntityList } from '@backstage/plugin-catalog-react';
+import { DocsTableToolbar } from './DocsTableToolbar';
 
 /**
  * Offset-paginated docs table — manages server-side pagination via
@@ -67,6 +68,7 @@ export function OffsetPaginatedDocsTable(props: TableProps<DocsTableRow>) {
         }}
         actions={actions}
         isLoading={isLoading}
+        components={{ Toolbar: DocsTableToolbar }}
       />
       {/* External pagination controls for server-side offset pagination */}
       <div

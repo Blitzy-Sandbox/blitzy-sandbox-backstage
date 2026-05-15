@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 The Backstage Authors
+ * Copyright 2024 The Backstage Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,4 @@
  * limitations under the License.
  */
 
-// Filters are now rendered directly in CatalogTableToolbar (type, starred, tags)
-// and EntityKindPicker is mounted in BaseCatalogPage for initial query initialization.
-export default [];
+export { StarredToggle } from './StarredToggle';

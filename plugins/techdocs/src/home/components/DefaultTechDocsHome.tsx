@@ -20,13 +20,7 @@ import {
   ContentHeader,
   SupportButton,
 } from '@backstage/core-components';
-import {
-  CatalogFilterLayout,
-  EntityListProvider,
-  EntityOwnerPicker,
-  EntityTagPicker,
-  UserListPicker,
-} from '@backstage/plugin-catalog-react';
+import { EntityListProvider } from '@backstage/plugin-catalog-react';
 import { TechDocsPageWrapper } from './TechDocsPageWrapper';
 import { TechDocsPicker } from './TechDocsPicker';
 import { EntityListDocsTable } from './Tables';
@@ -46,16 +40,8 @@ export type DefaultTechDocsHomeProps = TechDocsIndexPageProps;
  * @public
  */
 export const DefaultTechDocsHome = (props: TechDocsIndexPageProps) => {
-  const {
-    initialFilter = 'owned',
-    columns,
-    actions,
-    ownerPickerMode,
-    pagination,
-    options,
-    PageWrapper,
-    CustomHeader,
-  } = props;
+  const { columns, actions, pagination, options, PageWrapper, CustomHeader } =
+    props;
   const Wrapper: FC<{
     children: ReactNode;
   }> = PageWrapper ? PageWrapper : TechDocsPageWrapper;
@@ -71,21 +57,12 @@ export const DefaultTechDocsHome = (props: TechDocsIndexPageProps) => {
       <Content>
         <Header />
         <EntityListProvider pagination={pagination}>
-          <CatalogFilterLayout>
-            <CatalogFilterLayout.Filters>
-              <TechDocsPicker />
-              <UserListPicker initialFilter={initialFilter} />
-              <EntityOwnerPicker mode={ownerPickerMode} />
-              <EntityTagPicker />
-            </CatalogFilterLayout.Filters>
-            <CatalogFilterLayout.Content>
-              <EntityListDocsTable
-                actions={actions}
-                columns={columns}
-                options={options}
-              />
-            </CatalogFilterLayout.Content>
-          </CatalogFilterLayout>
+          <TechDocsPicker />
+          <EntityListDocsTable
+            actions={actions}
+            columns={columns}
+            options={options}
+          />
         </EntityListProvider>
       </Content>
     </Wrapper>

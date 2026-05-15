@@ -37,9 +37,6 @@ import { useEntityFromUrl } from '../components/CatalogEntityPage/useEntityFromU
 import { buildFilterFn } from './filter/FilterWrapper';
 
 export const catalogPage = PageBlueprint.makeWithOverrides({
-  inputs: {
-    filters: createExtensionInput([coreExtensionData.reactElement]),
-  },
   config: {
     schema: {
       pagination: z =>
@@ -55,7 +52,7 @@ export const catalogPage = PageBlueprint.makeWithOverrides({
           .default(true),
     },
   },
-  factory(originalFactory, { inputs, config }) {
+  factory(originalFactory, { config }) {
     return originalFactory({
       path: '/catalog',
       routeRef: rootRouteRef,
@@ -63,15 +60,7 @@ export const catalogPage = PageBlueprint.makeWithOverrides({
       title: 'Catalog',
       loader: async () => {
         const { BaseCatalogPage } = await import('../components/CatalogPage');
-        const filters = inputs.filters.map(filter =>
-          filter.get(coreExtensionData.reactElement),
-        );
-        return (
-          <BaseCatalogPage
-            filters={<>{filters}</>}
-            pagination={config.pagination}
-          />
-        );
+        return <BaseCatalogPage pagination={config.pagination} />;
       },
     });
   },

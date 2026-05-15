@@ -21,10 +21,7 @@ import {
   StarredToggle,
 } from '@backstage/plugin-catalog-react';
 
-/** @public */
-export type CatalogTableToolbarClassKey = 'root' | 'text';
-
-export function CatalogTableToolbar(props: {
+export function DocsTableToolbar(props: {
   title?: string | ReactElement<any>;
 }) {
   return (

@@ -34,7 +34,11 @@ export const DefaultFilters = (props: DefaultFiltersProps) => {
   return (
     <>
       <EntityTypePicker />
-      <UserListPicker initialFilter={initiallySelectedFilter} />
+      <UserListPicker
+        initialFilter={initiallySelectedFilter}
+        availableFilters={['starred']}
+        showGroupName={false}
+      />
       <EntityTagPicker />
     </>
   );

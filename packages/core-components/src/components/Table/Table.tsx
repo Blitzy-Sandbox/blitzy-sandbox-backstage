@@ -300,6 +300,8 @@ export interface TableActionEntry<T extends object = {}> {
   isFreeAction?: boolean;
   disabled?: boolean;
   hidden?: boolean;
+  /** When true the action button stays fully visible regardless of row hover state. */
+  active?: boolean;
   cellStyle?: CSSProperties;
   [key: string]: any;
 }
@@ -349,6 +351,8 @@ export interface TableProps<T extends object = {}> {
   columnVisibility?: VisibilityState;
   /** Controlled row selection state for selecting rows. */
   rowSelection?: RowSelectionState;
+  /** Content rendered inside the card border, below the table rows. */
+  footer?: ReactNode;
 }
 
 /* ---------------------------------------------------------------------------
@@ -701,6 +705,7 @@ export function Table<T extends object = {}>(props: TableProps<T>) {
     onPageChange,
     onRowsPerPageChange: _onRowsPerPageChange,
     totalCount: _totalCount,
+    footer,
   } = props;
 
   const { t } = useTranslationRef(coreComponentsTranslationRef);
@@ -928,8 +933,9 @@ export function Table<T extends object = {}>(props: TableProps<T>) {
   const isDense = options?.padding === 'dense';
   const cellPadding = isDense ? 'px-2 py-1' : 'px-2.5 py-2';
 
-  /* -- Custom Row component ----------------------------------------------- */
+  /* -- Custom Row / Toolbar components --------------------------------------- */
   const CustomRow = customComponents?.Row;
+  const CustomToolbar = customComponents?.Toolbar;
 
   return (
     <div className={cn('flex items-start', className)}>
@@ -945,16 +951,20 @@ export function Table<T extends object = {}>(props: TableProps<T>) {
       {/* Main table area */}
       <div className="flex-1 min-w-0 overflow-hidden rounded-lg border border-border bg-card shadow-sm">
         {/* Toolbar */}
-        <TableToolbar
-          setSearch={setSearch}
-          hasFilters={hasFilters}
-          selectedFiltersLength={selectedFiltersLength}
-          toggleFilters={toggleFilters}
-          searchText={search}
-          showSearch={enableSearch}
-          title={title}
-          subtitle={subtitle}
-        />
+        {CustomToolbar ? (
+          <CustomToolbar title={title} />
+        ) : (
+          <TableToolbar
+            setSearch={setSearch}
+            hasFilters={hasFilters}
+            selectedFiltersLength={selectedFiltersLength}
+            toggleFilters={toggleFilters}
+            searchText={search}
+            showSearch={enableSearch}
+            title={title}
+            subtitle={subtitle}
+          />
+        )}
 
         {/* Table element — uses shadcn/ui Table primitives */}
         <ShadcnTable className="border-collapse" style={style}>
@@ -1106,7 +1116,7 @@ export function Table<T extends object = {}>(props: TableProps<T>) {
                       <TableCell
                         className={cn(cellPadding, 'whitespace-nowrap')}
                       >
-                        <div className="flex items-center gap-0.5 opacity-40 transition-opacity duration-150 group-hover/row:opacity-100">
+                        <div className="flex items-center gap-0.5">
                           {actions
                             .map(a =>
                               typeof a === 'function' ? a(row.original) : a,
@@ -1119,7 +1129,12 @@ export function Table<T extends object = {}>(props: TableProps<T>) {
                                   key={actionIdx}
                                   variant="ghost"
                                   size="icon"
-                                  className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground"
+                                  className={cn(
+                                    'h-7 w-7 rounded-full transition-opacity duration-150',
+                                    action.active
+                                      ? 'opacity-100'
+                                      : 'text-muted-foreground hover:text-foreground opacity-40 group-hover/row:opacity-100',
+                                  )}
                                   title={action.tooltip}
                                   disabled={action.disabled}
                                   style={action.cellStyle}
@@ -1150,6 +1165,9 @@ export function Table<T extends object = {}>(props: TableProps<T>) {
             onPageChange={onPageChange}
           />
         )}
+
+        {/* Custom footer (e.g. cursor pagination controls) */}
+        {footer}
       </div>
     </div>
   );

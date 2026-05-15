@@ -43,6 +43,7 @@ import { CatalogTableColumnsFunc, CatalogTableRow } from './types';
 import { OffsetPaginatedCatalogTable } from './OffsetPaginatedCatalogTable';
 import { CursorPaginatedCatalogTable } from './CursorPaginatedCatalogTable';
 import { defaultCatalogTableColumnsFunc } from './defaultCatalogTableColumnsFunc';
+import { CatalogTableToolbar } from './CatalogTableToolbar';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { catalogTranslationRef } from '../../alpha';
 import { FavoriteToggleIcon } from '@backstage/core-components';
@@ -164,6 +165,7 @@ export const CatalogTable = (props: CatalogTableProps) => {
         icon: () => <FavoriteToggleIcon isFavorite={isStarred} />,
         tooltip: title,
         onClick: () => toggleStarredEntity(entity),
+        active: isStarred,
       };
     },
   ];
@@ -239,6 +241,7 @@ export const CatalogTable = (props: CatalogTableProps) => {
       actions={actions}
       subtitle={subtitle}
       emptyContent={emptyContent}
+      components={{ Toolbar: CatalogTableToolbar }}
     />
   );
 };

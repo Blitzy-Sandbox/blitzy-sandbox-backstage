@@ -15,6 +15,7 @@
  */
 
 import { Share } from 'lucide-react';
+import { AlertApi } from '@backstage/core-plugin-api';
 import { DocsTableRow } from './types';
 import { FavoriteToggleIcon } from '@backstage/core-components';
 
@@ -24,13 +25,27 @@ import { FavoriteToggleIcon } from '@backstage/core-components';
  * @public
  */
 export const actionFactories = {
-  createCopyDocsUrlAction(copyToClipboard: Function) {
+  createCopyDocsUrlAction(alertApi: AlertApi) {
     return (row: DocsTableRow) => {
       return {
         icon: () => <Share className="h-4 w-4" />,
-        tooltip: 'Click to copy documentation link to clipboard',
-        onClick: () =>
-          copyToClipboard(`${window.location.origin}${row.resolved.docsUrl}`),
+        tooltip: 'Copy link to clipboard',
+        onClick: () => {
+          const url = `${window.location.origin}${row.resolved.docsUrl}`;
+          window.navigator.clipboard.writeText(url).then(
+            () =>
+              alertApi.post({
+                message: 'Documentation link copied to clipboard',
+                severity: 'success',
+                display: 'transient',
+              }),
+            () =>
+              alertApi.post({
+                message: 'Failed to copy link to clipboard',
+                severity: 'error',
+              }),
+          );
+        },
       };
     };
   },
@@ -45,6 +60,7 @@ export const actionFactories = {
         icon: () => <FavoriteToggleIcon isFavorite={isStarred} />,
         tooltip: isStarred ? 'Remove from favorites' : 'Add to favorites',
         onClick: () => toggleStarredEntity(entity),
+        active: isStarred,
       };
     };
   },
