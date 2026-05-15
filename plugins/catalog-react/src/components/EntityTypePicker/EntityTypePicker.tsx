@@ -76,7 +76,7 @@ export const EntityTypePicker = (props: EntityTypePickerProps) => {
 
   const select = (
     <ShadcnSelect
-      value={(items.length > 1 ? selectedTypes[0] : undefined) ?? 'all'}
+      value={selectedTypes[0]}
       onValueChange={value =>
         setSelectedTypes(value === 'all' ? [] : [String(value)])
       }
