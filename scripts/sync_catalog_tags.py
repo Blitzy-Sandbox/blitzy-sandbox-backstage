@@ -49,6 +49,11 @@ TITLE_RULES: list[tuple[list[str], list[str]]] = [
     (["modernization"],                        ["modernization", "refactor"]),
     (["rewrite"],                              ["refactor"]),
     (["feature", "enhancement", "addition"],   ["new-feature"]),
+    (["poc", "proof of concept"],              ["proof-of-concept"]),
+    (["pipeline"],                             ["data-pipeline"]),
+    (["extension"],                            ["new-feature"]),
+    (["configurator"],                         ["frontend", "new-feature"]),
+    (["intelligence"],                         ["ai", "new-feature"]),
 ]
 
 
