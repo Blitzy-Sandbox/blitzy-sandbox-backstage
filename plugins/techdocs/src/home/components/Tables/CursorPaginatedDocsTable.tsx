@@ -14,7 +14,15 @@
  * limitations under the License.
  */
 
+import { useState, useEffect, useRef } from 'react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from 'lucide-react';
 import { Table, TableProps } from '@backstage/core-components';
+import { useEntityList } from '@backstage/plugin-catalog-react';
 import { DocsTableRow } from './types';
 import { DocsTableToolbar } from './DocsTableToolbar';
 
@@ -24,15 +32,86 @@ type PaginatedDocsTableProps = {
 } & TableProps<DocsTableRow>;
 
 /**
- * Cursor-paginated docs table — renders a core Table with disabled internal
- * pagination and adds custom Previous/Next Page buttons whose enabled state
- * is driven by the `prev` and `next` callback props (cursor availability).
- *
  * @internal
  */
 export function CursorPaginatedDocsTable(props: PaginatedDocsTableProps) {
   const { actions, columns, data, next, prev, title, isLoading, options } =
     props;
+  const { totalItems, limit } = useEntityList();
+
+  const [pageIndex, setPageIndex] = useState(0);
+  const [goToFirst, setGoToFirst] = useState(false);
+  const [goToLast, setGoToLast] = useState(false);
+
+  // Reset pageIndex when prev disappears unexpectedly (e.g. filter change resets cursor)
+  const prevRef = useRef(prev);
+  useEffect(() => {
+    if (prevRef.current !== undefined && prev === undefined) {
+      setPageIndex(0);
+      setGoToFirst(false);
+      setGoToLast(false);
+    }
+    prevRef.current = prev;
+  }, [prev]);
+
+  // Step-by-step navigation to first page; re-fires each time prev gets a new
+  // reference (i.e. after each successful fetch)
+  useEffect(() => {
+    if (!goToFirst) return;
+    if (!prev) {
+      setGoToFirst(false);
+      return;
+    }
+    setPageIndex(i => i - 1);
+    prev();
+  }, [goToFirst, prev]);
+
+  // Step-by-step navigation to last page
+  useEffect(() => {
+    if (!goToLast) return;
+    if (!next) {
+      setGoToLast(false);
+      return;
+    }
+    setPageIndex(i => i + 1);
+    next();
+  }, [goToLast, next]);
+
+  const handlePrev = () => {
+    setGoToFirst(false);
+    setGoToLast(false);
+    setPageIndex(i => i - 1);
+    prev?.();
+  };
+
+  const handleNext = () => {
+    setGoToFirst(false);
+    setGoToLast(false);
+    setPageIndex(i => i + 1);
+    next?.();
+  };
+
+  const handleFirst = () => {
+    if (!prev) return;
+    setGoToLast(false);
+    setGoToFirst(true);
+  };
+
+  const handleLast = () => {
+    if (!next) return;
+    setGoToFirst(false);
+    setGoToLast(true);
+  };
+
+  const pageSize = limit || data.length;
+  const start = pageIndex * pageSize + 1;
+  const end = Math.min(
+    (pageIndex + 1) * pageSize,
+    totalItems ?? start + data.length - 1,
+  );
+
+  const btnClass =
+    'inline-flex items-center justify-center h-8 w-8 rounded-full hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors';
 
   return (
     <div>
@@ -41,43 +120,62 @@ export function CursorPaginatedDocsTable(props: PaginatedDocsTableProps) {
         columns={columns}
         data={data}
         options={{
+          ...options,
           paging: false,
           pageSize: Number.MAX_SAFE_INTEGER,
-          ...options,
+          emptyRowsWhenPaging: false,
         }}
         actions={actions}
         isLoading={isLoading}
         components={{ Toolbar: DocsTableToolbar }}
       />
-      {/* Custom cursor-based pagination controls */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          alignItems: 'center',
-          gap: '0.5rem',
-          padding: '0.5rem 1rem',
-        }}
-      >
-        <button
-          type="button"
-          aria-label="Previous Page"
-          disabled={!prev}
-          onClick={() => prev?.()}
-          style={{ padding: '0.25rem 0.75rem' }}
-        >
-          Previous
-        </button>
-        <button
-          type="button"
-          aria-label="Next Page"
-          disabled={!next}
-          onClick={() => next?.()}
-          style={{ padding: '0.25rem 0.75rem' }}
-        >
-          Next
-        </button>
-      </div>
+      {(prev || next) && (
+        <div className="flex items-center justify-between border-t border-border px-4 py-2 text-sm text-muted-foreground">
+          <span>
+            {totalItems !== undefined
+              ? `${start}–${end} of ${totalItems}`
+              : `${data.length} items`}
+          </span>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              aria-label="First page"
+              disabled={!prev}
+              onClick={handleFirst}
+              className={btnClass}
+            >
+              <ChevronsLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              aria-label="Previous page"
+              disabled={!prev}
+              onClick={handlePrev}
+              className={btnClass}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              aria-label="Next page"
+              disabled={!next}
+              onClick={handleNext}
+              className={btnClass}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              aria-label="Last page"
+              disabled={!next}
+              onClick={handleLast}
+              className={btnClass}
+            >
+              <ChevronsRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
