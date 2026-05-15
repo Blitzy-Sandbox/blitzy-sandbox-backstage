@@ -113,69 +113,70 @@ export function CursorPaginatedDocsTable(props: PaginatedDocsTableProps) {
   const btnClass =
     'inline-flex items-center justify-center h-8 w-8 rounded-full hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors';
 
-  return (
-    <div>
-      <Table
-        title={isLoading ? '' : title}
-        columns={columns}
-        data={data}
-        options={{
-          ...options,
-          paging: false,
-          pageSize: Number.MAX_SAFE_INTEGER,
-          emptyRowsWhenPaging: false,
-        }}
-        actions={actions}
-        isLoading={isLoading}
-        components={{ Toolbar: DocsTableToolbar }}
-      />
-      {(prev || next) && (
-        <div className="flex items-center justify-between border-t border-border px-4 py-2 text-sm text-muted-foreground">
-          <span>
-            {totalItems !== undefined
-              ? `${start}–${end} of ${totalItems}`
-              : `${data.length} items`}
-          </span>
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              aria-label="First page"
-              disabled={!prev}
-              onClick={handleFirst}
-              className={btnClass}
-            >
-              <ChevronsLeft className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              aria-label="Previous page"
-              disabled={!prev}
-              onClick={handlePrev}
-              className={btnClass}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              aria-label="Next page"
-              disabled={!next}
-              onClick={handleNext}
-              className={btnClass}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              aria-label="Last page"
-              disabled={!next}
-              onClick={handleLast}
-              className={btnClass}
-            >
-              <ChevronsRight className="h-4 w-4" />
-            </button>
-          </div>
+  const paginationFooter =
+    prev || next ? (
+      <div className="flex items-center justify-between border-t border-border px-4 py-2 text-sm text-muted-foreground">
+        <span>
+          {totalItems !== undefined
+            ? `${start}–${end} of ${totalItems}`
+            : `${data.length} items`}
+        </span>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            aria-label="First page"
+            disabled={!prev}
+            onClick={handleFirst}
+            className={btnClass}
+          >
+            <ChevronsLeft className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            aria-label="Previous page"
+            disabled={!prev}
+            onClick={handlePrev}
+            className={btnClass}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            aria-label="Next page"
+            disabled={!next}
+            onClick={handleNext}
+            className={btnClass}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            aria-label="Last page"
+            disabled={!next}
+            onClick={handleLast}
+            className={btnClass}
+          >
+            <ChevronsRight className="h-4 w-4" />
+          </button>
         </div>
-      )}
-    </div>
+      </div>
+    ) : undefined;
+
+  return (
+    <Table
+      title={isLoading ? '' : title}
+      columns={columns}
+      data={data}
+      options={{
+        ...options,
+        paging: false,
+        pageSize: Number.MAX_SAFE_INTEGER,
+        emptyRowsWhenPaging: false,
+      }}
+      actions={actions}
+      isLoading={isLoading}
+      components={{ Toolbar: DocsTableToolbar }}
+      footer={paginationFooter}
+    />
   );
 }

@@ -351,6 +351,8 @@ export interface TableProps<T extends object = {}> {
   columnVisibility?: VisibilityState;
   /** Controlled row selection state for selecting rows. */
   rowSelection?: RowSelectionState;
+  /** Content rendered inside the card border, below the table rows. */
+  footer?: ReactNode;
 }
 
 /* ---------------------------------------------------------------------------
@@ -703,6 +705,7 @@ export function Table<T extends object = {}>(props: TableProps<T>) {
     onPageChange,
     onRowsPerPageChange: _onRowsPerPageChange,
     totalCount: _totalCount,
+    footer,
   } = props;
 
   const { t } = useTranslationRef(coreComponentsTranslationRef);
@@ -1162,6 +1165,9 @@ export function Table<T extends object = {}>(props: TableProps<T>) {
             onPageChange={onPageChange}
           />
         )}
+
+        {/* Custom footer (e.g. cursor pagination controls) */}
+        {footer}
       </div>
     </div>
   );
