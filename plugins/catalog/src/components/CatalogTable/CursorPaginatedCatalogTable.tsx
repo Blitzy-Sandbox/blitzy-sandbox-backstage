@@ -26,38 +26,45 @@ type PaginatedCatalogTableProps = {
 /**
  * @internal
  */
-
 export function CursorPaginatedCatalogTable(props: PaginatedCatalogTableProps) {
   const { columns, data, next, prev, options, ...restProps } = props;
 
   return (
-    <Table
-      columns={columns}
-      data={data}
-      options={{
-        ...options,
-        // These settings are configured to force server side pagination
-        pageSizeOptions: [],
-        showFirstLastPageButtons: false,
-        pageSize: Number.MAX_SAFE_INTEGER,
-        emptyRowsWhenPaging: false,
-      }}
-      onPageChange={page => {
-        if (page > 0) {
-          next?.();
-        } else {
-          prev?.();
-        }
-      }}
-      components={{
-        Toolbar: CatalogTableToolbar,
-      }}
-      /* this will enable the prev button accordingly */
-      page={prev ? 1 : 0}
-      /* this will enable the next button accordingly */
-      totalCount={next ? Number.MAX_VALUE : Number.MAX_SAFE_INTEGER}
-      localization={{ pagination: { labelDisplayedRows: '' } }}
-      {...restProps}
-    />
+    <div>
+      <Table
+        columns={columns}
+        data={data}
+        options={{
+          ...options,
+          paging: false,
+          pageSize: Number.MAX_SAFE_INTEGER,
+          emptyRowsWhenPaging: false,
+        }}
+        components={{ Toolbar: CatalogTableToolbar }}
+        {...restProps}
+      />
+      {(prev || next) && (
+        <div className="flex justify-end items-center gap-2 px-4 py-2 border-t border-border">
+          <button
+            type="button"
+            aria-label="Previous page"
+            disabled={!prev}
+            onClick={() => prev?.()}
+            className="inline-flex items-center rounded-md px-3 py-1.5 text-sm border border-input bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            aria-label="Next page"
+            disabled={!next}
+            onClick={() => next?.()}
+            className="inline-flex items-center rounded-md px-3 py-1.5 text-sm border border-input bg-background hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
