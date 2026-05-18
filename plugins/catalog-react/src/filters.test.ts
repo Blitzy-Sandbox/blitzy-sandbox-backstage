@@ -19,6 +19,7 @@ import { Entity, RELATION_OWNED_BY } from '@backstage/catalog-model';
 import { TemplateEntityV1beta3 } from '@backstage/plugin-scaffolder-common';
 import {
   EntityErrorFilter,
+  EntityHasProjectHistoryFilter,
   EntityOrphanFilter,
   EntityOwnerFilter,
   EntityTextFilter,
@@ -148,6 +149,42 @@ describe('EntityOrphanFilter', () => {
     const filter = new EntityOrphanFilter(true);
     expect(filter.filterEntity(orphan)).toBeTruthy();
     expect(filter.filterEntity(entities[1])).toBeFalsy();
+  });
+});
+
+describe('EntityHasProjectHistoryFilter', () => {
+  const make = (value?: 'true' | 'false'): Entity => ({
+    apiVersion: '1',
+    kind: 'Component',
+    metadata: {
+      name: 'svc',
+      annotations:
+        value === undefined
+          ? undefined
+          : { 'blitzy.io/has-project-history': value },
+    },
+  });
+
+  it('hides entities annotated as false', () => {
+    const filter = new EntityHasProjectHistoryFilter(true);
+    expect(filter.filterEntity(make('false'))).toBe(false);
+  });
+
+  it('shows entities annotated as true', () => {
+    const filter = new EntityHasProjectHistoryFilter(true);
+    expect(filter.filterEntity(make('true'))).toBe(true);
+  });
+
+  it('shows entities with the annotation missing (backfill window)', () => {
+    const filter = new EntityHasProjectHistoryFilter(true);
+    expect(filter.filterEntity(make())).toBe(true);
+  });
+
+  it('is a no-op when value is false', () => {
+    const filter = new EntityHasProjectHistoryFilter(false);
+    expect(filter.filterEntity(make('false'))).toBe(true);
+    expect(filter.filterEntity(make('true'))).toBe(true);
+    expect(filter.filterEntity(make())).toBe(true);
   });
 });
 

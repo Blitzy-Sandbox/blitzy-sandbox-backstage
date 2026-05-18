@@ -32,6 +32,7 @@ export * from './InspectEntityDialog';
 export * from './UnregisterEntityDialog';
 export * from './UserListPicker';
 export * from './EntityProcessingStatusPicker';
+export * from './EntityHasProjectHistoryPicker';
 export * from './EntityNamespacePicker';
 export * from './EntityAutocompletePicker';
 export * from './MissingAnnotationEmptyState';

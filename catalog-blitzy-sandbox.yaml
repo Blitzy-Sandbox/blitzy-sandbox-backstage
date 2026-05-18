@@ -107,10 +107,12 @@ metadata:
   name: blitzy-sandbox-backstage
   description: Backstage developer portal with MUI-to-shadcn/ui migration — 88.8% component coverage across 154 plugins, demonstrating large-scale design system modernization
   tags:
+    - design
+    - frontend
+    - migration
+    - refactor
     - typescript
     - web-app
-    - refactor
-    - migration
   labels:
     blitzy.com/language: typescript
   annotations:

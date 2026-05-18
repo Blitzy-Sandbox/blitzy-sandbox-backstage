@@ -361,6 +361,32 @@ export class EntityOrphanFilter implements EntityFilter {
 }
 
 /**
+ * Hides entities whose `blitzy.io/has-project-history` annotation is
+ * explicitly `'false'`. Entities with the annotation set to `'true'`, or
+ * with the annotation missing entirely (e.g. the backend processor has not
+ * yet stamped them), pass through.
+ *
+ * Client-side only: the equality-based catalog filter API cannot express
+ * "annotation != 'false'", so pagination may show fewer rows than the
+ * page size until every entity has been stamped by the processor.
+ * @public
+ */
+export class EntityHasProjectHistoryFilter implements EntityFilter {
+  readonly value: boolean;
+
+  constructor(value: boolean) {
+    this.value = value;
+  }
+
+  filterEntity(entity: Entity): boolean {
+    if (!this.value) return true;
+    return (
+      entity.metadata.annotations?.['blitzy.io/has-project-history'] !== 'false'
+    );
+  }
+}
+
+/**
  * Filters entities based on if it has errors or not.
  * @public
  */

@@ -40,6 +40,7 @@ import useMountedState from 'react-use/esm/useMountedState';
 import { catalogApiRef } from '../api';
 import {
   EntityErrorFilter,
+  EntityHasProjectHistoryFilter,
   EntityKindFilter,
   EntityLifecycleFilter,
   EntityNamespaceFilter,
@@ -70,6 +71,7 @@ export type DefaultEntityFilters = {
   text?: EntityTextFilter;
   orphan?: EntityOrphanFilter;
   error?: EntityErrorFilter;
+  hasProjectHistory?: EntityHasProjectHistoryFilter;
   namespace?: EntityNamespaceFilter;
   order?: EntityOrderFilter;
 };

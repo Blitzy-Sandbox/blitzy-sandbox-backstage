@@ -26,6 +26,10 @@ export type { GithubLocationAnalyzerOptions } from './analyzers/GithubLocationAn
 export { GithubDiscoveryProcessor } from './processors/GithubDiscoveryProcessor';
 export { GithubMultiOrgReaderProcessor } from './processors/GithubMultiOrgReaderProcessor';
 export { GithubOrgReaderProcessor } from './processors/GithubOrgReaderProcessor';
+export {
+  BlitzyProjectHistoryProcessor,
+  HAS_PROJECT_HISTORY_ANNOTATION,
+} from './processors/BlitzyProjectHistoryProcessor';
 export { GithubEntityProvider } from './providers/GithubEntityProvider';
 export { GithubMultiOrgEntityProvider } from './providers/GithubMultiOrgEntityProvider';
 export type { GithubMultiOrgEntityProviderOptions } from './providers/GithubMultiOrgEntityProvider';
