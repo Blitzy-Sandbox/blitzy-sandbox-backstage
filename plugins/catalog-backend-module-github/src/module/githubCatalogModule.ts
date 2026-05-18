@@ -29,6 +29,7 @@ import { GithubEntityProvider } from '../providers/GithubEntityProvider';
 import { GithubLocationAnalyzer } from '../analyzers/GithubLocationAnalyzer';
 import { octokitProviderServiceRef } from '../util/octokitProviderService';
 import { GithubScmEventsBridge } from '../events/GithubScmEventsBridge';
+import { BlitzyProjectHistoryProcessor } from '../processors/BlitzyProjectHistoryProcessor';
 
 /**
  * Registers all relevant GitHub integration points into the catalog backend.
@@ -79,6 +80,13 @@ export const githubCatalogModule = createBackendModule({
             events,
             logger,
             scheduler,
+          }),
+        );
+
+        catalogProcessing.addProcessor(
+          new BlitzyProjectHistoryProcessor({
+            octokitProvider,
+            logger,
           }),
         );
 

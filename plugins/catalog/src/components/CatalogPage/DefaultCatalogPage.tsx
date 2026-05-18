@@ -24,6 +24,7 @@ import {
 } from '@backstage/core-components';
 import { configApiRef, useApi } from '@backstage/core-plugin-api';
 import {
+  EntityHasProjectHistoryPicker,
   EntityKindPicker,
   EntityListPagination,
   EntityListProvider,
@@ -56,6 +57,7 @@ export function BaseCatalogPage(props: BaseCatalogPageProps) {
         <EntityListProvider pagination={pagination}>
           <div style={{ display: 'none' }}>
             <EntityKindPicker initialFilter="component" />
+            <EntityHasProjectHistoryPicker />
           </div>
           {content}
         </EntityListProvider>
