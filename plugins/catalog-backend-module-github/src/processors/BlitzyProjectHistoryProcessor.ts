@@ -26,19 +26,34 @@ import { OctokitProviderService } from '../util/octokitProviderService';
 
 /**
  * Annotation stamped onto Component entities to indicate whether the linked
- * GitHub repo has any pull request history. Filtered against in the catalog
- * UI to hide entities with no project history.
+ * GitHub repo has any Blitzy-authored pull requests. Filtered against in the
+ * catalog UI to hide entities with no Blitzy run history.
+ *
+ * A PR counts as a Blitzy run if EITHER:
+ *   - its head branch ref starts with `blitzy-` (the bot's UUID-suffixed
+ *     branch convention, e.g. `blitzy-<uuid>`), OR
+ *   - its author login is `blitzy[bot]` (the GitHub App account, used as
+ *     a fallback so a rename of the branch convention doesn't break us).
  *
  * Values:
- *  - `'true'`  — at least one PR exists (any state)
+ *  - `'true'`  — at least one Blitzy-authored PR exists (any state)
  *  - `'false'` — the entity has no `github.com/project-slug` annotation, OR
- *                the linked repo returned zero PRs
+ *                the linked repo has zero Blitzy-authored PRs in the most
+ *                recent page (see PR_PAGE_SIZE)
  *  - missing   — the processor has not yet run for this entity (filter
  *                shows the entity through during this transient state)
  */
 export const HAS_PROJECT_HISTORY_ANNOTATION = 'blitzy.io/has-project-history';
 
 const SLUG_ANNOTATION = 'github.com/project-slug';
+const BLITZY_BRANCH_PREFIX = 'blitzy-';
+const BLITZY_BOT_LOGIN = 'blitzy[bot]';
+
+// Only the most recent N PRs are scanned. If a repo has more than N
+// non-Blitzy PRs in front of its first Blitzy PR, that PR will be missed
+// and the entity will be hidden. Today's most active repo has ~20 PRs, so
+// 100 has plenty of headroom; revisit if that changes.
+const PR_PAGE_SIZE = 100;
 
 /** Cache entry shape persisted between processor runs. */
 type CacheEntry = {
@@ -50,7 +65,10 @@ type CacheEntry = {
   value: 'true' | 'false';
 };
 
-const CACHE_KEY = 'blitzy-project-history';
+// Bumped from `blitzy-project-history` when the stamping logic narrowed
+// from "any PR" to "Blitzy-authored PRs only" — old entries would have
+// served stale `'true'` stamps until the 6h TTL elapsed.
+const CACHE_KEY = 'blitzy-project-history-v2';
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
 /**
@@ -120,9 +138,9 @@ export class BlitzyProjectHistoryProcessor implements CatalogProcessor {
         owner,
         repo,
         state: 'all',
-        per_page: 1,
+        per_page: PR_PAGE_SIZE,
       });
-      value = response.data.length > 0 ? 'true' : 'false';
+      value = response.data.some(isBlitzyPr) ? 'true' : 'false';
     } catch (error) {
       // Don't overwrite a previously-stamped annotation on transient
       // GitHub failures (rate limits, 5xx, network). Keep what the entity
@@ -143,6 +161,18 @@ export class BlitzyProjectHistoryProcessor implements CatalogProcessor {
 
     return stamp(entity, value);
   }
+}
+
+type PrSummary = {
+  head?: { ref?: string | null } | null;
+  user?: { login?: string | null } | null;
+};
+
+function isBlitzyPr(pr: PrSummary): boolean {
+  return (
+    pr.head?.ref?.startsWith(BLITZY_BRANCH_PREFIX) === true ||
+    pr.user?.login === BLITZY_BOT_LOGIN
+  );
 }
 
 function stamp(entity: Entity, value: 'true' | 'false'): Entity {
