@@ -28,7 +28,8 @@ import {
 import { useTranslationRef } from '@backstage/frontend-plugin-api';
 import { userSettingsTranslationRef } from '../../translation';
 
-type TabButtonProps = ComponentPropsWithRef<'button'> & {
+/** @public */
+export type TabButtonProps = ComponentPropsWithRef<'button'> & {
   component?: ElementType;
 };
 

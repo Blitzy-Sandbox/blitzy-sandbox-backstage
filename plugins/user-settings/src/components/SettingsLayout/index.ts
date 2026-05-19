@@ -17,5 +17,6 @@
 export type {
   SettingsLayoutProps,
   SettingsLayoutRouteProps,
+  TabButtonProps,
 } from './SettingsLayout';
 export { SettingsLayout } from './SettingsLayout';

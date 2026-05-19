@@ -6,6 +6,7 @@
 import { ApiRef } from '@backstage/core-plugin-api';
 import { BackstagePlugin } from '@backstage/core-plugin-api';
 import { BackstageUserIdentity } from '@backstage/frontend-plugin-api';
+import { ComponentPropsWithRef } from 'react';
 import { DiscoveryApi } from '@backstage/core-plugin-api';
 import { ElementType } from 'react';
 import { ErrorApi } from '@backstage/core-plugin-api';
@@ -24,7 +25,6 @@ import { SessionApi } from '@backstage/core-plugin-api';
 import { SignalApi } from '@backstage/plugin-signals-react';
 import { StorageApi } from '@backstage/core-plugin-api';
 import { StorageValueSnapshot } from '@backstage/core-plugin-api';
-import { TabProps } from '@material-ui/core/Tab';
 
 // @public (undocumented)
 export const DefaultProviderSettings: (props: {
@@ -65,12 +65,12 @@ export type SettingsLayoutRouteProps = {
   path: string;
   title: string;
   children: JSX.Element;
-  tabProps?: TabProps<
-    ElementType,
-    {
-      component?: ElementType;
-    }
-  >;
+  tabProps?: TabButtonProps;
+};
+
+// @public (undocumented)
+export type TabButtonProps = ComponentPropsWithRef<'button'> & {
+  component?: ElementType;
 };
 
 // @public @deprecated (undocumented)

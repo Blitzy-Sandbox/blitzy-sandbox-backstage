@@ -21,8 +21,11 @@ import {
   NavItemBlueprint,
 } from '@backstage/frontend-plugin-api';
 import type { IconComponent } from '@backstage/frontend-plugin-api';
+import { convertLegacyRouteRef } from '@backstage/core-compat-api';
 import { Settings } from 'lucide-react';
-import { settingsRouteRef } from './plugin';
+import { settingsRouteRef as legacySettingsRouteRef } from './plugin';
+
+const settingsRouteRef = convertLegacyRouteRef(legacySettingsRouteRef);
 
 /** Map MUI-style fontSize values to Lucide pixel sizes */
 const ICON_SIZE_MAP: Record<string, number> = {
