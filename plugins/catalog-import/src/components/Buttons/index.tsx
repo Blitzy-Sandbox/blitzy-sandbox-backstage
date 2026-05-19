@@ -83,7 +83,7 @@ export const ViewComponentButton = (
   return (
     <LinkButton
       color="primary"
-      variant="contained"
+      variant="default"
       className={classes.button}
       {...props}
     >

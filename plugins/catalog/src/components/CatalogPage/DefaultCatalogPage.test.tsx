@@ -314,7 +314,7 @@ describe('DefaultCatalogPage', () => {
   }, 20_000);
 
   it('should set initial filter correctly', async () => {
-    await renderWrapped(<DefaultCatalogPage initiallySelectedFilter="all" />);
+    await renderWrapped(<DefaultCatalogPage />);
     await expect(
       screen.findByText(/All components \(2\)/),
     ).resolves.toBeInTheDocument();

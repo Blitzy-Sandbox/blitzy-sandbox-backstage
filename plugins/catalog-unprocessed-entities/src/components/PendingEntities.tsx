@@ -56,7 +56,7 @@ export const PendingEntities = () => {
     return <ErrorPanel error={error} />;
   }
 
-  const columns: TableColumn[] = [
+  const columns: TableColumn<UnprocessedEntity>[] = [
     {
       title: <Typography>entityRef</Typography>,
       sorting: true,
@@ -65,30 +65,25 @@ export const PendingEntities = () => {
         row.entity_ref
           .toLocaleUpperCase('en-US')
           .includes(query.toLocaleUpperCase('en-US')),
-      render: (rowData: UnprocessedEntity | {}) =>
-        (rowData as UnprocessedEntity).entity_ref,
+      render: rowData => rowData.entity_ref,
     },
     {
       title: <Typography>Kind</Typography>,
       sorting: true,
       field: 'kind',
-      render: (rowData: UnprocessedEntity | {}) =>
-        (rowData as UnprocessedEntity).unprocessed_entity.kind,
+      render: rowData => rowData.unprocessed_entity.kind,
     },
     {
       title: <Typography>Owner</Typography>,
       sorting: true,
       field: 'unprocessed_entity.spec.owner',
-      render: (rowData: UnprocessedEntity | {}) =>
-        (rowData as UnprocessedEntity).unprocessed_entity.spec?.owner ||
-        'unknown',
+      render: rowData =>
+        String(rowData.unprocessed_entity.spec?.owner ?? 'unknown'),
     },
     {
       title: <Typography>Raw</Typography>,
       sorting: false,
-      render: (rowData: UnprocessedEntity | {}) => (
-        <EntityDialog entity={rowData as UnprocessedEntity} />
-      ),
+      render: rowData => <EntityDialog entity={rowData} />,
     },
   ];
   return (
@@ -97,9 +92,7 @@ export const PendingEntities = () => {
         options={{ pageSize: 20 }}
         columns={columns}
         data={data?.entities || []}
-        onSearchChange={(searchTerm: string) =>
-          setSelectedSearchTerm(searchTerm)
-        }
+        onStateChange={state => setSelectedSearchTerm(state.search ?? '')}
         emptyContent={
           <Typography className={classes.successMessage}>
             No pending entities found

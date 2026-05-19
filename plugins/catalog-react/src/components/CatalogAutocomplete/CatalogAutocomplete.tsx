@@ -162,7 +162,6 @@ export function CatalogAutocomplete<
     open: controlledOpen,
     onOpen,
     onClose,
-    size = 'small',
     className,
     id,
     ListboxProps: listboxProps,
@@ -538,26 +537,6 @@ export function CatalogAutocomplete<
       </ul>
     );
   };
-
-  /* --------------------------------------------------------------------- */
-  /* Default input renderer                                                 */
-  /* --------------------------------------------------------------------- */
-  /* --------------------------------------------------------------------- */
-  /* Tag removal handler (multi-select chip delete)                         */
-  /* --------------------------------------------------------------------- */
-  const handleTagRemove = useCallback(
-    (e: React.SyntheticEvent, tagValue: T) => {
-      e.stopPropagation();
-      const currentValues = ((value as T[] | null) ?? []) as T[];
-      const newValues = currentValues.filter(v =>
-        getOptionSelected ? !getOptionSelected(tagValue, v) : v !== tagValue,
-      );
-      setInternalValue(newValues);
-      onChange?.(e, newValues as Multiple extends true ? T[] : T | null);
-      inputRef.current?.focus();
-    },
-    [value, getOptionSelected, onChange],
-  );
 
   /* --------------------------------------------------------------------- */
   /* Default input renderer                                                 */

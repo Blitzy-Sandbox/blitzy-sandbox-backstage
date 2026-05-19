@@ -17,13 +17,11 @@ import { useState } from 'react';
 import { DateTime } from 'luxon';
 import {
   ErrorPanel,
-  MarkdownContent,
   Progress,
   Table,
   TableColumn,
 } from '@backstage/core-components';
 
-import Box from '@material-ui/core/Box';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
 import { Theme, makeStyles } from '@material-ui/core/styles';
@@ -37,57 +35,12 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import { DeleteEntityConfirmationDialog } from './DeleteEntityConfirmationDialog';
 
 const useStyles = makeStyles((theme: Theme) => ({
-  errorBox: {
-    color: theme.palette.status.error,
-    backgroundColor: theme.palette.errorBackground,
-    padding: '1em',
-    margin: '1em',
-    border: `1px solid ${theme.palette.status.error}`,
-  },
-  errorTitle: {
-    width: '100%',
-    fontWeight: 'bold',
-  },
   successMessage: {
     background: theme.palette.infoBackground,
     color: theme.palette.infoText,
     padding: theme.spacing(2),
   },
 }));
-
-const RenderErrorContext = ({
-  error,
-  rowData,
-}: {
-  error: { message: string };
-  rowData: UnprocessedEntity;
-}) => {
-  if (error.message.includes('tags.')) {
-    return (
-      <>
-        <Typography>Tags</Typography>
-        <ul>
-          {rowData.unprocessed_entity.metadata.tags?.map(t => (
-            <li>{t}</li>
-          ))}
-        </ul>
-      </>
-    );
-  }
-
-  if (error.message.includes('metadata.name')) {
-    return (
-      <>
-        <Typography>Name</Typography>
-        <Typography variant="caption">
-          {rowData.unprocessed_entity.metadata.name}
-        </Typography>
-      </>
-    );
-  }
-
-  return null;
-};
 
 /**
  * Converts input datetime which lacks timezone info into user's local time so that they can
@@ -160,7 +113,7 @@ export const FailedEntities = () => {
     setConfirmationDialogOpen(false);
   };
 
-  const columns: TableColumn[] = [
+  const columns: TableColumn<UnprocessedEntity>[] = [
     {
       title: <Typography>entityRef</Typography>,
       sorting: true,
@@ -169,36 +122,35 @@ export const FailedEntities = () => {
         row.entity_ref
           .toLocaleUpperCase('en-US')
           .includes(query.toLocaleUpperCase('en-US')),
-      render: (rowData: UnprocessedEntity | {}) =>
+      render: (rowData: UnprocessedEntity) =>
         (rowData as UnprocessedEntity).entity_ref,
     },
     {
       title: <Typography>Location Path</Typography>,
       sorting: true,
       field: 'location_key',
-      render: (rowData: UnprocessedEntity | {}) =>
+      render: (rowData: UnprocessedEntity) =>
         (rowData as UnprocessedEntity).location_key,
     },
     {
       title: <Typography>Kind</Typography>,
       sorting: true,
       field: 'kind',
-      render: (rowData: UnprocessedEntity | {}) =>
+      render: (rowData: UnprocessedEntity) =>
         (rowData as UnprocessedEntity).unprocessed_entity.kind,
     },
     {
       title: <Typography>Owner</Typography>,
       sorting: true,
       field: 'unprocessed_entity.spec.owner',
-      render: (rowData: UnprocessedEntity | {}) =>
-        (rowData as UnprocessedEntity).unprocessed_entity.spec?.owner ||
-        'unknown',
+      render: rowData =>
+        String(rowData.unprocessed_entity.spec?.owner ?? 'unknown'),
     },
     {
       title: <Typography>Last Discovery At</Typography>,
       sorting: true,
       field: 'last_discovery_at',
-      render: (rowData: UnprocessedEntity | {}) =>
+      render: (rowData: UnprocessedEntity) =>
         convertTimeToLocalTimezone(
           (rowData as UnprocessedEntity).last_discovery_at,
         ) || 'unknown',
@@ -207,7 +159,7 @@ export const FailedEntities = () => {
       title: <Typography>Next Refresh At</Typography>,
       sorting: true,
       field: 'next_update_at',
-      render: (rowData: UnprocessedEntity | {}) =>
+      render: (rowData: UnprocessedEntity) =>
         convertTimeToLocalTimezone(
           (rowData as UnprocessedEntity).next_update_at,
         ) || 'unknown',
@@ -215,13 +167,13 @@ export const FailedEntities = () => {
     {
       title: <Typography>Raw Entity Definition</Typography>,
       sorting: false,
-      render: (rowData: UnprocessedEntity | {}) => (
+      render: (rowData: UnprocessedEntity) => (
         <EntityDialog entity={rowData as UnprocessedEntity} />
       ),
     },
     {
       title: <Typography>Actions</Typography>,
-      render: (rowData: UnprocessedEntity | {}) => {
+      render: (rowData: UnprocessedEntity) => {
         const { entity_id, entity_ref } = rowData as UnprocessedEntity;
 
         return (
@@ -252,30 +204,7 @@ export const FailedEntities = () => {
             No failed entities found
           </Typography>
         }
-        onSearchChange={(searchTerm: string) =>
-          setSelectedSearchTerm(searchTerm)
-        }
-        detailPanel={({ rowData }) => {
-          const errors = (rowData as UnprocessedEntity).errors;
-          return (
-            <>
-              {errors?.map((e, idx) => {
-                return (
-                  <Box key={idx} className={classes.errorBox}>
-                    <Typography className={classes.errorTitle}>
-                      {e.name}
-                    </Typography>
-                    <MarkdownContent content={e.message} />
-                    <RenderErrorContext
-                      error={e}
-                      rowData={rowData as UnprocessedEntity}
-                    />
-                  </Box>
-                );
-              })}
-            </>
-          );
-        }}
+        onStateChange={state => setSelectedSearchTerm(state.search ?? '')}
       />
       <DeleteEntityConfirmationDialog
         open={confirmationDialogOpen}

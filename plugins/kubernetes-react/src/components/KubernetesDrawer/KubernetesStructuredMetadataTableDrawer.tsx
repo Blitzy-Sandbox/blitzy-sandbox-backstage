@@ -228,13 +228,13 @@ const KubernetesStructuredMetadataTableDrawerContent = <
         <div>
           {clusterLink && (
             <BackstageButton
-              variant="outlined"
+              variant="outline"
               color="primary"
-              size="small"
+              size="sm"
               to={clusterLink}
-              endIcon={<OpenInNewIcon />}
             >
               Open Kubernetes Dashboard
+              <OpenInNewIcon />
             </BackstageButton>
           )}
         </div>

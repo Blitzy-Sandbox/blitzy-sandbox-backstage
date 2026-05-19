@@ -16,14 +16,12 @@
 
 import { useEffect, useState } from 'react';
 import { useEntity } from '@backstage/plugin-catalog-react';
-import { useApi, configApiRef } from '@backstage/core-plugin-api';
 import { InfoCard, MarkdownContent } from '@backstage/core-components';
 
 /** @public */
 export function ReadmeCard(props: { variant?: 'gridItem' | 'fullHeight' }) {
   const { variant } = props;
   const { entity } = useEntity();
-  const config = useApi(configApiRef);
   const [content, setContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,13 +37,6 @@ export function ReadmeCard(props: { variant?: 'gridItem' | 'fullHeight' }) {
           return;
         }
 
-        // Fetch README via Backstage backend, which handles GitHub auth
-        const backendUrl = config.getString('backend.baseUrl');
-        const response = await fetch(
-          `${backendUrl}/api/catalog/entities/by-name/component/default/${entity.metadata.name}`,
-        );
-
-        // Fallback: fetch directly from GitHub raw content (no auth needed for public repos)
         const rawUrl = `https://raw.githubusercontent.com/${slug}/HEAD/README.md`;
         const readmeResponse = await fetch(rawUrl);
 
@@ -65,7 +56,7 @@ export function ReadmeCard(props: { variant?: 'gridItem' | 'fullHeight' }) {
     }
 
     fetchReadme();
-  }, [entity, config]);
+  }, [entity]);
 
   if (loading) {
     return (

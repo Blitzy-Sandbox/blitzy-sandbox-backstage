@@ -8,6 +8,7 @@
     "plugins/*/dev",
     "plugins/*/migrations"
   ],
+  "exclude": ["packages/app-legacy/src"],
   "compilerOptions": {
     "outDir": "dist-types",
     "rootDir": ".",

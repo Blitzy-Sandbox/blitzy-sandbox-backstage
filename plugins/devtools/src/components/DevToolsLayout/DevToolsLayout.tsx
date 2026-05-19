@@ -19,15 +19,14 @@ import {
   attachComponentData,
   useElementFilter,
 } from '@backstage/core-plugin-api';
-import { TabProps } from '@material-ui/core/Tab';
-import { ElementType, ReactNode } from 'react';
+import { ComponentPropsWithoutRef, ReactNode } from 'react';
 
 /** @public */
 export type SubRoute = {
   path: string;
   title: string;
   children: JSX.Element;
-  tabProps?: TabProps<ElementType, { component?: ElementType }>;
+  tabProps?: ComponentPropsWithoutRef<'button'> & { asChild?: boolean };
 };
 
 const dataKey = 'plugin.devtools.devtoolsLayoutRoute';

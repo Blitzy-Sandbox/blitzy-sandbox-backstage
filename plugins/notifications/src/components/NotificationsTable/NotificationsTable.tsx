@@ -341,7 +341,7 @@ export const NotificationsTable = ({
       onRowsPerPageChange={onRowsPerPageChange}
       page={page}
       totalCount={totalCount}
-      onSearchChange={throttledContainsTextHandler}
+      onStateChange={state => throttledContainsTextHandler(state.search ?? '')}
       data={notifications}
       columns={compactColumns}
       localization={{

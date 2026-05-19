@@ -37,7 +37,6 @@ import NightsStay from '@material-ui/icons/NightsStay';
 import ErrorIcon from '@material-ui/icons/Error';
 import BlockIcon from '@material-ui/icons/Block';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import { ScheduledTaskDetailPanel } from './ScheduledTaskDetailedPanel';
 import { RequirePermission } from '@backstage/plugin-permission-react';
 import { devToolsTaskSchedulerCreatePermission } from '@backstage/plugin-devtools-common/alpha';
 
@@ -308,9 +307,6 @@ export const ScheduledTasksContent = () => {
               No scheduled tasks found for {selectedPlugin}.
             </Alert>
           }
-          detailPanel={({ rowData }) => {
-            return <ScheduledTaskDetailPanel rowData={rowData} />;
-          }}
         />
       )}
     </Box>
