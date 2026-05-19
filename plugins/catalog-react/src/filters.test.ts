@@ -175,9 +175,16 @@ describe('EntityHasProjectHistoryFilter', () => {
     expect(filter.filterEntity(make('true'))).toBe(true);
   });
 
-  it('shows entities with the annotation missing (backfill window)', () => {
+  it('hides entities with the annotation missing', () => {
     const filter = new EntityHasProjectHistoryFilter(true);
-    expect(filter.filterEntity(make())).toBe(true);
+    expect(filter.filterEntity(make())).toBe(false);
+  });
+
+  it('pushes the annotation-equality filter to the catalog API', () => {
+    const filter = new EntityHasProjectHistoryFilter(true);
+    expect(filter.getCatalogFilters()).toEqual({
+      'metadata.annotations.blitzy.io/has-project-history': 'true',
+    });
   });
 
   it('is a no-op when value is false', () => {
@@ -185,6 +192,7 @@ describe('EntityHasProjectHistoryFilter', () => {
     expect(filter.filterEntity(make('false'))).toBe(true);
     expect(filter.filterEntity(make('true'))).toBe(true);
     expect(filter.filterEntity(make())).toBe(true);
+    expect(filter.getCatalogFilters()).toEqual({});
   });
 });
 

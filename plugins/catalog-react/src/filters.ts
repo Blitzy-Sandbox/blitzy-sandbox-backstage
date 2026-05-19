@@ -361,14 +361,14 @@ export class EntityOrphanFilter implements EntityFilter {
 }
 
 /**
- * Hides entities whose `blitzy.io/has-project-history` annotation is
- * explicitly `'false'`. Entities with the annotation set to `'true'`, or
- * with the annotation missing entirely (e.g. the backend processor has not
- * yet stamped them), pass through.
+ * Hides entities that do not have `blitzy.io/has-project-history: 'true'`.
  *
- * Client-side only: the equality-based catalog filter API cannot express
- * "annotation != 'false'", so pagination may show fewer rows than the
- * page size until every entity has been stamped by the processor.
+ * Filtering is pushed to the catalog API via an annotation-equality filter
+ * so pagination counts and per-page row counts reflect the post-filter
+ * result. The trade-off is that entities whose annotation is missing (the
+ * backend processor has not stamped them yet) are hidden during that
+ * backfill window — typically one processor cycle after a backend restart
+ * with a fresh cache.
  * @public
  */
 export class EntityHasProjectHistoryFilter implements EntityFilter {
@@ -378,10 +378,15 @@ export class EntityHasProjectHistoryFilter implements EntityFilter {
     this.value = value;
   }
 
+  getCatalogFilters(): Record<string, string | string[]> {
+    if (!this.value) return {};
+    return { 'metadata.annotations.blitzy.io/has-project-history': 'true' };
+  }
+
   filterEntity(entity: Entity): boolean {
     if (!this.value) return true;
     return (
-      entity.metadata.annotations?.['blitzy.io/has-project-history'] !== 'false'
+      entity.metadata.annotations?.['blitzy.io/has-project-history'] === 'true'
     );
   }
 }

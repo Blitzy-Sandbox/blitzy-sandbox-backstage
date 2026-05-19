@@ -129,8 +129,16 @@ describe('BlitzyProjectHistoryProcessor', () => {
     expect(provider.getOctokit).not.toHaveBeenCalled();
   });
 
-  it('stamps true when the repo has at least one PR', async () => {
-    const list = jest.fn().mockResolvedValue({ data: [{ number: 1 }] });
+  it('stamps true when the repo has a PR on a blitzy-* head branch', async () => {
+    const list = jest.fn().mockResolvedValue({
+      data: [
+        {
+          number: 1,
+          head: { ref: 'blitzy-abc-123' },
+          user: { login: 'someone-else' },
+        },
+      ],
+    });
     const provider = makeOctokitProvider(list);
     const processor = new BlitzyProjectHistoryProcessor({
       octokitProvider: provider,
@@ -149,8 +157,65 @@ describe('BlitzyProjectHistoryProcessor', () => {
       owner: 'org',
       repo: 'repo',
       state: 'all',
-      per_page: 1,
+      per_page: 100,
     });
+  });
+
+  it('stamps true when a PR is authored by blitzy[bot] even without the branch prefix', async () => {
+    const list = jest.fn().mockResolvedValue({
+      data: [
+        {
+          number: 1,
+          head: { ref: 'some-other-branch' },
+          user: { login: 'blitzy[bot]' },
+        },
+      ],
+    });
+    const provider = makeOctokitProvider(list);
+    const processor = new BlitzyProjectHistoryProcessor({
+      octokitProvider: provider,
+      logger,
+    });
+    const out = await processor.postProcessEntity(
+      component({ 'github.com/project-slug': 'org/repo' }),
+      LOCATION,
+      noop,
+      makeCache(),
+    );
+    expect(out.metadata.annotations?.[HAS_PROJECT_HISTORY_ANNOTATION]).toBe(
+      'true',
+    );
+  });
+
+  it('stamps false when the repo only has non-Blitzy PRs', async () => {
+    const list = jest.fn().mockResolvedValue({
+      data: [
+        {
+          number: 1,
+          head: { ref: 'feat/something' },
+          user: { login: 'ajay-blitzy' },
+        },
+        {
+          number: 2,
+          head: { ref: 'dependabot/npm_and_yarn/foo' },
+          user: { login: 'dependabot[bot]' },
+        },
+      ],
+    });
+    const provider = makeOctokitProvider(list);
+    const processor = new BlitzyProjectHistoryProcessor({
+      octokitProvider: provider,
+      logger,
+    });
+    const out = await processor.postProcessEntity(
+      component({ 'github.com/project-slug': 'org/repo' }),
+      LOCATION,
+      noop,
+      makeCache(),
+    );
+    expect(out.metadata.annotations?.[HAS_PROJECT_HISTORY_ANNOTATION]).toBe(
+      'false',
+    );
   });
 
   it('stamps false when the repo has zero PRs', async () => {
@@ -202,7 +267,7 @@ describe('BlitzyProjectHistoryProcessor', () => {
       logger,
     });
     const cache = makeCache({
-      'blitzy-project-history': {
+      'blitzy-project-history-v2': {
         slug: 'org/repo',
         value: 'true',
         checkedAt: new Date().toISOString(),
@@ -229,7 +294,7 @@ describe('BlitzyProjectHistoryProcessor', () => {
     });
     const stale = new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString();
     const cache = makeCache({
-      'blitzy-project-history': {
+      'blitzy-project-history-v2': {
         slug: 'org/repo',
         value: 'true',
         checkedAt: stale,
@@ -248,14 +313,22 @@ describe('BlitzyProjectHistoryProcessor', () => {
   });
 
   it('invalidates the cache when the slug changes', async () => {
-    const list = jest.fn().mockResolvedValue({ data: [{ number: 1 }] });
+    const list = jest.fn().mockResolvedValue({
+      data: [
+        {
+          number: 1,
+          head: { ref: 'blitzy-xyz' },
+          user: { login: 'blitzy[bot]' },
+        },
+      ],
+    });
     const provider = makeOctokitProvider(list);
     const processor = new BlitzyProjectHistoryProcessor({
       octokitProvider: provider,
       logger,
     });
     const cache = makeCache({
-      'blitzy-project-history': {
+      'blitzy-project-history-v2': {
         slug: 'old-org/old-repo',
         value: 'false',
         checkedAt: new Date().toISOString(),
