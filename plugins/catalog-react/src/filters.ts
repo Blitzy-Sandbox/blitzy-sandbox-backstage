@@ -73,7 +73,35 @@ export class EntityTypeFilter implements EntityFilter {
 }
 
 /**
- * Filters entities based on tag.
+ * Filters entities based on tag, with AND semantics across all selected tag values.
+ *
+ * @remarks
+ *
+ * When multiple tag values are selected, the user-visible contract is that the
+ * displayed list and the displayed count both reflect entities whose
+ * `metadata.tags` array contains **all** selected values (logical AND).
+ *
+ * This AND semantics is enforced by a two-layer design:
+ *
+ * 1. `filterEntity` uses `Array.prototype.every` to require that every selected
+ *    tag value is present in the entity's `metadata.tags`. This is the canonical
+ *    source of truth for AND-narrowing the rendered row list.
+ *
+ * 2. `getCatalogFilters` emits the wire-format-compatible shape
+ *    `{ 'metadata.tags': this.values }`. The Backstage catalog backend's
+ *    `EntitiesSearchFilter` evaluates this as OR across the listed values
+ *    (returning a SUPERSET of the AND-narrowed result). The frontend then
+ *    narrows the displayed list via `filterEntity`, and
+ *    `useEntityListProvider` narrows the displayed count defensively via
+ *    `Math.min(response.totalItems, filteredEntities.length)` so that the
+ *    count matches the rendered row count under multi-tag filters.
+ *
+ * The wire format `EntityFilterQuery` (in `@backstage/catalog-client`) is
+ * `Record<string, string | symbol | (string | symbol)[]>`; same-key values are
+ * deduplicated by the backend filter parser into a single `EntitiesSearchFilter`
+ * that is evaluated as OR. There is no wire-format path to emit AND across
+ * same-key values, which is why the AND-correction lives in the React layer.
+ *
  * @public
  */
 export class EntityTagFilter implements EntityFilter {
@@ -83,10 +111,22 @@ export class EntityTagFilter implements EntityFilter {
     this.values = values;
   }
 
+  /**
+   * Returns true when the entity's `metadata.tags` contains **every** selected
+   * tag value. This is the source-of-truth AND predicate that anchors both the
+   * rendered row list and the displayed count.
+   */
   filterEntity(entity: Entity): boolean {
     return this.values.every(v => (entity.metadata.tags ?? []).includes(v));
   }
 
+  /**
+   * Emits the wire-format-compatible catalog filter for `metadata.tags`. The
+   * backend evaluates this as OR across listed values (returning a superset);
+   * the displayed row list is narrowed to AND by `filterEntity`, and the
+   * displayed count is narrowed to AND by `useEntityListProvider`'s defensive
+   * `Math.min(response.totalItems, filteredEntities.length)`.
+   */
   getCatalogFilters(): Record<string, string | string[]> {
     return { 'metadata.tags': this.values };
   }
