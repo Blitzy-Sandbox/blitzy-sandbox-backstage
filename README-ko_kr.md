@@ -48,6 +48,23 @@ Backstage의 문서는 다음을 포함합니다:
 - [Designing for Backstage](https://backstage.io/docs/dls/design)
 - [Storybook - UI components](https://backstage.io/storybook)
 
+## Blitzy Sandbox 안내
+
+이 저장소는 Blitzy의 Backstage 포크입니다. 표준 Backstage와의 주요 차이점은 다음과 같습니다.
+
+- **크롬(Chrome) UI**: 좌측 사이드바가 제거되고, 모든 페이지 상단 우측에 Blitzy 로고(클릭 불가), 설정 아이콘, 지원 버튼이 배치됩니다. 지원 버튼은 `app-config.yaml`의 `app.support.items`를 통해 공식 지원 이메일 `support@blitzy.com`을 표시합니다.
+- **랜딩 페이지**: 애플리케이션은 `/catalog`에서 시작하며, 루트 URL `/`는 `/catalog`로 리다이렉트됩니다. 기존 대시보드 페이지는 제거되었습니다.
+- **권한 정책**: 새로운 `BlitzyPermissionPolicy`가 기존 `AllowAllPermissionPolicy`를 대체합니다. 확인된 이메일 도메인이 `@blitzy.com`이 아닌 사용자와 Guest 세션은 백엔드 권한 계층에서 강제되는 **읽기 전용** 액세스로 제한됩니다.
+- **감사(audit) 로그**: GitHub 로그인(`user-login`)과 카탈로그 엔티티 액세스(`entity-access`) 이벤트가 Backstage `AuditorService`를 통해 기록됩니다.
+
+### 리팩토링 문서
+
+- [의사결정 로그](docs/refactor/decision-log.md) — 주요 결정 사항과 대안 및 위험 요소
+- [추적성 매트릭스](docs/refactor/traceability-matrix.md) — 요구사항-구현 간 양방향 매핑
+- [아키텍처 변경 전/후](docs/refactor/architecture-before-after.md) — 크롬 및 권한 흐름 Mermaid 다이어그램
+- [온보딩 부록](docs/refactor/onboarding-addendum.md) — 클린 머신 설정, LocalGCP, 사용자 정의 가이드
+- [향후 작업](docs/refactor/next-tasks.md) — 현재 범위에서 제외된 후속 개선 사항
+
 ## 커뮤니티
 
 커뮤니티에 참여하려면 다음 리소스를 사용하세요:
