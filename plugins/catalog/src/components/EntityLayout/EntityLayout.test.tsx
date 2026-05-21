@@ -279,7 +279,10 @@ describe('EntityLayout', () => {
     expect(screen.getByText('tabbed-test-title-3')).toBeInTheDocument();
   });
 
-  it('renders the owner links inside `p` tags', async () => {
+  it('does not render the Owner HeaderLabel even when ownedBy relations are present', async () => {
+    // Per AAP §0.5.1.2 CRITICAL: "remove the ability to click on or access the 'Owner'
+    // link/element. Perform a full removal of this functionality across the application."
+    // This test verifies the Owner link is fully removed from EntityLayout/EntityLabels.
     const mockTargetRef = 'my:target/ref';
     const ownerEntity = {
       ...mockEntity,
@@ -303,12 +306,45 @@ describe('EntityLayout', () => {
       },
     );
 
-    const ownerLink = screen.getByText(mockTargetRef).closest('a');
-    expect(ownerLink).toBeInTheDocument();
-    expect(ownerLink?.tagName).toBe('A');
-    const linkParent = ownerLink?.parentElement;
-    expect(linkParent).toBeInTheDocument();
-    expect(linkParent?.tagName).toBe('P');
+    // The owner targetRef text must not appear anywhere in the header label area.
+    expect(screen.queryByText(mockTargetRef)).not.toBeInTheDocument();
+    // The Owner HeaderLabel translation key ('Owner') must not be rendered.
+    expect(screen.queryByText(/^Owner$/i)).not.toBeInTheDocument();
+  });
+
+  it('does not render the FavoriteEntity star icon next to the entity title', async () => {
+    // Per AAP §0.5.1.2: "Remove the star icon from the project's title".
+    // This test verifies the FavoriteEntity affordance is removed from EntityLayoutTitle.
+    await renderInTestApp(
+      <ApiProvider apis={apis}>
+        <EntityProvider entity={mockEntity}>
+          <EntityLayout>
+            <EntityLayout.Route path="/" title="tabbed-test-title">
+              <div>tabbed-test-content</div>
+            </EntityLayout.Route>
+          </EntityLayout>
+        </EntityProvider>
+      </ApiProvider>,
+      {
+        mountedRoutes: {
+          '/catalog/:namespace/:kind/:name': entityRouteRef,
+          '/catalog': rootRouteRef,
+        },
+      },
+    );
+
+    // Title still renders the entity display name.
+    expect(screen.getByText('my-entity')).toBeInTheDocument();
+    // No "Add to favorites" / "Remove from favorites" toggle should be present.
+    expect(
+      screen.queryByRole('button', { name: /favorit/i }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/add to favorites/i),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(/remove from favorites/i),
+    ).not.toBeInTheDocument();
   });
 });
 
