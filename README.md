@@ -47,13 +47,19 @@
 - **Search** — cross-catalog full-text search, with optional Elasticsearch backend
 - **Auth** — GitHub OAuth and Guest sign-in; OpenShift provider available
 - **Notifications & Signals** — real-time alerts and event-driven messages across the portal
-- **PR Review Plugin** — custom Blitzy plugin for surfacing pull request status on the home page
+- **PR Review Plugin** — custom Blitzy plugin for surfacing pull request status in the portal
 
 The portal runs on a **TypeScript monorepo** (~970k lines, 10k+ files) using Yarn workspaces. The frontend uses Backstage's new Declarative Integration system; the backend uses the new plugin-as-service DI model.
 
-### Chrome and Landing Page
+### Chrome and Landing Page (planned refactor)
 
-This Blitzy fork ships a refactored chrome. The traditional left sidebar is removed; instead, every page header carries a **top-right cluster** containing the Blitzy logo, a Settings icon button linking to `/settings`, and a Support button. The Blitzy logo is decorative and **non-clickable**. The Support button surfaces `support@blitzy.com` via the `app.support.items` configuration in `app-config.yaml`. The application **lands on `/catalog`** — the bare URL `/` redirects to `/catalog`, and the previous Dashboard / Home landing page has been removed. Per-entity TechDocs remain accessible after selecting a catalog entity; the global `/docs` index has been removed.
+The Blitzy fork is undergoing a multi-checkpoint refactor of the application chrome. The current Checkpoint 1 milestone delivers the foundation configuration (the `support@blitzy.com` entry in `app.support.items` in `app-config.yaml`, the LocalGCP compose file, and the permission policy plugin metadata scaffolding). Subsequent checkpoints will:
+
+- Replace the left sidebar with a **top-right cluster** containing a non-clickable Blitzy logo, a Settings icon button linking to `/settings`, and a Support button that surfaces `support@blitzy.com`.
+- Make `/catalog` the application landing page and redirect the bare URL `/` to `/catalog`, removing the previous Dashboard / Home landing page.
+- Preserve per-entity TechDocs while removing the global `/docs` index.
+
+See the **Refactor Documentation** section below for the planned decision log, traceability matrix, and architecture-before/after diagrams.
 
 ## Built With
 
@@ -203,33 +209,35 @@ blitzy-backstage/
 
 ### Key Entry Points
 
-| File                                                            | Purpose                                                                          |
-| --------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `packages/backend/src/index.ts`                                 | Backend process — registers all plugins via `backend.add()`                      |
-| `packages/app/src/App.tsx`                                      | Frontend app root — assembles all features via `createApp()`                     |
-| `packages/app/src/modules/appModuleTopBar.tsx`                  | Top-right chrome cluster (Blitzy logo, Settings, Support)                        |
-| `plugins/permission-backend-module-blitzy-policy/src/policy.ts` | `BlitzyPermissionPolicy` — read-only enforcement for non-`@blitzy.com` and Guest |
-| `app-config.yaml`                                               | App configuration (URLs, database, auth, integrations, support email)            |
+| File                                                            | Purpose                                                                                                                                |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/backend/src/index.ts`                                 | Backend process — registers all plugins via `backend.add()`                                                                            |
+| `packages/app/src/App.tsx`                                      | Frontend app root — assembles all features via `createApp()`                                                                           |
+| `app-config.yaml`                                               | App configuration (URLs, database, auth, integrations, support email)                                                                  |
+| `docker-compose.localgcp.yml`                                   | Containerized LocalGCP emulators (GCS, Pub/Sub, Firestore) for integration tests                                                       |
+| `plugins/permission-backend-module-blitzy-policy/`              | Workspace package metadata for the upcoming `BlitzyPermissionPolicy` (source implementation is forthcoming in a subsequent checkpoint) |
+| `packages/app/src/modules/appModuleTopBar.tsx`                  | Forthcoming — top-right chrome cluster (Blitzy logo, Settings, Support); planned for a subsequent checkpoint                           |
+| `plugins/permission-backend-module-blitzy-policy/src/policy.ts` | Forthcoming — `BlitzyPermissionPolicy` read-only enforcement; planned for a subsequent checkpoint                                      |
 
 ### Architecture Notes
 
 - The backend uses a **DI container** (`ServiceRegistry`) that resolves typed `ServiceRef` → `ServiceFactory` at startup. Plugins declare their service dependencies declaratively.
 - The frontend uses **Declarative Integration** — plugins expose typed `Extension` objects (pages, nav items, entity content) assembled by `createApp()`. Routing is automatic.
 - **TechDocs search** is intentionally disabled to prevent OOM when indexing repositories that haven't built docs — see the comment in `packages/backend/src/index.ts`.
-- **Authorization** — This fork enforces a custom `BlitzyPermissionPolicy` (in `plugins/permission-backend-module-blitzy-policy/src/policy.ts`, registered in `packages/backend/src/index.ts`), replacing the previous `AllowAllPermissionPolicy`. Users whose verified email domain is `@blitzy.com` retain full access; all other authenticated users and Guest sessions are constrained to **read-only** permissions enforced by the backend permission layer.
-- **Audit logging** — GitHub sign-in attempts and project (catalog entity) reads are recorded via Backstage's `AuditorService`. The `user-login` event is emitted on every sign-in (success and failure); the `entity-access` event is emitted on every catalog entity read. See [Observability Dashboards](docs/observability/dashboards.md) for the log catalog and dashboard import instructions.
+- **Authorization (planned)** — A custom `BlitzyPermissionPolicy` will be introduced in `plugins/permission-backend-module-blitzy-policy/` (workspace metadata is scaffolded in Checkpoint 1) and registered in `packages/backend/src/index.ts`, replacing the upstream `AllowAllPermissionPolicy`. Once delivered, users whose verified email domain is `@blitzy.com` will retain full access; all other authenticated users and Guest sessions will be constrained to **read-only** permissions enforced by the backend permission layer. The current codebase still runs with the upstream allow-all policy.
+- **Audit logging (planned)** — Subsequent checkpoints will record GitHub sign-in attempts and project (catalog entity) reads via Backstage's `AuditorService`. A `user-login` event will be emitted on every sign-in (success and failure); an `entity-access` event will be emitted on every catalog entity read. The Grafana dashboard template and observability documentation are Checkpoint 4 deliverables (see _Refactor Documentation_ below for the forthcoming link list).
 
-### Refactor Documentation
+### Refactor Documentation (planned)
 
-Documentation describing the Blitzy fork's refactor scope, decisions, and runtime observability:
+The Blitzy refactor will ship the following documentation artifacts in a subsequent checkpoint (Checkpoint 4 — _Documentation & Observability_, per Agent Action Plan §0.6.1.7). These files are **not present yet** at this milestone — they are listed here for forward visibility and will become navigable once committed. Until then, the canonical refactor specification lives in `blitzy/documentation/Technical Specifications.md` and the executive overview in `blitzy-deck/executive-summary.html`.
 
-- [Decision Log](docs/refactor/decision-log.md) — non-trivial decisions, alternatives, and risks
-- [Traceability Matrix](docs/refactor/traceability-matrix.md) — bidirectional requirement-to-implementation mapping
-- [Architecture Before/After](docs/refactor/architecture-before-after.md) — Mermaid diagrams of chrome and permission flows
-- [Onboarding Addendum](docs/refactor/onboarding-addendum.md) — clean-machine setup, LocalGCP setup, customization guides
-- [Next Tasks](docs/refactor/next-tasks.md) — discovered improvements out of current scope
-- [Observability Dashboards](docs/observability/dashboards.md) — structured logging, tracing, metrics, dashboard import
-- [Grafana Dashboard Template](docs/observability/dashboard-template.json) — importable dashboard JSON
+- `docs/refactor/decision-log.md` (forthcoming) — non-trivial decisions, alternatives, and risks
+- `docs/refactor/traceability-matrix.md` (forthcoming) — bidirectional requirement-to-implementation mapping
+- `docs/refactor/architecture-before-after.md` (forthcoming) — Mermaid diagrams of chrome and permission flows
+- `docs/refactor/onboarding-addendum.md` (forthcoming) — clean-machine setup, LocalGCP setup, customization guides
+- `docs/refactor/next-tasks.md` (forthcoming) — discovered improvements out of current scope
+- `docs/observability/dashboards.md` (forthcoming) — structured logging, tracing, metrics, dashboard import
+- `docs/observability/dashboard-template.json` (forthcoming) — importable dashboard JSON
 
 ## Contributing
 

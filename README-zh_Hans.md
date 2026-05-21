@@ -48,17 +48,22 @@ Backstage 的文档包括：
 - [Backstage 设计](https://backstage.io/docs/dls/design)
 - [Storybook - UI 组件](https://backstage.io/storybook)
 
-### Blitzy Sandbox 分支说明
+### Blitzy Sandbox 分支说明（重构进行中）
 
-本仓库是 Backstage 的 Blitzy 定制分支：原侧边栏被移除，改为位于页面右上角的**顶部栏**（非可点击的 Blitzy 徽标、设置按钮、显示 `support@blitzy.com` 的支持按钮）；应用**着陆页**为 `/catalog`（裸路径 `/` 自动重定向），原 Dashboard 已删除。**权限策略** `BlitzyPermissionPolicy` 将所有非 `@blitzy.com` 邮箱用户与 Guest 会话限制为只读访问；GitHub 登录与项目访问通过 `AuditorService` 进行**审计**（事件 ID：`user-login`、`entity-access`）。
+本仓库是 Backstage 的 Blitzy 定制分支，目前正在进行多 Checkpoint 重构。当前 Checkpoint 1 里程碑仅交付基础配置工件（`app-config.yaml` 中 `app.support.items` 内的 `support@blitzy.com` 条目、LocalGCP compose 文件，以及权限策略插件元数据脚手架）。后续 Checkpoint 将：
 
-分支专属文档：
+- 移除原左侧边栏，改为位于页面右上角的**顶部栏**：非可点击的 Blitzy 徽标、设置按钮、显示 `support@blitzy.com` 的支持按钮。
+- 将 `/catalog` 设为应用着陆页，裸路径 `/` 自动重定向到 `/catalog`，原 Dashboard 页面将被移除。
+- 引入新的 `BlitzyPermissionPolicy`：所有非 `@blitzy.com` 邮箱用户和 Guest 会话将被限制为只读访问；当前代码库仍运行上游的允许全部策略。
+- 通过 `AuditorService` 审计 GitHub 登录与项目访问，事件 ID 为 `user-login` 和 `entity-access`。
 
-- [入职指南补充](docs/refactor/onboarding-addendum.md)
-- [决策日志](docs/refactor/decision-log.md)
-- [需求溯源矩阵](docs/refactor/traceability-matrix.md)
-- [重构前后架构图](docs/refactor/architecture-before-after.md)
-- [后续任务清单](docs/refactor/next-tasks.md)
+分支专属文档（计划中——将于后续 Checkpoint 4 _文档与可观测性_ 提交，详见 Agent Action Plan §0.6.1.7。本次 Checkpoint 1 尚不包含以下文件，列出仅作前向可见性参考）：
+
+- `docs/refactor/onboarding-addendum.md`（待提交）— 入职指南补充
+- `docs/refactor/decision-log.md`（待提交）— 决策日志
+- `docs/refactor/traceability-matrix.md`（待提交）— 需求溯源矩阵
+- `docs/refactor/architecture-before-after.md`（待提交）— 重构前后架构图
+- `docs/refactor/next-tasks.md`（待提交）— 后续任务清单
 
 ## 社区
 

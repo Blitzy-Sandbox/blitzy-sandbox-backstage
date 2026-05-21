@@ -48,17 +48,22 @@ La documentation de Backstage inclut:
 - [Designing for Backstage](https://backstage.io/docs/dls/design)
 - [Storybook - UI components](https://backstage.io/storybook)
 
-### Spécificités Blitzy Sandbox
+### Spécificités Blitzy Sandbox (refactor en cours)
 
-Ce dépôt est le fork Blitzy de Backstage : la barre latérale d'origine est remplacée par une **barre supérieure** en haut à droite (logo Blitzy non cliquable, bouton Réglages, bouton Support affichant `support@blitzy.com`) ; la **page d'accueil** est `/catalog` (le chemin `/` est redirigé automatiquement ; l'ancien Dashboard a été supprimé). La **politique d'autorisation** `BlitzyPermissionPolicy` restreint les utilisateurs dont le domaine d'e-mail n'est pas `@blitzy.com` ainsi que les sessions Guest à un accès **en lecture seule** ; les connexions GitHub et les accès aux projets sont **audités** via `AuditorService` (identifiants d'événement : `user-login`, `entity-access`).
+Ce dépôt est le fork Blitzy de Backstage et fait actuellement l'objet d'un refactor en plusieurs checkpoints. Le jalon Checkpoint 1 livre uniquement les artefacts de configuration fondamentaux (l'entrée `support@blitzy.com` dans `app.support.items` de `app-config.yaml`, le fichier compose LocalGCP et le scaffolding des métadonnées du plugin de politique d'autorisation). Les checkpoints suivants introduiront :
 
-Documentation spécifique au fork :
+- Le remplacement de la barre latérale d'origine par une **barre supérieure** en haut à droite (logo Blitzy non cliquable, bouton Réglages, bouton Support affichant `support@blitzy.com`).
+- La redirection de `/` vers `/catalog`, qui deviendra la **page d'accueil**, et la suppression de l'ancien Dashboard.
+- La nouvelle **politique d'autorisation** `BlitzyPermissionPolicy`, qui restreindra les utilisateurs dont le domaine d'e-mail n'est pas `@blitzy.com` ainsi que les sessions Guest à un accès **en lecture seule**. La base de code actuelle utilise encore la politique allow-all d'amont.
+- L'**audit** des connexions GitHub et des accès aux projets via `AuditorService` (identifiants d'événement : `user-login`, `entity-access`).
 
-- [Addendum d'intégration](docs/refactor/onboarding-addendum.md)
-- [Journal des décisions](docs/refactor/decision-log.md)
-- [Matrice de traçabilité](docs/refactor/traceability-matrix.md)
-- [Architecture avant/après](docs/refactor/architecture-before-after.md)
-- [Prochaines tâches](docs/refactor/next-tasks.md)
+Documentation spécifique au fork (à venir — livrée au Checkpoint 4 _Documentation & Observabilité_, voir Agent Action Plan §0.6.1.7). Ces fichiers **ne sont pas présents** à ce jalon ; ils figurent ici pour visibilité prospective.
+
+- `docs/refactor/onboarding-addendum.md` (à venir) — addendum d'intégration
+- `docs/refactor/decision-log.md` (à venir) — journal des décisions
+- `docs/refactor/traceability-matrix.md` (à venir) — matrice de traçabilité
+- `docs/refactor/architecture-before-after.md` (à venir) — architecture avant/après
+- `docs/refactor/next-tasks.md` (à venir) — prochaines tâches
 
 ## Communauté
 
