@@ -44,6 +44,30 @@ async function setThemeMode(page: Page, mode: 'light' | 'dark') {
  * and Support button — there are no sidebar navigation links to wait on.
  * The presence of the top-bar is therefore the canonical signal that the
  * authenticated shell has finished mounting.
+ *
+ * IMPORTANT — auth-state preservation across navigations:
+ *
+ * The `ProxiedSignInIdentity` instance produced by Guest sign-in lives in
+ * React state at the `App`-level wrapper (see `packages/app/src/App.tsx`
+ * + `packages/app/src/GuestSignInPage.tsx`). It is NOT persisted in
+ * `localStorage`, `sessionStorage`, or a session cookie. Because of this,
+ * a hard browser navigation via `page.goto(targetPath)` wipes the React
+ * state tree and re-renders the sign-in page — defeating the purpose of
+ * the prior sign-in click.
+ *
+ * To navigate while preserving the React-state auth, we prefer in-app
+ * navigation via the top-bar's `<Link>` controls (Backstage `Link` from
+ * `@backstage/core-components`, which delegates to React Router and
+ * therefore does NOT trigger a browser reload). For paths that are
+ * directly addressable from the top-bar (`/settings`, `/search`), the
+ * helper clicks the matching `data-testid` control. For other paths
+ * (`/catalog` is a no-op since Guest sign-in already lands there;
+ * everything else falls back to `page.goto`), the previous behavior is
+ * preserved.
+ *
+ * This mapping is sourced from the top-bar implementation in
+ * `packages/app/src/modules/appModuleTopBar.tsx`, which exposes the
+ * `data-testid` attributes referenced below.
  */
 async function signInAndNavigate(page: Page, targetPath?: string) {
   await page.goto('/');
@@ -53,9 +77,40 @@ async function signInAndNavigate(page: Page, targetPath?: string) {
   // Wait for authenticated shell — the top-bar is the canonical chrome
   // element mounted on every authenticated page (AAP §0.5.1.1).
   await expect(page.locator('[data-testid="app-top-bar"]')).toBeVisible();
-  if (targetPath) {
-    await page.goto(targetPath);
+
+  if (!targetPath) {
+    return;
   }
+
+  // After Guest sign-in the GuestSignInPage navigates to `/catalog`, so if
+  // that is also the target we are already there and no further navigation
+  // is needed. (Reading `page.url()` is cheap and avoids a needless reload.)
+  const currentPath = new URL(page.url()).pathname;
+  if (currentPath === targetPath) {
+    return;
+  }
+
+  // Known top-bar destinations: click the matching React-Router-aware link
+  // so that the React-state-only auth identity survives the navigation.
+  // The data-testid values below MUST match those exported by
+  // `packages/app/src/modules/appModuleTopBar.tsx`.
+  const topBarSelectors: Record<string, string> = {
+    '/settings': '[data-testid="app-top-bar-settings"]',
+    '/search': '[data-testid="app-top-bar-search"]',
+  };
+  const topBarSelector = topBarSelectors[targetPath];
+  if (topBarSelector) {
+    await page.locator(topBarSelector).click();
+    // Use `toHaveURL` so the wait is matched against the resolved URL and
+    // remains robust to query strings or trailing slashes the route may
+    // add (e.g., `/settings` -> `/settings/`).
+    await expect(page).toHaveURL(new RegExp(`${targetPath}/?$`));
+    return;
+  }
+
+  // Fallback: hard navigation. Tests using this path must tolerate the
+  // auth-state wipe (e.g., re-sign-in flows) or migrate to an in-app link.
+  await page.goto(targetPath);
 }
 
 // ---------------------------------------------------------------------------
