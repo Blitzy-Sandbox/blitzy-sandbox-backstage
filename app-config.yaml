@@ -228,6 +228,18 @@ catalog:
       rules:
         - allow: [Component, Group, System]
 
+    # E2E test fixture catalog. Loaded by the example backend so the
+    # Playwright suite always has deterministic entities to assert
+    # against. The fixture file is committed under
+    # `packages/app/e2e-tests/fixtures/` to keep the test data
+    # co-located with the tests that consume it. The entities are
+    # namespaced under `blitzy-e2e-` to make them easy to identify and
+    # exclude from non-test queries if needed.
+    - type: file
+      target: ../app/e2e-tests/fixtures/e2e-seed-catalog.yaml
+      rules:
+        - allow: [Component]
+
 scaffolder:
   auditor:
     taskParameterMaxLength: 256

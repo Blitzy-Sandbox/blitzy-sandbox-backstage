@@ -20,6 +20,7 @@ import {
   coreServices,
   createBackendFeatureLoader,
 } from '@backstage/backend-plugin-api';
+import { blitzyE2EAuditorServiceFactory } from './blitzyE2EAuditCapture';
 
 const backend = createBackend();
 
@@ -44,6 +45,20 @@ backend.add(import('@backstage/plugin-auth-backend'));
 backend.add(import('./authModuleGithubProvider'));
 backend.add(import('@backstage/plugin-auth-backend-module-guest-provider'));
 backend.add(import('@backstage/plugin-auth-backend-module-openshift-provider'));
+
+// E2E TEST-ONLY: when BLITZY_E2E_TEST_MODE=true, register the
+// `blitzy-e2e` proxy auth provider that mints identity tokens with
+// arbitrary email claims via custom HTTP headers, the capturing
+// AuditorService factory, and the audit-events debug HTTP endpoint.
+// All three pieces gate themselves on the env var even if a
+// misconfigured deployment imports the modules. See
+// `authModuleBlitzyE2E.ts` and `blitzyE2EAuditCapture.ts` for the
+// full security posture.
+if (process.env.BLITZY_E2E_TEST_MODE === 'true') {
+  backend.add(import('./authModuleBlitzyE2E'));
+  backend.add(blitzyE2EAuditorServiceFactory);
+  backend.add(import('./blitzyE2EAuditCapture'));
+}
 backend.add(import('@backstage/plugin-app-backend'));
 backend.add(import('@backstage/plugin-catalog-backend-module-unprocessed'));
 backend.add(import('@backstage/plugin-catalog-backend'));

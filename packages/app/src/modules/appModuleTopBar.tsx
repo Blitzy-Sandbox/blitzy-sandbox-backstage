@@ -15,11 +15,15 @@
  */
 
 import type { CSSProperties } from 'react';
+import appPlugin from '@backstage/plugin-app';
 import { Link, SupportButton } from '@backstage/core-components';
-import { createFrontendModule } from '@backstage/frontend-plugin-api';
+import {
+  coreExtensionData,
+  createFrontendModule,
+} from '@backstage/frontend-plugin-api';
 import { NavContentBlueprint } from '@backstage/plugin-app-react';
 import { UserSettingsSignInAvatar } from '@backstage/plugin-user-settings';
-import { Settings as SettingsIcon } from 'lucide-react';
+import { Settings as SettingsIcon, Search as SearchIcon } from 'lucide-react';
 
 /**
  * `BlitzyLogo` renders the Blitzy brand mark as a non-interactive inline SVG.
@@ -104,6 +108,51 @@ const TopBarSignInAvatar = () => (
 );
 
 /**
+ * Shared className for the icon-button affordances in the right cluster.
+ * Centralized so that the visual treatment (padding, hover, focus ring)
+ * stays in lockstep across Search/Settings/Support — preventing one icon
+ * from drifting visually from the others when the buttons are edited.
+ */
+const ICON_BUTTON_CLASS =
+  'inline-flex items-center justify-center p-2 rounded text-current no-underline hover:opacity-80 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current';
+
+const ICON_BUTTON_STYLE: CSSProperties = {
+  color: 'inherit',
+  // The Tailwind ring token is overridden inline so that the focus ring
+  // is visible against the dark purple primary background even when the
+  // theme has not pre-loaded the corresponding CSS variable.
+  '--tw-ring-color': '#FFFFFF',
+} as CSSProperties;
+
+/**
+ * `TopBarSearch` is the Search icon affordance anchored in the top-bar's
+ * right cluster.
+ *
+ * The previous `appModuleNav` sidebar mounted a global Search entry next
+ * to Catalog, APIs, and Docs. Removing the sidebar without a replacement
+ * would have orphaned that affordance (the AAP §0.1.1 prerequisite
+ * "Sidebar replacement, not just deletion" warns against this). This
+ * button restores discoverable Search access from anywhere in the app,
+ * linking to the `/search` route registered by the search plugin.
+ *
+ * Like `TopBarSettings`, it uses Backstage's `Link` for analytics +
+ * baseUrl resolution and is icon-only with an explicit `aria-label` for
+ * assistive technology.
+ */
+const TopBarSearch = () => (
+  <Link
+    to="/search"
+    aria-label="Search"
+    title="Search"
+    data-testid="app-top-bar-search"
+    className={ICON_BUTTON_CLASS}
+    style={ICON_BUTTON_STYLE}
+  >
+    <SearchIcon size={20} aria-hidden="true" focusable="false" />
+  </Link>
+);
+
+/**
  * `TopBarSettings` is the Settings icon button anchored in the top-bar's
  * right cluster.
  *
@@ -120,13 +169,8 @@ const TopBarSettings = () => (
     aria-label="Settings"
     title="Settings"
     data-testid="app-top-bar-settings"
-    className="inline-flex items-center justify-center p-2 rounded text-current no-underline hover:opacity-80 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current"
-    style={
-      {
-        color: 'inherit',
-        '--tw-ring-color': '#FFFFFF',
-      } as CSSProperties
-    }
+    className={ICON_BUTTON_CLASS}
+    style={ICON_BUTTON_STYLE}
   >
     <SettingsIcon size={20} aria-hidden="true" focusable="false" />
   </Link>
@@ -149,32 +193,40 @@ const TopBarSupport = () => (
 );
 
 /**
- * `TopBar` composes the four pieces of the new application chrome into a
- * single full-width, fixed-position bar that sits at the top of every page.
+ * `TopBar` composes the five pieces of the new application chrome into a
+ * single horizontal bar.
  *
- * Layout: a fixed `<header>` element spanning the full viewport width with
- * a right-anchored cluster containing — in left-to-right order — the
- * Blitzy logo, the signed-in user's avatar, the Settings icon button, and
- * the Support popover. All cluster children are kept on the right via
- * `justify-end`, satisfying the AAP requirement to "Relocate the Blitzy
- * logo to the top right corner".
+ * Layout: a `<header>` element rendered in normal flow (NOT fixed-
+ * positioned). It is anchored at the top of a flex-column page shell
+ * (see `appModuleTopBar` below) so that page content naturally starts
+ * below it without requiring `padding-top` on every page or any
+ * SidebarPage-style left gutter.
+ *
+ * Right-cluster ordering (left-to-right): Logo, Avatar, Search, Settings,
+ * Support. All cluster children remain on the right via `justify-end`,
+ * satisfying the AAP requirement to "Relocate the Blitzy logo to the top
+ * right corner". Search is positioned before Settings/Support per the
+ * navigation-continuity finding from the code review — restoring a
+ * discoverable search affordance after the sidebar's `/search` link was
+ * deleted with the sidebar module.
  *
  * Styling notes:
- * - `position: fixed` + `top/left/right: 0` makes the bar viewport-wide so
- *   that any left-padding applied by upstream `SidebarPage` (when rendered
- *   inside a Page tree that still wraps in a SidebarPage shell) does not
- *   shrink the bar.
+ * - The bar participates in normal document flow (no `position: fixed`)
+ *   so that no page content is hidden beneath it. Backstage's `Header`
+ *   component on individual pages renders below this top-bar in the
+ *   flex-column layout.
  * - `z-index: 1100` matches the existing Backstage Sidebar's z-index so
- *   that the top-bar correctly overlays catalog/entity page content.
+ *   that any sticky/floating page chrome stays correctly stacked.
  * - `bg-primary text-primary-foreground` resolves to the Blitzy purple
  *   primary token (`#5B39F3` in light mode, `#7A6DEC` in dark) with white
  *   foreground — providing sufficient contrast for the white logo SVG and
  *   icons. An explicit `backgroundColor` style fallback guarantees the
- *   dark background even if Tailwind tokens are unavailable in a test env.
+ *   dark background even if Tailwind tokens are unavailable in a test
+ *   env.
  */
 const TopBar = () => (
   <header
-    className="fixed top-0 left-0 right-0 z-[1100] flex items-center justify-end gap-3 px-4 py-2 bg-primary text-primary-foreground shadow-sm"
+    className="relative flex w-full items-center justify-end gap-3 px-4 py-2 bg-primary text-primary-foreground shadow-sm z-[1100]"
     style={
       {
         minHeight: 56,
@@ -182,6 +234,9 @@ const TopBar = () => (
         // tokens are not loaded (e.g., during isolated component tests).
         backgroundColor: 'var(--primary, #5B39F3)',
         color: 'var(--primary-foreground, #FFFFFF)',
+        // The bar is flex-shrink: 0 so the flex-column shell does not
+        // collapse it under tight viewport heights.
+        flexShrink: 0,
       } as CSSProperties
     }
     data-testid="app-top-bar"
@@ -190,6 +245,7 @@ const TopBar = () => (
     <BlitzyLogo />
     <div className="inline-flex items-center gap-2">
       <TopBarSignInAvatar />
+      <TopBarSearch />
       <TopBarSettings />
       <TopBarSupport />
     </div>
@@ -200,17 +256,35 @@ const TopBar = () => (
  * `appModuleTopBar` is the new application chrome module that replaces the
  * deleted `appModuleNav` (sidebar) frontend module.
  *
- * It registers a single `NavContentBlueprint` extension whose component is
- * `TopBar`. The blueprint attaches at `app/nav#content`, which is the same
- * extension slot the deleted sidebar used — making this a drop-in chrome
- * replacement that requires only swapping the module reference in
- * `packages/app/src/App.tsx`.
+ * It performs two coordinated changes:
  *
- * The blueprint factory receives `navItems` (a take/rest API over app-wide
- * navigation entries), but we intentionally do NOT consume them: the new
- * chrome has no inline navigation links because users reach catalog, API
- * docs, and other pages via the catalog landing page (`/` → `/catalog`)
- * and direct URLs.
+ *  1. Registers a `NavContentBlueprint` extension whose component is
+ *     `TopBar`. The blueprint attaches at `app/nav#content`, which is the
+ *     same extension slot the deleted sidebar used. This makes the
+ *     module a drop-in chrome replacement for the slot — `appPlugin`'s
+ *     `app/nav` extension forwards the rendered `TopBar` to the layout.
+ *
+ *  2. Overrides the upstream `app/layout` extension to replace its
+ *     `<SidebarPage>` wrapper with a custom flex-column layout. This is
+ *     the critical fix for the Checkpoint-3 review finding that the
+ *     fixed-position top-bar was overlaying the first 56px of every
+ *     page and leaving a residual sidebar-width left gutter (because
+ *     `SidebarPage` always applies `paddingLeft: drawerWidthClosed` to
+ *     the content even when no sidebar is present — see
+ *     `packages/core-components/src/layout/Sidebar/Page.tsx` L110-117).
+ *
+ *     The replacement layout renders nav + content in a vertical flex
+ *     column with `min-height: 100vh`. Nav (the rendered `TopBar`) sits
+ *     at the top in normal flow; content sits below in a `flex: 1`
+ *     region with no left gutter and no top padding. This guarantees
+ *     that every page's first heading is fully visible immediately
+ *     below the 56px top-bar.
+ *
+ * The blueprint factory receives `navItems` (a take/rest API over
+ * app-wide navigation entries), but we intentionally do NOT consume them
+ * in the TopBar component itself: the new chrome surfaces navigation
+ * via icons (Logo/Search/Settings/Support) plus the catalog landing
+ * page (`/` → `/catalog`) rather than inline link lists.
  *
  * @public
  */
@@ -221,6 +295,47 @@ export const appModuleTopBar = createFrontendModule({
       params: {
         component: () => <TopBar />,
       },
+    }),
+    appPlugin.getExtension('app/layout').override({
+      // The override factory receives the original factory as its first
+      // argument (unused — we replace the layout entirely) and the
+      // extension context (including `inputs`) as the second. The
+      // upstream `app/layout` declares `nav` and `content` as singleton
+      // ReactElement inputs (see `plugins/app/src/extensions/AppLayout.tsx`),
+      // and the override preserves those inputs by inheriting them from
+      // the parent definition.
+      factory: (_originalFactory, { inputs }) => [
+        coreExtensionData.reactElement(
+          <div
+            data-testid="app-layout"
+            className="flex flex-col min-h-screen w-full"
+            style={
+              {
+                minHeight: '100vh',
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+              } as CSSProperties
+            }
+          >
+            {inputs.nav.get(coreExtensionData.reactElement)}
+            <main
+              data-testid="app-layout-content"
+              className="flex flex-1 min-h-0"
+              style={
+                {
+                  flex: '1 1 auto',
+                  minHeight: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                } as CSSProperties
+              }
+            >
+              {inputs.content.get(coreExtensionData.reactElement)}
+            </main>
+          </div>,
+        ),
+      ],
     }),
   ],
 });

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { decodeJwt } from 'jose';
 import {
   AuthorizeResult,
   PolicyDecision,
@@ -39,9 +40,26 @@ import {
  *    - All other principals (missing email, non-Blitzy domain,
  *      spoofed-domain subdomain, etc.) are denied.
  *
+ * Email propagation: the augmented GitHub `signInResolver` in
+ * `packages/backend/src/authModuleGithubProvider.ts` issues an identity
+ * token with a custom `email` claim. Backstage's default
+ * `UserInfoService` only extracts `sub` and `ent` from that token, so
+ * `user.info.email` is NEVER populated by the default pipeline. This
+ * policy therefore decodes the user's verified JWT directly from
+ * `user.credentials.token` to read the `email` claim. The JWT was
+ * already cryptographically verified by `DefaultAuthService.authenticate`
+ * before the credentials object reaches this policy, so we use
+ * `jose.decodeJwt` (non-verifying decode) here — verifying again would
+ * be redundant work without any security improvement.
+ *
+ * The `user.info.email` field is still consulted FIRST as a forward-
+ * compatible path: if a future deployment installs a custom
+ * `UserInfoService` that surfaces email through `BackstageUserInfo`, the
+ * policy will pick it up without further code change.
+ *
  * The policy is stateless, side-effect-free, and O(1). It never trusts
- * client-asserted email; it reads only the server-side hydrated
- * `info.email` field populated by the augmented GitHub `signInResolver`.
+ * client-asserted email; it reads only the server-validated JWT claims
+ * carried on `BackstageCredentials`.
  *
  * @public
  */
@@ -98,15 +116,63 @@ function isGuestPrincipal(user?: PolicyQueryUser): boolean {
   return false;
 }
 
-function extractEmail(user?: PolicyQueryUser): string | undefined {
+/**
+ * Extracts the user's verified email from the policy query user object.
+ *
+ * Lookup order:
+ *   1. `user.info.email` — used when a custom `UserInfoService` has
+ *      hydrated this field. The Backstage default `UserInfoService` does
+ *      NOT populate this, so step 2 is the actual production path.
+ *   2. The `email` claim on the validated JWT carried by
+ *      `user.credentials.token`. The token was signed by the auth
+ *      backend after the augmented GitHub `signInResolver` set the
+ *      `email` claim, and it was cryptographically verified by
+ *      `DefaultAuthService` before reaching this policy. Decoding here
+ *      is a pure read of an already-verified token.
+ *
+ * Returns `undefined` when no email is available (missing token,
+ * malformed token, missing claim, or non-string claim). Callers treat
+ * `undefined` as a non-Blitzy domain (DENY for writes).
+ *
+ * @internal exported for testing
+ */
+export function extractEmail(user?: PolicyQueryUser): string | undefined {
   if (!user) {
     return undefined;
   }
-  // The augmented signInResolver hydrates `info.email`. The
-  // BackstageUserInfo type does not declare this field, so we read it
-  // via a typed projection rather than via `as any`.
-  const email = (user.info as { email?: string } | undefined)?.email;
-  return typeof email === 'string' && email.length > 0 ? email : undefined;
+  // Forward-compatible path: if a custom UserInfoService populates
+  // `info.email`, use it directly. The Backstage default
+  // UserInfoService never sets this.
+  const infoEmail = (user.info as { email?: string } | undefined)?.email;
+  if (typeof infoEmail === 'string' && infoEmail.length > 0) {
+    return infoEmail;
+  }
+
+  // Production path: decode the validated JWT carried by the
+  // credentials object. The token is stored as a non-enumerable
+  // property on the internal `BackstageCredentials` shape — accessing it
+  // via a structural type assertion is the established pattern used by
+  // `packages/backend-defaults/src/entrypoints/userInfo/DefaultUserInfoService.ts`
+  // and elsewhere in the Backstage backend.
+  const credentialsToken = (user.credentials as { token?: string } | undefined)
+    ?.token;
+  if (typeof credentialsToken !== 'string' || credentialsToken.length === 0) {
+    return undefined;
+  }
+  try {
+    const payload = decodeJwt(credentialsToken);
+    const claimEmail = (payload as { email?: unknown }).email;
+    if (typeof claimEmail === 'string' && claimEmail.length > 0) {
+      return claimEmail;
+    }
+  } catch {
+    // Malformed JWT — treat as no email available. The DefaultAuthService
+    // already cryptographically verified the token before invoking this
+    // policy, so a decode failure here would indicate an unexpected
+    // internal state. Failing closed to DENY is the safe response.
+    return undefined;
+  }
+  return undefined;
 }
 
 function isBlitzyDomain(email: string | undefined): boolean {

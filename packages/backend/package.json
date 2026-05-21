@@ -33,6 +33,7 @@
     "@backstage/backend-defaults": "workspace:^",
     "@backstage/backend-plugin-api": "workspace:^",
     "@backstage/catalog-model": "workspace:^",
+    "@backstage/errors": "workspace:^",
     "@backstage/plugin-app-backend": "workspace:^",
     "@backstage/plugin-auth-backend": "workspace:^",
     "@backstage/plugin-auth-backend-module-github-provider": "workspace:^",
@@ -68,9 +69,11 @@
     "@opentelemetry/exporter-prometheus": "^0.211.0",
     "@opentelemetry/sdk-node": "^0.211.0",
     "better-sqlite3": "^11.0.0",
-    "example-app": "link:../app"
+    "example-app": "link:../app",
+    "express": "^4.22.0"
   },
   "devDependencies": {
+    "@backstage/backend-test-utils": "workspace:^",
     "@backstage/cli": "workspace:^"
   }
 }

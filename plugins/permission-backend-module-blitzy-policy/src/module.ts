@@ -1,0 +1,47 @@
+/*
+ * Copyright 2024 The Backstage Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { createBackendModule } from '@backstage/backend-plugin-api';
+import { policyExtensionPoint } from '@backstage/plugin-permission-node/alpha';
+import { BlitzyPermissionPolicy } from './policy';
+
+/**
+ * Backend module that installs `BlitzyPermissionPolicy` as the Backstage
+ * permission framework's active policy.
+ *
+ * The Blitzy policy enforces a read-only posture for users whose
+ * verified email domain is not `@blitzy.com` and for Guest principals
+ * (including anonymous callers). See `./policy.ts` for the full decision
+ * matrix.
+ *
+ * This module is registered in `packages/backend/src/index.ts` and
+ * replaces the previous `@backstage/plugin-permission-backend-module-
+ * allow-all-policy` registration.
+ *
+ * @public
+ */
+export const permissionModuleBlitzyPolicy = createBackendModule({
+  pluginId: 'permission',
+  moduleId: 'blitzy-policy',
+  register(reg) {
+    reg.registerInit({
+      deps: { policy: policyExtensionPoint },
+      async init({ policy }) {
+        policy.setPolicy(new BlitzyPermissionPolicy());
+      },
+    });
+  },
+});

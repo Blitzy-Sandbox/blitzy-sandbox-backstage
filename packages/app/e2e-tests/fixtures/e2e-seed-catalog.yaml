@@ -1,0 +1,72 @@
+# Deterministic seed catalog used by the Playwright E2E suite.
+#
+# This file is loaded by the example-backend via a `type: file`
+# catalog location declared in `app-config.yaml`. It guarantees the
+# fixtures the e2e suite needs are present at every run, regardless of
+# whether the developer has bound the optional remote catalog
+# providers (GitHub, GitHubOrg, AzureBlob) to live integrations.
+#
+# Entities below cover three test-data requirements identified by the
+# Checkpoint 3 review of `packages/app/e2e-tests/refactor.test.ts`:
+#
+#   1. At least one entity with `spec.type: library` so the
+#      "Visual Treatment: library type chip border" test can locate
+#      and assert the visible border on the library chip.
+#
+#   2. At least two entities sharing at least two distinct tags so
+#      the "Catalog Count Fix: AND logic" test can intersect the
+#      tag filter and assert the displayed count strictly less than
+#      the one-tag count.
+#
+#   3. At least one entity with a TechDocs annotation so the
+#      "per-entity Documentation tab" test can verify the per-entity
+#      tab is still reachable (the global /docs index page is
+#      removed; only the entity-scoped tab remains per AAP
+#      §0.8.1.3).
+#
+# Selecting tags ["java", "spring"] returns:
+#   - blitzy-e2e-component-a   (java, spring, library)  ← library entity
+#   - blitzy-e2e-component-b   (java, spring)
+# but NOT blitzy-e2e-component-c (java only) — proving AND semantics.
+# OR semantics would have returned 3 results.
+#
+# These entities are namespaced under the `default` namespace and
+# explicitly prefixed with `blitzy-e2e-` to avoid collisions with
+# real catalog content.
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: blitzy-e2e-component-a
+  description: E2E fixture — library with two shared tags and TechDocs.
+  tags:
+    - java
+    - spring
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+spec:
+  type: library
+  lifecycle: production
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: blitzy-e2e-component-b
+  description: E2E fixture — service sharing tags with component-a.
+  tags:
+    - java
+    - spring
+spec:
+  type: service
+  lifecycle: production
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: blitzy-e2e-component-c
+  description: E2E fixture — service with only one of the shared tags.
+  tags:
+    - java
+spec:
+  type: service
+  lifecycle: experimental

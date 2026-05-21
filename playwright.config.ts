@@ -43,7 +43,18 @@ export default defineConfig({
     },
   },
 
-  // Run your local dev server before starting the tests
+  // Run your local dev server before starting the tests.
+  //
+  // BLITZY_E2E_TEST_MODE=true is exported into the backend's environment
+  // so that the `blitzy-e2e` proxy auth provider is registered and able
+  // to mint identity tokens with arbitrary `email` JWT claims for the
+  // `authorization.test.ts` deterministic-token suite. The provider is
+  // intentionally gated behind this env var with multiple layers of
+  // defense (see `packages/backend/src/authModuleBlitzyE2E.ts`).
+  //
+  // CI environments that start the backend out-of-band MUST set the
+  // same env var; otherwise the authorization E2E suite will fail-fast
+  // rather than silently skip the non-Blitzy and Blitzy-domain paths.
   webServer: process.env.CI
     ? []
     : [
@@ -58,6 +69,10 @@ export default defineConfig({
           port: 7007,
           reuseExistingServer: true,
           timeout: 60_000,
+          env: {
+            ...process.env,
+            BLITZY_E2E_TEST_MODE: 'true',
+          },
         },
       ],
 
