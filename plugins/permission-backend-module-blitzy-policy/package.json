@@ -1,0 +1,47 @@
+{
+  "name": "@internal/plugin-permission-backend-module-blitzy-policy",
+  "version": "0.1.0",
+  "description": "Blitzy permission policy backend module for the permission plugin. Enforces read-only access for users whose verified email domain is not @blitzy.com and for Guest principals.",
+  "private": true,
+  "backstage": {
+    "role": "backend-plugin-module",
+    "pluginId": "permission",
+    "pluginPackage": "@backstage/plugin-permission-backend"
+  },
+  "publishConfig": {
+    "access": "public",
+    "main": "dist/index.cjs.js",
+    "types": "dist/index.d.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Blitzy-Sandbox/blitzy-sandbox-backstage",
+    "directory": "plugins/permission-backend-module-blitzy-policy"
+  },
+  "license": "Apache-2.0",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "backstage-cli package build",
+    "clean": "backstage-cli package clean",
+    "lint": "backstage-cli package lint",
+    "prepack": "backstage-cli package prepack",
+    "postpack": "backstage-cli package postpack",
+    "start": "backstage-cli package start",
+    "test": "backstage-cli package test"
+  },
+  "dependencies": {
+    "@backstage/backend-plugin-api": "workspace:^",
+    "@backstage/plugin-auth-node": "workspace:^",
+    "@backstage/plugin-catalog-common": "workspace:^",
+    "@backstage/plugin-permission-common": "workspace:^",
+    "@backstage/plugin-permission-node": "workspace:^"
+  },
+  "devDependencies": {
+    "@backstage/backend-test-utils": "workspace:^",
+    "@backstage/cli": "workspace:^"
+  }
+}
