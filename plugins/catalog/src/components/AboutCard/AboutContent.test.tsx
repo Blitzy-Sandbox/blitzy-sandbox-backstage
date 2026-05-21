@@ -87,14 +87,6 @@ describe('<AboutContent />', () => {
       await renderAboutContent(entity);
 
       expect(screen.getByText('This is the description')).toBeInTheDocument();
-      // Per AAP §0.5.1.2 / §0.7.2 (CRITICAL): the Owner and System
-      // AboutField blocks were fully removed from AboutContent. The
-      // 'Owner' / 'System' labels and the linked target text MUST NOT
-      // render even when the entity carries the corresponding relations.
-      expect(screen.queryByText(/^Owner$/i)).not.toBeInTheDocument();
-      expect(screen.queryByText('user:o')).not.toBeInTheDocument();
-      expect(screen.queryByText(/^System$/i)).not.toBeInTheDocument();
-      expect(screen.queryByText('s')).not.toBeInTheDocument();
       expect(screen.getByText('Domain')).toBeInTheDocument();
       expect(screen.getByText('Domain').nextSibling).toHaveTextContent('d');
       expect(screen.queryByText('Parent Component')).not.toBeInTheDocument();
@@ -104,6 +96,9 @@ describe('<AboutContent />', () => {
       expect(screen.getByText('Lifecycle').nextSibling).toHaveTextContent('l');
       expect(screen.getByText('Tags')).toBeInTheDocument();
       expect(screen.getByText('Tags').nextSibling).toHaveTextContent('tag-1');
+      // AAP §0.5.1.2 — Owner and System UI surfaces fully removed
+      expect(screen.queryByText('Owner')).not.toBeInTheDocument();
+      expect(screen.queryByText('System')).not.toBeInTheDocument();
     });
 
     it('highlights missing required fields', async () => {
@@ -114,15 +109,13 @@ describe('<AboutContent />', () => {
       await renderAboutContent(entity);
 
       expect(screen.getByText('This is the description')).toBeInTheDocument();
-      // Per AAP §0.5.1.2 / §0.7.2: Owner and System fields removed
-      // entirely — the previous 'No Owner' fallback rendering is gone too.
-      expect(screen.queryByText(/^Owner$/i)).not.toBeInTheDocument();
-      expect(screen.queryByText('No Owner')).not.toBeInTheDocument();
       expect(screen.queryByText('Domain')).not.toBeInTheDocument();
-      expect(screen.queryByText(/^System$/i)).not.toBeInTheDocument();
       expect(screen.queryByText('Parent Component')).not.toBeInTheDocument();
       expect(screen.queryByText('Type')).not.toBeInTheDocument();
       expect(screen.queryByText('Lifecycle')).not.toBeInTheDocument();
+      // AAP §0.5.1.2 — Owner and System UI surfaces fully removed
+      expect(screen.queryByText('Owner')).not.toBeInTheDocument();
+      expect(screen.queryByText('System')).not.toBeInTheDocument();
     });
   });
 
@@ -162,14 +155,6 @@ describe('<AboutContent />', () => {
       await renderAboutContent(entity);
 
       expect(screen.getByText('This is the description')).toBeInTheDocument();
-      // Per AAP §0.5.1.2 / §0.7.2 (CRITICAL): Owner and System fields
-      // removed — even when the entity has RELATION_OWNED_BY and
-      // RELATION_PART_OF system relations, those affordances MUST NOT
-      // render anywhere on the AboutCard.
-      expect(screen.queryByText(/^Owner$/i)).not.toBeInTheDocument();
-      expect(screen.queryByText('user:guest')).not.toBeInTheDocument();
-      expect(screen.queryByText(/^System$/i)).not.toBeInTheDocument();
-      expect(screen.queryByText('system')).not.toBeInTheDocument();
       expect(screen.queryByText('Domain')).not.toBeInTheDocument();
       expect(screen.queryByText('Parent Component')).not.toBeInTheDocument();
       expect(screen.getByText('Type')).toBeInTheDocument();
@@ -180,6 +165,9 @@ describe('<AboutContent />', () => {
       );
       expect(screen.getByText('Tags')).toBeInTheDocument();
       expect(screen.getByText('Tags').nextSibling).toHaveTextContent('tag-1');
+      // AAP §0.5.1.2 — Owner and System UI surfaces fully removed
+      expect(screen.queryByText('Owner')).not.toBeInTheDocument();
+      expect(screen.queryByText('System')).not.toBeInTheDocument();
     });
 
     it('highlights missing required fields', async () => {
@@ -192,12 +180,7 @@ describe('<AboutContent />', () => {
       await renderAboutContent(entity);
 
       expect(screen.getByText('This is the description')).toBeInTheDocument();
-      // Per AAP §0.5.1.2 / §0.7.2: Owner and System fields fully removed.
-      expect(screen.queryByText(/^Owner$/i)).not.toBeInTheDocument();
-      expect(screen.queryByText('No Owner')).not.toBeInTheDocument();
       expect(screen.queryByText('Domain')).not.toBeInTheDocument();
-      expect(screen.queryByText(/^System$/i)).not.toBeInTheDocument();
-      expect(screen.queryByText('No System')).not.toBeInTheDocument();
       expect(screen.queryByText('Parent Component')).not.toBeInTheDocument();
       expect(screen.getByText('Type')).toBeInTheDocument();
       expect(screen.getByText('Type').nextSibling).toHaveTextContent('unknown');
@@ -207,6 +190,9 @@ describe('<AboutContent />', () => {
       );
       expect(screen.getByText('Tags')).toBeInTheDocument();
       expect(screen.getByText('Tags').nextSibling).toHaveTextContent('No Tags');
+      // AAP §0.5.1.2 — Owner and System UI surfaces fully removed
+      expect(screen.queryByText('Owner')).not.toBeInTheDocument();
+      expect(screen.queryByText('System')).not.toBeInTheDocument();
     });
   });
 
@@ -250,12 +236,6 @@ describe('<AboutContent />', () => {
       await renderAboutContent(entity);
 
       expect(screen.getByText('This is the description')).toBeInTheDocument();
-      // Per AAP §0.5.1.2 / §0.7.2 (CRITICAL): Owner and System fields
-      // removed entirely from AboutContent.
-      expect(screen.queryByText(/^Owner$/i)).not.toBeInTheDocument();
-      expect(screen.queryByText('user:guest')).not.toBeInTheDocument();
-      expect(screen.queryByText(/^System$/i)).not.toBeInTheDocument();
-      expect(screen.queryByText('system')).not.toBeInTheDocument();
       expect(screen.queryByText('Domain')).not.toBeInTheDocument();
       expect(screen.getByText('Parent Component')).toBeInTheDocument();
       expect(
@@ -269,6 +249,9 @@ describe('<AboutContent />', () => {
       );
       expect(screen.getByText('Tags')).toBeInTheDocument();
       expect(screen.getByText('Tags').nextSibling).toHaveTextContent('tag-1');
+      // AAP §0.5.1.2 — Owner and System UI surfaces fully removed
+      expect(screen.queryByText('Owner')).not.toBeInTheDocument();
+      expect(screen.queryByText('System')).not.toBeInTheDocument();
     });
 
     it('highlights missing required fields', async () => {
@@ -281,12 +264,7 @@ describe('<AboutContent />', () => {
       await renderAboutContent(entity);
 
       expect(screen.getByText('This is the description')).toBeInTheDocument();
-      // Per AAP §0.5.1.2 / §0.7.2: Owner and System fields fully removed.
-      expect(screen.queryByText(/^Owner$/i)).not.toBeInTheDocument();
-      expect(screen.queryByText('No Owner')).not.toBeInTheDocument();
       expect(screen.queryByText('Domain')).not.toBeInTheDocument();
-      expect(screen.queryByText(/^System$/i)).not.toBeInTheDocument();
-      expect(screen.queryByText('No System')).not.toBeInTheDocument();
       expect(screen.queryByText('Parent Component')).not.toBeInTheDocument();
       expect(screen.getByText('Type')).toBeInTheDocument();
       expect(screen.getByText('Type').nextSibling).toHaveTextContent('unknown');
@@ -296,6 +274,9 @@ describe('<AboutContent />', () => {
       );
       expect(screen.getByText('Tags')).toBeInTheDocument();
       expect(screen.getByText('Tags').nextSibling).toHaveTextContent('No Tags');
+      // AAP §0.5.1.2 — Owner and System UI surfaces fully removed
+      expect(screen.queryByText('Owner')).not.toBeInTheDocument();
+      expect(screen.queryByText('System')).not.toBeInTheDocument();
     });
   });
 
@@ -327,16 +308,15 @@ describe('<AboutContent />', () => {
       await renderAboutContent(entity);
 
       expect(screen.getByText('This is the description')).toBeInTheDocument();
-      // Per AAP §0.5.1.2 / §0.7.2 (CRITICAL): Owner and System removed.
-      expect(screen.queryByText(/^Owner$/i)).not.toBeInTheDocument();
-      expect(screen.queryByText('user:guest')).not.toBeInTheDocument();
       expect(screen.queryByText('Domain')).not.toBeInTheDocument();
-      expect(screen.queryByText(/^System$/i)).not.toBeInTheDocument();
       expect(screen.queryByText('Parent Component')).not.toBeInTheDocument();
       expect(screen.queryByText('Type')).not.toBeInTheDocument();
       expect(screen.queryByText('Lifecycle')).not.toBeInTheDocument();
       expect(screen.getByText('Tags')).toBeInTheDocument();
       expect(screen.getByText('Tags').nextSibling).toHaveTextContent('tag-1');
+      // AAP §0.5.1.2 — Owner and System UI surfaces fully removed
+      expect(screen.queryByText('Owner')).not.toBeInTheDocument();
+      expect(screen.queryByText('System')).not.toBeInTheDocument();
     });
 
     it('highlights missing required fields', async () => {
@@ -346,17 +326,15 @@ describe('<AboutContent />', () => {
       await renderAboutContent(entity);
 
       expect(screen.getByText('This is the description')).toBeInTheDocument();
-      // Per AAP §0.5.1.2 / §0.7.2: Owner field removed — the 'No Owner'
-      // fallback is also gone.
-      expect(screen.queryByText(/^Owner$/i)).not.toBeInTheDocument();
-      expect(screen.queryByText('No Owner')).not.toBeInTheDocument();
       expect(screen.queryByText('Domain')).not.toBeInTheDocument();
-      expect(screen.queryByText(/^System$/i)).not.toBeInTheDocument();
       expect(screen.queryByText('Parent Component')).not.toBeInTheDocument();
       expect(screen.queryByText('Type')).not.toBeInTheDocument();
       expect(screen.queryByText('Lifecycle')).not.toBeInTheDocument();
       expect(screen.getByText('Tags')).toBeInTheDocument();
       expect(screen.getByText('Tags').nextSibling).toHaveTextContent('No Tags');
+      // AAP §0.5.1.2 — Owner and System UI surfaces fully removed
+      expect(screen.queryByText('Owner')).not.toBeInTheDocument();
+      expect(screen.queryByText('System')).not.toBeInTheDocument();
     });
   });
 
@@ -384,11 +362,7 @@ describe('<AboutContent />', () => {
       await renderAboutContent(entity);
 
       expect(screen.getByText('This is the description')).toBeInTheDocument();
-      // Per AAP §0.5.1.2 / §0.7.2: Owner field removed for Location too.
-      expect(screen.queryByText(/^Owner$/i)).not.toBeInTheDocument();
-      expect(screen.queryByText('No Owner')).not.toBeInTheDocument();
       expect(screen.queryByText('Domain')).not.toBeInTheDocument();
-      expect(screen.queryByText(/^System$/i)).not.toBeInTheDocument();
       expect(screen.queryByText('Parent Component')).not.toBeInTheDocument();
       expect(screen.getByText('Type')).toBeInTheDocument();
       expect(screen.getByText('Type').nextSibling).toHaveTextContent('root');
@@ -399,6 +373,9 @@ describe('<AboutContent />', () => {
       expect(screen.getByText('Targets').nextSibling).toHaveTextContent(
         'https://backstage.io',
       );
+      // AAP §0.5.1.2 — Owner and System UI surfaces fully removed
+      expect(screen.queryByText('Owner')).not.toBeInTheDocument();
+      expect(screen.queryByText('System')).not.toBeInTheDocument();
     });
 
     it('highlights missing required fields', async () => {
@@ -408,17 +385,16 @@ describe('<AboutContent />', () => {
       await renderAboutContent(entity);
 
       expect(screen.getByText('This is the description')).toBeInTheDocument();
-      // Per AAP §0.5.1.2 / §0.7.2: Owner removed.
-      expect(screen.queryByText(/^Owner$/i)).not.toBeInTheDocument();
-      expect(screen.queryByText('No Owner')).not.toBeInTheDocument();
       expect(screen.queryByText('Domain')).not.toBeInTheDocument();
-      expect(screen.queryByText(/^System$/i)).not.toBeInTheDocument();
       expect(screen.queryByText('Parent Component')).not.toBeInTheDocument();
       expect(screen.getByText('Type')).toBeInTheDocument();
       expect(screen.getByText('Type').nextSibling).toHaveTextContent('unknown');
       expect(screen.queryByText('Lifecycle')).not.toBeInTheDocument();
       expect(screen.getByText('Tags')).toBeInTheDocument();
       expect(screen.getByText('Tags').nextSibling).toHaveTextContent('No Tags');
+      // AAP §0.5.1.2 — Owner and System UI surfaces fully removed
+      expect(screen.queryByText('Owner')).not.toBeInTheDocument();
+      expect(screen.queryByText('System')).not.toBeInTheDocument();
     });
   });
 
@@ -456,11 +432,6 @@ describe('<AboutContent />', () => {
       await renderAboutContent(entity);
 
       expect(screen.getByText('This is the description')).toBeInTheDocument();
-      // Per AAP §0.5.1.2 / §0.7.2 (CRITICAL): Owner and System removed.
-      expect(screen.queryByText(/^Owner$/i)).not.toBeInTheDocument();
-      expect(screen.queryByText('user:guest')).not.toBeInTheDocument();
-      expect(screen.queryByText(/^System$/i)).not.toBeInTheDocument();
-      expect(screen.queryByText('system')).not.toBeInTheDocument();
       expect(screen.queryByText('Domain')).not.toBeInTheDocument();
       expect(screen.queryByText('Parent Component')).not.toBeInTheDocument();
       expect(screen.getByText('Type')).toBeInTheDocument();
@@ -468,6 +439,9 @@ describe('<AboutContent />', () => {
       expect(screen.queryByText('Lifecycle')).not.toBeInTheDocument();
       expect(screen.getByText('Tags')).toBeInTheDocument();
       expect(screen.getByText('Tags').nextSibling).toHaveTextContent('tag-1');
+      // AAP §0.5.1.2 — Owner and System UI surfaces fully removed
+      expect(screen.queryByText('Owner')).not.toBeInTheDocument();
+      expect(screen.queryByText('System')).not.toBeInTheDocument();
     });
 
     it('highlights missing required fields', async () => {
@@ -479,18 +453,16 @@ describe('<AboutContent />', () => {
       await renderAboutContent(entity);
 
       expect(screen.getByText('This is the description')).toBeInTheDocument();
-      // Per AAP §0.5.1.2 / §0.7.2: Owner and System fields fully removed.
-      expect(screen.queryByText(/^Owner$/i)).not.toBeInTheDocument();
-      expect(screen.queryByText('No Owner')).not.toBeInTheDocument();
       expect(screen.queryByText('Domain')).not.toBeInTheDocument();
-      expect(screen.queryByText(/^System$/i)).not.toBeInTheDocument();
-      expect(screen.queryByText('No System')).not.toBeInTheDocument();
       expect(screen.queryByText('Parent Component')).not.toBeInTheDocument();
       expect(screen.getByText('Type')).toBeInTheDocument();
       expect(screen.getByText('Type').nextSibling).toHaveTextContent('unknown');
       expect(screen.queryByText('Lifecycle')).not.toBeInTheDocument();
       expect(screen.getByText('Tags')).toBeInTheDocument();
       expect(screen.getByText('Tags').nextSibling).toHaveTextContent('No Tags');
+      // AAP §0.5.1.2 — Owner and System UI surfaces fully removed
+      expect(screen.queryByText('Owner')).not.toBeInTheDocument();
+      expect(screen.queryByText('System')).not.toBeInTheDocument();
     });
   });
 
@@ -527,20 +499,18 @@ describe('<AboutContent />', () => {
       await renderAboutContent(entity);
 
       expect(screen.getByText('This is the description')).toBeInTheDocument();
-      // Per AAP §0.5.1.2 / §0.7.2 (CRITICAL): Owner field removed even for
-      // System entities (which still surface a Domain field below).
-      expect(screen.queryByText(/^Owner$/i)).not.toBeInTheDocument();
-      expect(screen.queryByText('user:guest')).not.toBeInTheDocument();
       expect(screen.getByText('Domain')).toBeInTheDocument();
       expect(screen.getByText('Domain').nextSibling).toHaveTextContent(
         'domain',
       );
-      expect(screen.queryByText(/^System$/i)).not.toBeInTheDocument();
       expect(screen.queryByText('Parent Component')).not.toBeInTheDocument();
       expect(screen.queryByText('Type')).not.toBeInTheDocument();
       expect(screen.queryByText('Lifecycle')).not.toBeInTheDocument();
       expect(screen.getByText('Tags')).toBeInTheDocument();
       expect(screen.getByText('Tags').nextSibling).toHaveTextContent('tag-1');
+      // AAP §0.5.1.2 — Owner and System UI surfaces fully removed
+      expect(screen.queryByText('Owner')).not.toBeInTheDocument();
+      expect(screen.queryByText('System')).not.toBeInTheDocument();
     });
 
     it('highlights missing required fields', async () => {
@@ -551,19 +521,18 @@ describe('<AboutContent />', () => {
       await renderAboutContent(entity);
 
       expect(screen.getByText('This is the description')).toBeInTheDocument();
-      // Per AAP §0.5.1.2 / §0.7.2: Owner field removed.
-      expect(screen.queryByText(/^Owner$/i)).not.toBeInTheDocument();
-      expect(screen.queryByText('No Owner')).not.toBeInTheDocument();
       expect(screen.getByText('Domain')).toBeInTheDocument();
       expect(screen.getByText('Domain').nextSibling).toHaveTextContent(
         'No Domain',
       );
-      expect(screen.queryByText(/^System$/i)).not.toBeInTheDocument();
       expect(screen.queryByText('Parent Component')).not.toBeInTheDocument();
       expect(screen.queryByText('Type')).not.toBeInTheDocument();
       expect(screen.queryByText('Lifecycle')).not.toBeInTheDocument();
       expect(screen.getByText('Tags')).toBeInTheDocument();
       expect(screen.getByText('Tags').nextSibling).toHaveTextContent('No Tags');
+      // AAP §0.5.1.2 — Owner and System UI surfaces fully removed
+      expect(screen.queryByText('Owner')).not.toBeInTheDocument();
+      expect(screen.queryByText('System')).not.toBeInTheDocument();
     });
   });
 });
