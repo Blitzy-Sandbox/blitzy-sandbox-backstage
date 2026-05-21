@@ -7,9 +7,40 @@
   <meta name="description" content="Executive summary for the Blitzy Sandbox Backstage refactor: catalog-first chrome, read-only authorization, audit-grade tracking, and the multi-tag catalog count fix.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css" id="reveal-theme">
+  <!--
+    Google Fonts CSS is intentionally NOT protected with a Subresource
+    Integrity hash. Google's CSS endpoint returns a dynamic stylesheet
+    whose content varies by User-Agent and Accept-Language headers (it
+    selects between woff2 / woff / ttf font payloads and CSP-permitted
+    src URLs at request time). A fixed SRI hash would block valid CSS
+    responses for browsers other than the one whose bytes were hashed.
+    This is the canonical SRI exception for Google Fonts; see
+    https://web.dev/articles/subresource-integrity for the security
+    guidance. The referrerpolicy hardens the request by stripping the
+    deck URL from the Referer header.
+  -->
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="stylesheet"
+        referrerpolicy="no-referrer">
+  <!--
+    External stylesheets pinned to specific versions and protected with
+    Subresource Integrity (SRI) hashes so a tampered or rolled CDN asset
+    cannot execute against this deck. Hashes are sha384-base64 over the
+    exact byte stream of the pinned URL. crossorigin="anonymous" is
+    required for browsers to perform the SRI check; referrerpolicy
+    avoids leaking the deck URL to the CDN in the Referer header.
+  -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css"
+        integrity="sha384-YgvgKeZJykuztG+iQPoZHNZENTFZvOcOJ/uRzmJTje6GHYN9zAw+y5rx/L8MQKA/"
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css"
+        id="reveal-theme"
+        integrity="sha384-/TZMdZeq0ZGi4iePTHhOMXOkyv2f72ZcwmhAtOmSZlPkx+5qCOfyc/U1kjd5Su6S"
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer">
   <style>
     /* ===========================================================
        Blitzy Reveal.js Theme &mdash; Executive Summary
@@ -738,14 +769,14 @@
     <!-- Slide 2 of 16: KPI Summary                               -->
     <!-- ====================================================== -->
     <section class="content-slide" data-slide-name="kpi-summary">
-      <span class="eyebrow">Headline Outcomes</span>
-      <h2>What Was Delivered</h2>
+      <span class="eyebrow">Target Outcomes</span>
+      <h2>What the Refactor Will Deliver</h2>
       <span class="accent-bar" aria-hidden="true"></span>
       <div class="kpi-grid">
         <div class="kpi-card">
           <span class="kpi-icon" aria-hidden="true"><i data-lucide="file-cog"></i></span>
           <span class="kpi-value">~35</span>
-          <span class="kpi-label">Source Files Modified</span>
+          <span class="kpi-label">Source Files in Refactor Scope</span>
         </div>
         <div class="kpi-card">
           <span class="kpi-icon" aria-hidden="true"><i data-lucide="layers"></i></span>
@@ -755,15 +786,15 @@
         <div class="kpi-card">
           <span class="kpi-icon" aria-hidden="true"><i data-lucide="shield-check"></i></span>
           <span class="kpi-value">&gt;80%</span>
-          <span class="kpi-label">Auth/Authz Coverage</span>
+          <span class="kpi-label">Auth/Authz Coverage Target</span>
         </div>
         <div class="kpi-card">
           <span class="kpi-icon" aria-hidden="true"><i data-lucide="badge-check"></i></span>
           <span class="kpi-value">100%</span>
-          <span class="kpi-label">GitHub Checks Green</span>
+          <span class="kpi-label">GitHub Checks Green Target</span>
         </div>
       </div>
-      <p class="caption">One PR: chrome refactor, read-only safety for non-Blitzy users, audit trail for sign-ins and project views, plus catalog count fix.</p>
+      <p class="caption">Targets for the full refactor: chrome modernization, read-only safety for non-Blitzy users, audit trail for sign-ins and project views, and the catalog count fix. Final status will be reported on completion of all checkpoints.</p>
     </section>
 
     <!-- ====================================================== -->
@@ -783,13 +814,21 @@ flowchart LR
     F1 -. mounts .-> S1["Top-Right Cluster:<br/>Logo &middot; Settings &middot; Support"]
     A -. redirects .-> S4["/ &rarr; /catalog"]
     F5 -. mounts only .-> S3["EntityTechdocsContent<br/>per entity"]
+    subgraph LEGEND["Legend"]
+        direction TB
+        L1["Frontend module"]:::module
+        L2["Mounted surface"]:::surface
+        L3["solid arrow: registers / wires"]:::legendArrow
+        L4["dashed arrow: mounts / redirects"]:::legendArrow
+    end
     classDef module fill:#F2F0FE,stroke:#5B39F3,color:#333333
     classDef surface fill:#F4EFF6,stroke:#999999,color:#333333,stroke-dasharray: 5 5
+    classDef legendArrow fill:#FFFFFF,stroke:#D9D9D9,color:#333333
     class F1,F4,F5,F6 module
     class S1,S3,S4 surface
         </pre>
       </div>
-      <p class="caption">Catalog is the landing page. Top-bar replaces sidebar.</p>
+      <p class="caption">Catalog is the landing page. Top-bar replaces sidebar. Legend (in-diagram): solid box = frontend module; dashed box = chrome surface; solid arrow = registers; dashed arrow = mounts/redirects.</p>
     </section>
 
     <!-- ====================================================== -->
@@ -817,6 +856,11 @@ flowchart TB
     A1 --> F3a[homePlugin]
     F1a -. mounts .-> S1a[Left Sidebar: Logo, Search, Catalog, APIs, Docs, Settings]
     F3a -. mounts .-> S2a[Dashboard at slash]
+    subgraph LEGEND["Legend"]
+        direction TB
+        L1["Frontend module"]:::m
+        L2["Mounted surface (to be removed)"]:::s
+    end
     classDef m fill:#F2F0FE,stroke:#5B39F3,color:#333333
     classDef s fill:#F4EFF6,stroke:#999999,color:#333333,stroke-dasharray: 5 5
     class F1a,F2a,F3a m
@@ -910,6 +954,7 @@ sequenceDiagram
     participant POL as BlitzyPermissionPolicy
     participant CAT as Catalog Backend
     participant AUD as AuditorService
+    Note over U,AUD: Legend &mdash; solid arrow ->>: synchronous call &middot; dashed arrow -->>: async event / response &middot; autonumber: sequence order
     U->>FE: GET slash catalog
     FE->>AUTH: OAuth GitHub callback
     AUTH->>AUTH: signInResolver extracts email
@@ -929,6 +974,7 @@ sequenceDiagram
     CAT-->>FE: entity or 403
         </pre>
       </div>
+      <p class="caption">Legend (in-diagram Note): solid arrow = synchronous call; dashed arrow = asynchronous event / response; autonumber = step order.</p>
     </section>
     <!-- ====================================================== -->
     <!-- Slide 9 of 16: Section Divider &mdash; Feature Removal    -->
@@ -1004,13 +1050,18 @@ flowchart LR
         D2 --> E2["Count equals rows"]
     end
     E1 -. refactor .-> A2
+    subgraph LEGEND["Legend"]
+        direction TB
+        L1["Pre-refactor (incorrect)"]:::bad
+        L2["Post-refactor (correct)"]:::good
+    end
     classDef bad fill:#F4EFF6,stroke:#999999,color:#333333
     classDef good fill:#F2F0FE,stroke:#5B39F3,color:#333333
     class A1,B1,C1,D1,E1 bad
     class A2,B2,C2,D2,E2 good
         </pre>
       </div>
-      <p class="caption">The displayed list was always correct. Only the count was wrong. Fix unifies semantics in <code>EntityTagFilter.getCatalogFilters()</code>.</p>
+      <p class="caption">The displayed list was always correct. Only the count was wrong. Fix unifies semantics in <code>EntityTagFilter.getCatalogFilters()</code>. Legend (in-diagram): solid box (light gray) = pre-refactor incorrect state; solid box (purple) = post-refactor correct state.</p>
     </section>
 
     <!-- ====================================================== -->
@@ -1101,9 +1152,9 @@ flowchart LR
       <span class="eyebrow">Blitzy Sandbox Backstage</span>
       <h2>Catalog-first, secure-by-default</h2>
       <ul>
-        <li>One PR &middot; all GitHub checks green</li>
-        <li>&gt;80% coverage on every new auth path</li>
-        <li>Audit trail starts on day one</li>
+        <li>One PR target &middot; all GitHub checks green at completion</li>
+        <li>&gt;80% coverage target on every new auth path</li>
+        <li>Audit trail enabled on cut-over</li>
       </ul>
       <div class="brand-lockup" aria-label="Blitzy brand lockup">
         BLITZY <span class="brand-lockup-sub">Sandbox Backstage</span>
@@ -1114,11 +1165,32 @@ flowchart LR
 </div>
 
 <!-- ========================================================== -->
-<!-- External libraries (pinned CDN versions)                    -->
+<!-- External libraries (pinned CDN versions + SRI integrity)    -->
+<!--                                                             -->
+<!-- Each script tag carries a Subresource Integrity hash so the -->
+<!-- browser refuses to execute the asset if its bytes differ    -->
+<!-- from the pinned version. Hashes are sha384-base64 over the  -->
+<!-- exact byte stream of the pinned CDN URL. crossorigin is     -->
+<!-- required for browsers to apply the SRI check, and           -->
+<!-- referrerpolicy keeps the deck URL out of CDN access logs.   -->
+<!--                                                             -->
+<!-- If a future bump of any pinned version is required, the     -->
+<!-- new SRI hash MUST be recomputed (e.g.                        -->
+<!-- `curl -sSL <url> | openssl dgst -sha384 -binary | openssl   -->
+<!-- base64 -A`) and committed alongside the version bump.       -->
 <!-- ========================================================== -->
-<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.0/dist/mermaid.min.js"></script>
-<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"
+        integrity="sha384-M/JtqCVlLcK9lwVnBnMXP0V577CBULkjodKsR/PITOe4MSKNbbwqCemEyluOw0+5"
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.0/dist/mermaid.min.js"
+        integrity="sha384-Wm9qzEgq4j1jEnuFK2FxKTlwuhbV2QqtGhcchvjDoKxeJ7WWAW7fysBq+1s6myfX"
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
+<script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"
+        integrity="sha384-ieG+IKD0d/ZPXyCBTMVAbqsQdns8QGJR/e26WMw7M4fkaI/rHcS/YIoi+ah9WGge"
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"></script>
 
 <script>
   // ============================================================
