@@ -51,6 +51,10 @@
 
 The portal runs on a **TypeScript monorepo** (~970k lines, 10k+ files) using Yarn workspaces. The frontend uses Backstage's new Declarative Integration system; the backend uses the new plugin-as-service DI model.
 
+### Chrome and Landing Page
+
+This Blitzy fork ships a refactored chrome. The traditional left sidebar is removed; instead, every page header carries a **top-right cluster** containing the Blitzy logo, a Settings icon button linking to `/settings`, and a Support button. The Blitzy logo is decorative and **non-clickable**. The Support button surfaces `support@blitzy.com` via the `app.support.items` configuration in `app-config.yaml`. The application **lands on `/catalog`** — the bare URL `/` redirects to `/catalog`, and the previous Dashboard / Home landing page has been removed. Per-entity TechDocs remain accessible after selecting a catalog entity; the global `/docs` index has been removed.
+
 ## Built With
 
 [![TypeScript][typescript-shield]][typescript-url]
@@ -177,15 +181,21 @@ blitzy-backstage/
 │   ├── cli/                    # Backstage CLI toolchain
 │   └── ...                     # ~50 total core packages
 ├── plugins/
-│   ├── auth-backend/           # Authentication backend
-│   ├── catalog-backend/        # Software catalog backend
-│   ├── scaffolder-backend/     # Template engine backend
-│   ├── techdocs-backend/       # TechDocs backend
-│   ├── search-backend/         # Search backend
-│   ├── notifications-backend/  # Notifications backend
-│   └── ...                     # ~100+ feature plugins
+│   ├── auth-backend/                              # Authentication backend
+│   ├── catalog-backend/                           # Software catalog backend
+│   ├── scaffolder-backend/                        # Template engine backend
+│   ├── techdocs-backend/                          # TechDocs backend
+│   ├── search-backend/                            # Search backend
+│   ├── notifications-backend/                     # Notifications backend
+│   ├── permission-backend-module-blitzy-policy/   # BlitzyPermissionPolicy (read-only for non-@blitzy.com and Guest)
+│   └── ...                                        # ~100+ feature plugins
 ├── contrib/
 │   └── catalog/                # Experimental catalog providers
+├── blitzy-deck/                # Executive presentation HTML deck (reveal.js)
+├── docs/
+│   ├── refactor/               # Decision log, traceability matrix, before/after architecture, onboarding addendum
+│   ├── observability/          # Observability docs and Grafana dashboard template
+│   └── ...                     # Upstream Backstage documentation
 ├── app-config.yaml             # Base configuration
 ├── app-config.production.yaml  # Production overrides
 └── knexfile.js                 # Database migration config
@@ -193,18 +203,33 @@ blitzy-backstage/
 
 ### Key Entry Points
 
-| File                            | Purpose                                                      |
-| ------------------------------- | ------------------------------------------------------------ |
-| `packages/backend/src/index.ts` | Backend process — registers all plugins via `backend.add()`  |
-| `packages/app/src/App.tsx`      | Frontend app root — assembles all features via `createApp()` |
-| `app-config.yaml`               | App configuration (URLs, database, auth, integrations)       |
+| File                                                            | Purpose                                                                          |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `packages/backend/src/index.ts`                                 | Backend process — registers all plugins via `backend.add()`                      |
+| `packages/app/src/App.tsx`                                      | Frontend app root — assembles all features via `createApp()`                     |
+| `packages/app/src/modules/appModuleTopBar.tsx`                  | Top-right chrome cluster (Blitzy logo, Settings, Support)                        |
+| `plugins/permission-backend-module-blitzy-policy/src/policy.ts` | `BlitzyPermissionPolicy` — read-only enforcement for non-`@blitzy.com` and Guest |
+| `app-config.yaml`                                               | App configuration (URLs, database, auth, integrations, support email)            |
 
 ### Architecture Notes
 
 - The backend uses a **DI container** (`ServiceRegistry`) that resolves typed `ServiceRef` → `ServiceFactory` at startup. Plugins declare their service dependencies declaratively.
 - The frontend uses **Declarative Integration** — plugins expose typed `Extension` objects (pages, nav items, entity content) assembled by `createApp()`. Routing is automatic.
 - **TechDocs search** is intentionally disabled to prevent OOM when indexing repositories that haven't built docs — see the comment in `packages/backend/src/index.ts`.
-- **Auth policy** is `dangerouslyDisableDefaultAuthPolicy: true` in development. This is temporary while plugins complete migration to the new auth system.
+- **Authorization** — This fork enforces a custom `BlitzyPermissionPolicy` (in `plugins/permission-backend-module-blitzy-policy/src/policy.ts`, registered in `packages/backend/src/index.ts`), replacing the previous `AllowAllPermissionPolicy`. Users whose verified email domain is `@blitzy.com` retain full access; all other authenticated users and Guest sessions are constrained to **read-only** permissions enforced by the backend permission layer.
+- **Audit logging** — GitHub sign-in attempts and project (catalog entity) reads are recorded via Backstage's `AuditorService`. The `user-login` event is emitted on every sign-in (success and failure); the `entity-access` event is emitted on every catalog entity read. See [Observability Dashboards](docs/observability/dashboards.md) for the log catalog and dashboard import instructions.
+
+### Refactor Documentation
+
+Documentation describing the Blitzy fork's refactor scope, decisions, and runtime observability:
+
+- [Decision Log](docs/refactor/decision-log.md) — non-trivial decisions, alternatives, and risks
+- [Traceability Matrix](docs/refactor/traceability-matrix.md) — bidirectional requirement-to-implementation mapping
+- [Architecture Before/After](docs/refactor/architecture-before-after.md) — Mermaid diagrams of chrome and permission flows
+- [Onboarding Addendum](docs/refactor/onboarding-addendum.md) — clean-machine setup, LocalGCP setup, customization guides
+- [Next Tasks](docs/refactor/next-tasks.md) — discovered improvements out of current scope
+- [Observability Dashboards](docs/observability/dashboards.md) — structured logging, tracing, metrics, dashboard import
+- [Grafana Dashboard Template](docs/observability/dashboard-template.json) — importable dashboard JSON
 
 ## Contributing
 
