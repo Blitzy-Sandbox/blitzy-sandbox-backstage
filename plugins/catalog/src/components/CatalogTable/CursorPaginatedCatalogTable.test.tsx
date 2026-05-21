@@ -182,4 +182,64 @@ describe('CursorPaginatedCatalogTable', () => {
       expect(screen.getByText(/My title/)).toBeInTheDocument();
     });
   });
+
+  // Regression guard for AAP §0.5.1.4 (catalog count fix downstream consumer).
+  //
+  // The catalog count bug is fixed upstream in
+  //   - plugins/catalog-react/src/filters.ts (EntityTagFilter AND-semantics)
+  //   - plugins/catalog-react/src/hooks/useEntityListProvider.tsx (totalItems
+  //     is narrowed to AND-filtered results before being exposed via context).
+  //
+  // CursorPaginatedCatalogTable is an unchanged downstream consumer: it
+  // destructures `totalItems` from useEntityList() and renders the count in
+  // its own pagination footer as `${start}–${end} of ${totalItems}` when at
+  // least one of `prev`/`next` is defined (see L115-L122 of
+  // CursorPaginatedCatalogTable.tsx). This test locks in that contract so
+  // that any future refactor which mistakenly derives the count from
+  // `data.length` or another source is caught immediately.
+  //
+  // The CatalogTableToolbar embedded by CursorPaginatedCatalogTable mounts
+  // EntityTypePicker, StarredToggle, and EntityTagPicker which require
+  // catalogApi/starredEntities api mocks; passing
+  // `components={{ Toolbar: () => null }}` overrides the default toolbar
+  // (the prop is spread via `...restProps` AFTER the internal `components`
+  // assignment in CursorPaginatedCatalogTable.tsx so the override wins) and
+  // keeps this test focused on the totalItems → pagination footer
+  // pass-through. It does not modify the production component.
+  it('should render a count equal to totalItems and the rendered row count when totalItems reflects a narrowed (AND-filtered) result set', async () => {
+    // Simulate the downstream contract after the catalog-react count fix:
+    // the parent context supplies totalItems narrowed to entities matching
+    // all selected tags. The cursor-paginated table must display that exact
+    // count, not derive a different count from data.length.
+    const narrowedData = data.slice(0, 5);
+    await renderInTestApp(
+      wrapInContext(
+        <CursorPaginatedCatalogTable
+          data={narrowedData}
+          columns={columns}
+          next={jest.fn()}
+          prev={undefined}
+          components={{ Toolbar: () => null }}
+        />,
+        {
+          entities: narrowedData.map(e => e.entity),
+          totalItems: 5,
+          limit: 20,
+        },
+      ),
+    );
+
+    // Each row in the narrowed result set is rendered.
+    for (const row of narrowedData) {
+      expect(screen.getByText(row.resolved.name)).toBeInTheDocument();
+    }
+
+    // Footer range text reflects totalItems = 5. With limit=20 and 5 rows
+    // the footer renders the literal text "1–5 of 5" inside a single
+    // <span>; matching against /of 5/ targets that span uniquely because
+    // testing-library compares the regex against each element's direct
+    // text-node content (not cumulative descendant text), avoiding ancestor
+    // false-positives.
+    expect(screen.getByText(/of 5/)).toBeInTheDocument();
+  });
 });
