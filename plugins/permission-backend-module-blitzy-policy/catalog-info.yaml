@@ -3,11 +3,12 @@ kind: Component
 metadata:
   name: internal-plugin-permission-backend-module-blitzy-policy
   title: '@internal/plugin-permission-backend-module-blitzy-policy'
-  description: >-
-    Blitzy permission policy backend module for the permission plugin. Enforces
-    read-only access for users whose verified email domain is not @blitzy.com
-    and for Guest principals.
+  description: |
+    Blitzy permission policy backend module for the Backstage permission
+    plugin. Enforces read-only access for any user whose verified email
+    domain is not @blitzy.com and for Guest principals. Replaces the
+    upstream allow-all policy registration.
 spec:
-  lifecycle: experimental
+  lifecycle: production
   type: backstage-backend-plugin-module
-  owner: permission-maintainers
+  owner: blitzy-platform
