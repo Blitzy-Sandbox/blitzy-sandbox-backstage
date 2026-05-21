@@ -52,24 +52,202 @@ type PrincipalMeta =
   | { type: 'none' };
 
 /**
- * Extracts the entity ref described by a request path, or returns
- * undefined if the path does not match one of the supported single-entity
- * GET endpoints.
+ * Result of inspecting a request path against the supported single-
+ * entity GET endpoints. The audit middleware uses these descriptors to
+ * (a) decide whether to audit the request at all and (b) carry the
+ * canonicalization strategy that will populate the emitted event's
+ * `meta.entityRef` (and, for by-uid reads, `meta.entityUid`).
+ *
+ * @remarks
+ *
+ * For `by-name` reads the canonical entity ref can be derived directly
+ * from the URL — `/entities/by-name/:kind/:namespace/:name` carries all
+ * three components needed by `stringifyEntityRef`. For `by-uid` reads
+ * the URL only carries the opaque UID; the canonical ref is only
+ * available after the catalog backend has resolved the UID and written
+ * the entity to the response. The audit middleware therefore wraps
+ * `res.json`/`res.end` for by-uid responses and inspects the serialized
+ * entity body to recover the canonical ref. The UID is always recorded
+ * as `meta.entityUid` so that the audit trail remains non-empty even
+ * when the canonical ref cannot be recovered (for example, on 404 or
+ * malformed JSON responses).
  */
-function extractEntityRef(path: string): string | undefined {
+type AuditTarget =
+  | {
+      kind: 'by-name';
+      /** Canonical entity ref derived from the request path. */
+      entityRef: string;
+    }
+  | {
+      kind: 'by-uid';
+      /** Opaque UID parsed from the request path. */
+      uid: string;
+    };
+
+/**
+ * Inspects the request path and returns the audit target descriptor for
+ * the supported single-entity GET endpoints. Returns `undefined` for any
+ * other path (including collection endpoints and sub-routes such as
+ * `/ancestry`) so the audit middleware short-circuits.
+ */
+function classifyRequest(path: string): AuditTarget | undefined {
   const byName = BY_NAME_PATH.exec(path);
   if (byName) {
     const [, kind, namespace, name] = byName;
-    return stringifyEntityRef({ kind, namespace, name });
+    return {
+      kind: 'by-name',
+      entityRef: stringifyEntityRef({ kind, namespace, name }),
+    };
   }
 
   const byUid = BY_UID_PATH.exec(path);
   if (byUid) {
     const [, uid] = byUid;
-    return `uid:${uid}`;
+    return { kind: 'by-uid', uid };
   }
 
   return undefined;
+}
+
+/**
+ * Attempts to canonicalize an entity ref from a parsed response body.
+ *
+ * @remarks
+ *
+ * Both response shapes emitted by the catalog backend's by-uid handler
+ * carry the same JSON entity envelope (see
+ * `plugins/catalog-backend/src/service/response/write.ts` —
+ * `writeSingleEntityResponse`):
+ *
+ * - Object mode writes `res.json(entity)` so the body inspected here is
+ *   a JavaScript object literal.
+ * - Raw-string mode writes `res.end(entity)` where the entity is a JSON
+ *   string; the audit middleware parses the string before invoking this
+ *   helper so the input is again a JavaScript object literal.
+ *
+ * The function defensively narrows `unknown` to the minimal `kind` +
+ * `metadata.name` shape required to construct a canonical entity ref
+ * and returns `undefined` if the body does not match (so the audit
+ * trail records the UID alone rather than crashing the middleware).
+ */
+function canonicalizeEntityRefFromBody(body: unknown): string | undefined {
+  if (!body || typeof body !== 'object') {
+    return undefined;
+  }
+  const root = body as Record<string, unknown>;
+  const kind = root.kind;
+  const metadata = root.metadata;
+  if (typeof kind !== 'string' || !metadata || typeof metadata !== 'object') {
+    return undefined;
+  }
+  const meta = metadata as Record<string, unknown>;
+  const name = meta.name;
+  if (typeof name !== 'string') {
+    return undefined;
+  }
+  const namespace =
+    typeof meta.namespace === 'string' ? meta.namespace : 'default';
+  try {
+    return stringifyEntityRef({ kind, namespace, name });
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Coerces an Express response chunk (string, Buffer, or undefined) into
+ * a UTF-8 string suitable for JSON parsing, or `undefined` when the
+ * chunk is neither a string nor a Buffer.
+ *
+ * @remarks
+ *
+ * Express's `res.end(chunk, encoding, cb)` overload permits the chunk
+ * argument to be any of: `string`, `Buffer`, `Uint8Array`, or
+ * `undefined`. Only string and Buffer chunks are inspected for a JSON
+ * entity envelope; other shapes (sparse `Uint8Array` payloads,
+ * pre-serialized binary content) cannot meaningfully contribute a
+ * canonical entity ref, so they are treated as non-inspectable.
+ */
+function coerceResponseChunkToString(chunk: unknown): string | undefined {
+  if (typeof chunk === 'string') {
+    return chunk;
+  }
+  if (Buffer.isBuffer(chunk)) {
+    return chunk.toString('utf8');
+  }
+  return undefined;
+}
+
+/**
+ * Wraps `res.json` and `res.end` so the audit middleware can inspect
+ * the entity body emitted for a by-uid read and recover the canonical
+ * entity ref before the audit event is emitted.
+ *
+ * @remarks
+ *
+ * The captured ref is exposed back to the middleware through the
+ * `getCapturedRef` accessor returned alongside the install function.
+ * The wrappers are pass-through with respect to the response lifecycle:
+ * they invoke the original `res.json` / `res.end` with the same
+ * arguments and the same `this` binding, so streaming and status-code
+ * propagation are unaffected. Errors raised during body inspection are
+ * swallowed so the original entity read never fails on the audit path.
+ */
+function installByUidResponseInspector(res: Response): {
+  getCapturedRef: () => string | undefined;
+} {
+  let captured: string | undefined;
+
+  const originalJson = res.json.bind(res);
+  const wrappedJson: typeof res.json = function wrappedJsonResponse(
+    body?: unknown,
+  ) {
+    if (!captured) {
+      try {
+        const ref = canonicalizeEntityRefFromBody(body);
+        if (ref) {
+          captured = ref;
+        }
+      } catch {
+        // Body inspection must never break the response.
+      }
+    }
+    return originalJson(body as never);
+  };
+  res.json = wrappedJson;
+
+  const originalEnd = res.end.bind(res);
+  const wrappedEnd: Response['end'] = function wrappedEndResponse(
+    this: Response,
+    chunk?: unknown,
+    encoding?: unknown,
+    cb?: unknown,
+  ): Response {
+    if (!captured && chunk !== undefined && chunk !== null) {
+      try {
+        const bodyStr = coerceResponseChunkToString(chunk);
+        if (bodyStr) {
+          const parsed = JSON.parse(bodyStr);
+          const ref = canonicalizeEntityRefFromBody(parsed);
+          if (ref) {
+            captured = ref;
+          }
+        }
+      } catch {
+        // Not a JSON entity envelope; leave captured ref undefined and
+        // let the audit middleware fall back to `meta.entityUid`.
+      }
+    }
+    // Forward to the original `res.end` overload exactly as called.
+    return (originalEnd as (...args: unknown[]) => Response)(
+      chunk,
+      encoding,
+      cb,
+    );
+  };
+  res.end = wrappedEnd as typeof res.end;
+
+  return { getCapturedRef: () => captured };
 }
 
 /**
@@ -144,10 +322,27 @@ function createAuditMiddleware(deps: {
       return;
     }
 
-    const entityRef = extractEntityRef(req.path);
-    if (!entityRef) {
+    const target = classifyRequest(req.path);
+    if (!target) {
       next();
       return;
+    }
+
+    // For by-uid reads, install response-body inspectors so the audit
+    // event can record the canonical entity ref (e.g.
+    // `component:default/my-service`) rather than only the opaque UID.
+    // For by-name reads the canonical ref is already available from the
+    // request path, so no response interception is needed.
+    let getByUidCapturedRef: (() => string | undefined) | undefined;
+    if (target.kind === 'by-uid') {
+      try {
+        ({ getCapturedRef: getByUidCapturedRef } =
+          installByUidResponseInspector(res));
+      } catch (error) {
+        logger.debug(
+          `entity-access audit: failed to install by-uid response inspector for uid ${target.uid}: ${error}`,
+        );
+      }
     }
 
     // Guard so finalize runs exactly once even when both 'finish' and
@@ -168,6 +363,18 @@ function createAuditMiddleware(deps: {
       // All audit work is deferred to a fire-and-forget async IIFE so
       // that any failures are isolated from the response lifecycle.
       void (async () => {
+        // Resolve the entity descriptors before any awaits so failures
+        // in credential resolution do not strip them.
+        const entityRef =
+          target.kind === 'by-name'
+            ? target.entityRef
+            : getByUidCapturedRef?.();
+        const entityUid = target.kind === 'by-uid' ? target.uid : undefined;
+        // Identifier used purely for log lines when an audit emission
+        // fails. Prefers the canonical ref but falls back to the UID so
+        // the operator can still correlate the failure with a request.
+        const logIdentifier = entityRef ?? entityUid ?? 'unknown';
+
         try {
           const credentials = await resolveCredentialsSafely(
             httpAuth,
@@ -177,26 +384,51 @@ function createAuditMiddleware(deps: {
           const principal = buildPrincipalMeta(credentials);
           const statusCode = res.statusCode;
 
+          // Build the audit event meta. `entityRef` is included only
+          // when canonicalization succeeded; `entityUid` is included
+          // for every by-uid read so the trail remains observable even
+          // when the entity could not be canonicalized (e.g. 404 or an
+          // unparseable response body). `action` is fixed to `read`
+          // since the middleware only audits GET requests.
+          const meta: {
+            principal: PrincipalMeta;
+            action: 'read';
+            entityRef?: string;
+            entityUid?: string;
+          } = {
+            principal,
+            action: 'read',
+          };
+          if (entityRef) {
+            meta.entityRef = entityRef;
+          }
+          if (entityUid) {
+            meta.entityUid = entityUid;
+          }
+
           let event: AuditorServiceEvent;
           try {
             event = await auditor.createEvent({
               eventId: 'entity-access',
               severityLevel: 'low',
               request: req,
-              meta: {
-                entityRef,
-                principal,
-                action: 'read',
-              },
+              meta,
             });
           } catch (error) {
             logger.warn(
-              `entity-access audit: failed to create event for ${entityRef}: ${error}`,
+              `entity-access audit: failed to create event for ${logIdentifier}: ${error}`,
             );
             return;
           }
 
           try {
+            // HTTP statuses below 400 — i.e. successful 2xx and
+            // redirect 3xx responses — record the read as a granted
+            // access via `.success(...)`. 4xx (client errors, denied
+            // reads, missing entities) and 5xx (server errors) record
+            // the read as a denied or failed access via `.fail(...)`,
+            // letting downstream consumers distinguish granted reads
+            // from denied or failed reads.
             if (statusCode < 400) {
               await event.success({ meta: { statusCode } });
             } else {
@@ -207,12 +439,12 @@ function createAuditMiddleware(deps: {
             }
           } catch (error) {
             logger.warn(
-              `entity-access audit: failed to finalize event for ${entityRef}: ${error}`,
+              `entity-access audit: failed to finalize event for ${logIdentifier}: ${error}`,
             );
           }
         } catch (error) {
           logger.warn(
-            `entity-access audit: unexpected failure for ${entityRef}: ${error}`,
+            `entity-access audit: unexpected failure for ${logIdentifier}: ${error}`,
           );
         }
       })();

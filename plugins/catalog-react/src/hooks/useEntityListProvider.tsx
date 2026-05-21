@@ -265,6 +265,58 @@ export const EntityListProvider = <EntityFilters extends DefaultEntityFilters>(
       const compacted = compact(Object.values(adjustedFilters));
       const entityFilter = reduceEntityFilters(compacted);
 
+      // Helper: compute the displayed `totalItems` for a paginated fresh
+      // fetch.
+      //
+      // Default semantics: `response.totalItems` is the backend's
+      // authoritative paginated total for the OR-emitted backend filter
+      // shape and is propagated unchanged so that pagination footers
+      // (`X of N`, next-page availability, offset clamping) remain
+      // consistent with the backend's page metadata.
+      //
+      // Exception: when multi-tag `EntityTagFilter` is active, the
+      // backend filter `{ 'metadata.tags': [v1, v2, ...] }` is evaluated
+      // as OR but the frontend narrows the rendered list to AND via
+      // `EntityTagFilter.filterEntity` (`Array.prototype.every`). The
+      // OR-superset `response.totalItems` would over-report and the
+      // current page's filtered row count would under-report (it caps
+      // the total at the page size). To deliver an accurate AND-narrowed
+      // global total we issue a secondary unpaginated `getEntities`
+      // request and apply the same frontend predicate to the unbounded
+      // result set. This satisfies the user-visible contract from the
+      // AAP that the catalog header count equals the AND-narrowed
+      // rendered row count across all pages for any tag combination.
+      //
+      // Other frontend-only narrowing (e.g. `EntityErrorFilter`, the
+      // `'starred'` variant of `EntityUserFilter`) is intentionally not
+      // recounted here — it is pre-existing behavior, and the AAP
+      // Critical Test Scenario scopes the count fix specifically to
+      // multi-tag selection.
+      const computePaginatedTotalItems = async (
+        response: QueryEntitiesResponse,
+        backendFilter: ReturnType<typeof reduceCatalogFilters>,
+      ): Promise<number | undefined> => {
+        const tagsFilter = requestedFilters.tags;
+        const multiTagActive =
+          tagsFilter instanceof EntityTagFilter && tagsFilter.values.length > 1;
+        if (!multiTagActive) {
+          return response.totalItems;
+        }
+        try {
+          const full = await catalogApi.getEntities({
+            filter: backendFilter.filter,
+            order: backendFilter.orderFields,
+          });
+          return full.items.filter(entityFilter).length;
+        } catch {
+          // If the secondary count query fails, fall back to the
+          // backend total so the UI is not blocked. The displayed count
+          // will be the OR-superset which is documented in the
+          // `EntityTagFilter` JSDoc.
+          return response.totalItems;
+        }
+      };
+
       if (paginationMode !== 'none') {
         if (cursor) {
           if (cursor !== outputState.appliedCursor) {
@@ -273,44 +325,41 @@ export const EntityListProvider = <EntityFilters extends DefaultEntityFilters>(
               limit,
             });
             const filteredEntities = response.items.filter(entityFilter);
-            // Defensive count narrowing: the backend can return a SUPERSET
-            // of the frontend-filtered set when frontend-only filter rules
-            // (notably EntityTagFilter with multiple values, which the
-            // backend evaluates as OR but the frontend narrows to AND via
-            // filterEntity.every()) reduce the rendered row list further.
-            // Narrow the displayed count to the filtered set so the header
-            // count matches the rendered row count for any tag combination.
-            // When no frontend narrowing applies,
-            // filteredEntities.length === response.items.length, and the
-            // Math.min reduces to response.totalItems (or to
-            // filteredEntities.length when the backend omits totalItems).
+            // `response.totalItems` is the authoritative paginated total
+            // and is preserved across page changes so pagination
+            // semantics (next/prev availability, offset clamping) stay
+            // consistent with the backend's view. When multi-tag
+            // `EntityTagFilter` is active the helper issues a secondary
+            // unpaginated `getEntities` request to derive the true
+            // AND-narrowed total instead of feeding the current-page
+            // filtered row count back into pagination state.
+            const totalItems = await computePaginatedTotalItems(
+              response,
+              reduceCatalogFilters(compacted),
+            );
             return {
               appliedFilters: requestedFilters,
               appliedCursor: cursor,
               backendEntities: response.items,
               entities: filteredEntities,
               pageInfo: response.pageInfo,
-              totalItems:
-                response.totalItems !== undefined
-                  ? Math.min(response.totalItems, filteredEntities.length)
-                  : filteredEntities.length,
+              totalItems,
             };
           }
           const entities = outputState.backendEntities.filter(entityFilter);
-          // Defensive count narrowing — when filters change between pages
-          // without a refetch (cached path), narrow the cached count to the
-          // AND-filtered set so the displayed count tracks the rendered
-          // row list.
+          // Cached path: reuse `outputState.totalItems` which was
+          // correctly narrowed during the originating fresh fetch.
+          // Multi-tag changes alter the backend filter and therefore
+          // trigger a fresh fetch (not this cached path), so the cached
+          // total remains consistent with the displayed list under any
+          // tag combination encountered on the same page.
           return {
             appliedFilters: requestedFilters,
             appliedCursor: outputState.appliedCursor,
             backendEntities: outputState.backendEntities,
             entities,
             pageInfo: outputState.pageInfo,
-            totalItems:
-              outputState.totalItems !== undefined
-                ? Math.min(outputState.totalItems, entities.length)
-                : entities.length,
+            totalItems: outputState.totalItems,
             limit: outputState.limit,
             offset: outputState.offset,
           };
@@ -332,33 +381,33 @@ export const EntityListProvider = <EntityFilters extends DefaultEntityFilters>(
             offset,
           });
           const filteredEntities = response.items.filter(entityFilter);
-          // Defensive count narrowing — see the comment in the cursor-mode
-          // fresh-fetch branch above for the rationale.
+          // See cursor-mode fresh-fetch branch comment above. The helper
+          // returns `response.totalItems` unchanged when there is no
+          // multi-tag narrowing, and an unpaginated AND-narrowed count
+          // otherwise.
+          const totalItems = await computePaginatedTotalItems(
+            response,
+            backendFilter,
+          );
           return {
             appliedFilters: requestedFilters,
             backendEntities: response.items,
             entities: filteredEntities,
             pageInfo: response.pageInfo,
-            totalItems:
-              response.totalItems !== undefined
-                ? Math.min(response.totalItems, filteredEntities.length)
-                : filteredEntities.length,
+            totalItems,
             limit,
             offset,
           };
         }
         const entities = outputState.backendEntities.filter(entityFilter);
-        // Defensive count narrowing — see the comment in the cursor-mode
-        // cached-path branch above for the rationale.
+        // Cached path: reuse `outputState.totalItems` (see cursor-mode
+        // cached-path branch comment above).
         return {
           appliedFilters: requestedFilters,
           backendEntities: outputState.backendEntities,
           entities,
           pageInfo: outputState.pageInfo,
-          totalItems:
-            outputState.totalItems !== undefined
-              ? Math.min(outputState.totalItems, entities.length)
-              : entities.length,
+          totalItems: outputState.totalItems,
           limit: outputState.limit,
           offset: outputState.offset,
         };

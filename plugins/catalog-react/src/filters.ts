@@ -90,11 +90,15 @@ export class EntityTypeFilter implements EntityFilter {
  * 2. `getCatalogFilters` emits the wire-format-compatible shape
  *    `{ 'metadata.tags': this.values }`. The Backstage catalog backend's
  *    `EntitiesSearchFilter` evaluates this as OR across the listed values
- *    (returning a SUPERSET of the AND-narrowed result). The frontend then
- *    narrows the displayed list via `filterEntity`, and
- *    `useEntityListProvider` narrows the displayed count defensively via
- *    `Math.min(response.totalItems, filteredEntities.length)` so that the
- *    count matches the rendered row count under multi-tag filters.
+ *    (returning a SUPERSET of the AND-narrowed result). The frontend narrows
+ *    the displayed row list via `filterEntity`, and when more than one tag
+ *    value is selected `useEntityListProvider` issues a secondary unpaginated
+ *    `getEntities` request and applies the same AND predicate to derive the
+ *    true global AND-narrowed total. The pagination footer therefore tracks
+ *    the rendered row count for any tag combination, and pagination metadata
+ *    (next-page availability, offset clamping, `X of N` footers) remains
+ *    consistent with the backend's authoritative paginated total whenever no
+ *    multi-tag narrowing is active.
  *
  * The wire format `EntityFilterQuery` (in `@backstage/catalog-client`) is
  * `Record<string, string | symbol | (string | symbol)[]>`; same-key values are
@@ -124,8 +128,9 @@ export class EntityTagFilter implements EntityFilter {
    * Emits the wire-format-compatible catalog filter for `metadata.tags`. The
    * backend evaluates this as OR across listed values (returning a superset);
    * the displayed row list is narrowed to AND by `filterEntity`, and the
-   * displayed count is narrowed to AND by `useEntityListProvider`'s defensive
-   * `Math.min(response.totalItems, filteredEntities.length)`.
+   * displayed total is narrowed to AND by `useEntityListProvider` via a
+   * secondary unpaginated `getEntities` request whenever more than one tag
+   * value is selected.
    */
   getCatalogFilters(): Record<string, string | string[]> {
     return { 'metadata.tags': this.values };

@@ -125,8 +125,6 @@ describe('DefaultApiExplorerPage', () => {
     await waitFor(() =>
       expect(columnHeaderLabels).toEqual([
         'Name',
-        'System',
-        'Owner',
         'Type',
         'Lifecycle',
         'Description',

@@ -30,15 +30,13 @@
   },
   "dependencies": {
     "@backstage/backend-plugin-api": "workspace:^",
-    "@backstage/catalog-model": "workspace:^",
-    "@backstage/plugin-auth-node": "workspace:^",
-    "@backstage/plugin-catalog-node": "workspace:^",
-    "express": "^4.17.1"
+    "@backstage/catalog-model": "workspace:^"
   },
   "devDependencies": {
     "@backstage/backend-test-utils": "workspace:^",
     "@backstage/cli": "workspace:^",
     "@types/express": "^4.17.6",
+    "express": "^4.17.1",
     "supertest": "^7.0.0"
   }
 }

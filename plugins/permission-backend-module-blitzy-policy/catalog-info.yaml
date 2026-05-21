@@ -11,4 +11,4 @@ metadata:
 spec:
   lifecycle: production
   type: backstage-backend-plugin-module
-  owner: blitzy-platform
+  owner: permission-maintainers

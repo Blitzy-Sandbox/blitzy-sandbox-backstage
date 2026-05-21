@@ -37,6 +37,7 @@ import { MockStarredEntitiesApi, starredEntitiesApiRef } from '../apis';
 import {
   EntityKindFilter,
   EntityOwnerFilter,
+  EntityTagFilter,
   EntityTextFilter,
   EntityTypeFilter,
   EntityUserFilter,
@@ -620,15 +621,160 @@ describe('<EntityListProvider pagination />', () => {
       });
     });
 
-    // After the defensive count-narrowing fix in useEntityListProvider, the
-    // displayed totalItems is `Math.min(response.totalItems, filteredEntities.length)`.
-    // The mock returns response.totalItems = 10 (the OR-superset count) and
-    // response.items.length = 2 (the rendered page). Since neither
-    // EntityKindFilter nor EntityTypeFilter defines `filterEntity`, the
-    // frontend predicate does not narrow further, so filteredEntities.length
-    // = 2. The narrowed count is therefore Math.min(10, 2) = 2, matching the
-    // rendered row count and resolving the catalog count bug (AAP §0.1.3).
-    expect(result.current.totalItems).toBe(2);
+    // `response.totalItems` is the backend's authoritative paginated total
+    // for the OR-emitted backend filter shape and is propagated unchanged
+    // whenever no multi-tag `EntityTagFilter` narrowing applies. The mock
+    // returns `response.totalItems = 10` and the test exercises only
+    // `EntityKindFilter` + `EntityTypeFilter`, neither of which defines a
+    // frontend `filterEntity` predicate; so the displayed count is the
+    // backend total (10), preserving pagination semantics (next-page
+    // availability, `X of N` footers, offset clamping). The AAP multi-tag
+    // count fix is exercised by dedicated unit and E2E tests against
+    // `EntityTagFilter` directly.
+    expect(result.current.totalItems).toBe(10);
+  });
+
+  it('recounts totalItems via unpaginated getEntities when multi-tag EntityTagFilter is active', async () => {
+    // Multi-tag tag filtering surfaces an OR/AND mismatch: the backend
+    // evaluates `{ 'metadata.tags': [a, b] }` as OR (returning a
+    // superset), but the frontend narrows the rendered row list to AND
+    // via `EntityTagFilter.filterEntity.every`. To keep the displayed
+    // count consistent with the rendered row count across all pages,
+    // `useEntityListProvider` issues a secondary unpaginated
+    // `getEntities` request and applies the same AND predicate to the
+    // unbounded result set. This test asserts that:
+    //   1. `response.totalItems` is propagated unchanged for the
+    //      initial single-filter fetch (no multi-tag narrowing).
+    //   2. After a multi-tag `EntityTagFilter` is applied, the hook
+    //      issues a secondary unpaginated `getEntities` request against
+    //      the OR-emitted backend filter shape.
+    //   3. The displayed `totalItems` is the AND-narrowed count derived
+    //      from the secondary request — NOT the OR-superset
+    //      `response.totalItems` and NOT the current page's row count
+    //      (the previously broken `Math.min` behavior).
+    const taggedEntities: Entity[] = [
+      {
+        apiVersion: '1',
+        kind: 'Component',
+        metadata: { name: 'a', tags: ['java', 'spring'] },
+      },
+      {
+        apiVersion: '1',
+        kind: 'Component',
+        metadata: { name: 'b', tags: ['java', 'spring'] },
+      },
+      {
+        apiVersion: '1',
+        kind: 'Component',
+        metadata: { name: 'c', tags: ['java'] },
+      },
+      {
+        apiVersion: '1',
+        kind: 'Component',
+        metadata: { name: 'd', tags: ['spring'] },
+      },
+    ];
+
+    const { result } = renderHook(() => useEntityList(), {
+      wrapper: createWrapper({ pagination }),
+    });
+
+    // First, wait for the initial render driven by `InitialFiltersWrapper`
+    // to settle. That render uses the default `queryEntities` mock which
+    // returns `totalItems: 10` and the original two-component fixture
+    // (`entities`). At this point no multi-tag narrowing applies, so the
+    // count fix must NOT recount — `response.totalItems` is propagated
+    // verbatim.
+    await waitFor(() => {
+      expect(result.current.entities.length).toBe(2);
+      expect(result.current.totalItems).toBe(10);
+    });
+    expect(mockCatalogApi.getEntities).not.toHaveBeenCalled();
+
+    // Now arrange the multi-tag scenario. The next `queryEntities` call
+    // (triggered by the upcoming `updateFilters({ tags })`) returns the
+    // OR-superset page with a distinctive `totalItems` (50) so the
+    // assertion below cannot be accidentally satisfied by the
+    // OR-superset value. The secondary unpaginated `getEntities` call
+    // returns the same OR-superset, and the hook AND-narrows it to 2
+    // entities via the same `entityFilter` predicate.
+    mockCatalogApi.queryEntities!.mockResolvedValueOnce({
+      items: taggedEntities,
+      pageInfo: {},
+      totalItems: 50,
+    });
+    mockCatalogApi.getEntities!.mockResolvedValueOnce({
+      items: taggedEntities,
+    });
+
+    act(() =>
+      result.current.updateFilters({
+        tags: new EntityTagFilter(['java', 'spring']),
+      }),
+    );
+
+    // AND-narrowed total via the secondary recount: 2 of the 4
+    // OR-superset entities carry both tags. The OR-superset
+    // `response.totalItems` of 50 must NOT leak through, and neither
+    // must the current-page row count (the previously broken behavior).
+    await waitFor(() => {
+      expect(result.current.entities.length).toBe(2);
+      expect(result.current.totalItems).toBe(2);
+    });
+
+    // Confirm the secondary recount was issued against the OR-emitted
+    // backend filter shape (kind + tags as a single multi-value
+    // `metadata.tags` array).
+    expect(mockCatalogApi.getEntities).toHaveBeenCalledWith({
+      filter: {
+        kind: 'component',
+        'metadata.tags': ['java', 'spring'],
+      },
+      order: orderFields,
+    });
+  });
+
+  it('does not issue a secondary recount when a single tag is selected', async () => {
+    // Single-tag selection has identical OR and AND semantics, so the
+    // hook MUST NOT issue a secondary unpaginated `getEntities`
+    // request — the backend's `response.totalItems` is already the
+    // correct narrowed total. This test exercises the multi-tag guard
+    // boundary so a regression that issues unnecessary backend traffic
+    // (or, conversely, that fails to recount when truly needed) is
+    // detected.
+    const { result } = renderHook(() => useEntityList(), {
+      wrapper: createWrapper({ pagination }),
+    });
+
+    // Settle the initial render with the default mocks first.
+    await waitFor(() => {
+      expect(result.current.entities.length).toBe(2);
+      expect(result.current.totalItems).toBe(10);
+    });
+
+    // Arrange the next `queryEntities` response with a distinctive
+    // total (7) so the assertion below confirms the backend total is
+    // propagated unchanged when only a single tag is selected.
+    mockCatalogApi.queryEntities!.mockResolvedValueOnce({
+      items: entities,
+      pageInfo: { prevCursor: 'prevCursor', nextCursor: 'nextCursor' },
+      totalItems: 7,
+    });
+
+    act(() =>
+      result.current.updateFilters({
+        tags: new EntityTagFilter(['java']),
+      }),
+    );
+
+    await waitFor(() => {
+      expect(result.current.totalItems).toBe(7);
+    });
+    // No secondary `getEntities` call should have been made — the
+    // entire test runs in paginated cursor mode against `queryEntities`
+    // only, and single-tag selection does not trigger the recount
+    // branch.
+    expect(mockCatalogApi.getEntities).not.toHaveBeenCalled();
   });
 
   it('returns an error on catalogApi failure', async () => {
