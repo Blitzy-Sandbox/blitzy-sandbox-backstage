@@ -51,9 +51,8 @@ backend.add(import('./catalogModuleConfigLocations'));
 backend.add(import('@backstage/plugin-catalog-backend-module-github'));
 backend.add(import('@backstage/plugin-catalog-backend-module-github-org'));
 backend.add(import('@backstage/plugin-events-backend'));
-backend.add(
-  import('@backstage/plugin-permission-backend-module-allow-all-policy'),
-);
+backend.add(import('@internal/plugin-permission-backend-module-blitzy-policy'));
+backend.add(import('@internal/plugin-catalog-backend-module-access-audit'));
 backend.add(import('@backstage/plugin-permission-backend'));
 backend.add(import('@backstage/plugin-proxy-backend'));
 backend.add(
