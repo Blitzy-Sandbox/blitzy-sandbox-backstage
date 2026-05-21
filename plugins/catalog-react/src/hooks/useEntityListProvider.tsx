@@ -272,23 +272,45 @@ export const EntityListProvider = <EntityFilters extends DefaultEntityFilters>(
               cursor,
               limit,
             });
+            const filteredEntities = response.items.filter(entityFilter);
+            // Defensive count narrowing: the backend can return a SUPERSET
+            // of the frontend-filtered set when frontend-only filter rules
+            // (notably EntityTagFilter with multiple values, which the
+            // backend evaluates as OR but the frontend narrows to AND via
+            // filterEntity.every()) reduce the rendered row list further.
+            // Narrow the displayed count to the filtered set so the header
+            // count matches the rendered row count for any tag combination.
+            // When no frontend narrowing applies,
+            // filteredEntities.length === response.items.length, and the
+            // Math.min reduces to response.totalItems (or to
+            // filteredEntities.length when the backend omits totalItems).
             return {
               appliedFilters: requestedFilters,
               appliedCursor: cursor,
               backendEntities: response.items,
-              entities: response.items.filter(entityFilter),
+              entities: filteredEntities,
               pageInfo: response.pageInfo,
-              totalItems: response.totalItems,
+              totalItems:
+                response.totalItems !== undefined
+                  ? Math.min(response.totalItems, filteredEntities.length)
+                  : filteredEntities.length,
             };
           }
           const entities = outputState.backendEntities.filter(entityFilter);
+          // Defensive count narrowing — when filters change between pages
+          // without a refetch (cached path), narrow the cached count to the
+          // AND-filtered set so the displayed count tracks the rendered
+          // row list.
           return {
             appliedFilters: requestedFilters,
             appliedCursor: outputState.appliedCursor,
             backendEntities: outputState.backendEntities,
             entities,
             pageInfo: outputState.pageInfo,
-            totalItems: outputState.totalItems,
+            totalItems:
+              outputState.totalItems !== undefined
+                ? Math.min(outputState.totalItems, entities.length)
+                : entities.length,
             limit: outputState.limit,
             offset: outputState.offset,
           };
@@ -309,23 +331,34 @@ export const EntityListProvider = <EntityFilters extends DefaultEntityFilters>(
             limit,
             offset,
           });
+          const filteredEntities = response.items.filter(entityFilter);
+          // Defensive count narrowing — see the comment in the cursor-mode
+          // fresh-fetch branch above for the rationale.
           return {
             appliedFilters: requestedFilters,
             backendEntities: response.items,
-            entities: response.items.filter(entityFilter),
+            entities: filteredEntities,
             pageInfo: response.pageInfo,
-            totalItems: response.totalItems,
+            totalItems:
+              response.totalItems !== undefined
+                ? Math.min(response.totalItems, filteredEntities.length)
+                : filteredEntities.length,
             limit,
             offset,
           };
         }
         const entities = outputState.backendEntities.filter(entityFilter);
+        // Defensive count narrowing — see the comment in the cursor-mode
+        // cached-path branch above for the rationale.
         return {
           appliedFilters: requestedFilters,
           backendEntities: outputState.backendEntities,
           entities,
           pageInfo: outputState.pageInfo,
-          totalItems: outputState.totalItems,
+          totalItems:
+            outputState.totalItems !== undefined
+              ? Math.min(outputState.totalItems, entities.length)
+              : entities.length,
           limit: outputState.limit,
           offset: outputState.offset,
         };

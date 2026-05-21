@@ -620,7 +620,15 @@ describe('<EntityListProvider pagination />', () => {
       });
     });
 
-    expect(result.current.totalItems).toBe(10);
+    // After the defensive count-narrowing fix in useEntityListProvider, the
+    // displayed totalItems is `Math.min(response.totalItems, filteredEntities.length)`.
+    // The mock returns response.totalItems = 10 (the OR-superset count) and
+    // response.items.length = 2 (the rendered page). Since neither
+    // EntityKindFilter nor EntityTypeFilter defines `filterEntity`, the
+    // frontend predicate does not narrow further, so filteredEntities.length
+    // = 2. The narrowed count is therefore Math.min(10, 2) = 2, matching the
+    // rendered row count and resolving the catalog count bug (AAP §0.1.3).
+    expect(result.current.totalItems).toBe(2);
   });
 
   it('returns an error on catalogApi failure', async () => {
