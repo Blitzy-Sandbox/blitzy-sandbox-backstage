@@ -23,14 +23,6 @@ import {
 import { EntityTable } from '@backstage/plugin-catalog-react';
 import { TableColumn } from '@backstage/core-components';
 
-// Per AAP §0.5.1.2 / §0.7.2 (CRITICAL): "remove the ability to click on or
-// access the 'Owner' link/element. Perform a full removal of this
-// functionality across the application." The
-// `EntityTable.columns.createOwnerColumn()` invocations were removed from
-// every preset below so that the Owner column does not surface in any of
-// the 8 consumer cards (HasComponentsCard, HasSubcomponentsCard,
-// DependsOnComponentsCard, DependencyOfComponentsCard, HasResourcesCard,
-// DependsOnResourcesCard, HasSystemsCard, HasSubdomainsCard).
 export const componentEntityColumns: TableColumn<ComponentEntity>[] = [
   EntityTable.columns.createEntityRefColumn({ defaultKind: 'component' }),
   EntityTable.columns.createSpecTypeColumn(),
