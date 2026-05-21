@@ -33,12 +33,14 @@ async function setThemeMode(page: Page, mode: 'light' | 'dark') {
 test('the results are rendered as expected', async ({ page }) => {
   await page.goto('/');
 
-  const enterButton = page.getByRole('button', { name: 'Enter' });
-  await expect(enterButton).toBeVisible();
-  await enterButton.click();
+  const guestButton = page.getByRole('button', { name: 'Continue as Guest' });
+  await expect(guestButton).toBeVisible();
+  await guestButton.click();
 
-  // Wait for sign-in to complete before navigating
-  await expect(page.getByRole('link', { name: 'Catalog' })).toBeVisible();
+  // Wait for sign-in to complete before navigating — the top-bar (replacing
+  // the deleted sidebar per AAP §0.5.1.1) is the canonical signal that the
+  // authenticated shell has rendered.
+  await expect(page.locator('[data-testid="app-top-bar"]')).toBeVisible();
 
   // Set up route interception BEFORE navigating to the search page
   await page.route(`**/api/search/query?term=*`, async route => {
@@ -78,10 +80,10 @@ test('the results are rendered as expected', async ({ page }) => {
 
 test('Visual regression: Search page - light mode', async ({ page }) => {
   await page.goto('/');
-  const enterButton = page.getByRole('button', { name: 'Enter' });
-  await expect(enterButton).toBeVisible();
-  await enterButton.click();
-  await expect(page.getByRole('link', { name: 'Catalog' })).toBeVisible();
+  const guestButton = page.getByRole('button', { name: 'Continue as Guest' });
+  await expect(guestButton).toBeVisible();
+  await guestButton.click();
+  await expect(page.locator('[data-testid="app-top-bar"]')).toBeVisible();
 
   // Set up search API mock for consistent visual regression
   await page.route(`**/api/search/query?term=*`, async route => {
@@ -107,10 +109,10 @@ test('Visual regression: Search page - light mode', async ({ page }) => {
 
 test('Visual regression: Search page - dark mode', async ({ page }) => {
   await page.goto('/');
-  const enterButton = page.getByRole('button', { name: 'Enter' });
-  await expect(enterButton).toBeVisible();
-  await enterButton.click();
-  await expect(page.getByRole('link', { name: 'Catalog' })).toBeVisible();
+  const guestButton = page.getByRole('button', { name: 'Continue as Guest' });
+  await expect(guestButton).toBeVisible();
+  await guestButton.click();
+  await expect(page.locator('[data-testid="app-top-bar"]')).toBeVisible();
 
   // Set up search API mock for consistent visual regression
   await page.route(`**/api/search/query?term=*`, async route => {
@@ -136,10 +138,10 @@ test('Visual regression: Search page - dark mode', async ({ page }) => {
 
 test('Visual regression: Search results - light mode', async ({ page }) => {
   await page.goto('/');
-  const enterButton = page.getByRole('button', { name: 'Enter' });
-  await expect(enterButton).toBeVisible();
-  await enterButton.click();
-  await expect(page.getByRole('link', { name: 'Catalog' })).toBeVisible();
+  const guestButton = page.getByRole('button', { name: 'Continue as Guest' });
+  await expect(guestButton).toBeVisible();
+  await guestButton.click();
+  await expect(page.locator('[data-testid="app-top-bar"]')).toBeVisible();
 
   // Set up search API mock for consistent visual regression
   await page.route(`**/api/search/query?term=*`, async route => {
@@ -177,10 +179,10 @@ test('Visual regression: Search results - light mode', async ({ page }) => {
 
 test('Visual regression: Search results - dark mode', async ({ page }) => {
   await page.goto('/');
-  const enterButton = page.getByRole('button', { name: 'Enter' });
-  await expect(enterButton).toBeVisible();
-  await enterButton.click();
-  await expect(page.getByRole('link', { name: 'Catalog' })).toBeVisible();
+  const guestButton = page.getByRole('button', { name: 'Continue as Guest' });
+  await expect(guestButton).toBeVisible();
+  await guestButton.click();
+  await expect(page.locator('[data-testid="app-top-bar"]')).toBeVisible();
 
   // Set up search API mock for consistent visual regression
   await page.route(`**/api/search/query?term=*`, async route => {
@@ -223,10 +225,10 @@ test('Visual regression: Search results - dark mode', async ({ page }) => {
  */
 test('Search page renders with Command dialog pattern', async ({ page }) => {
   await page.goto('/');
-  const enterButton = page.getByRole('button', { name: 'Enter' });
-  await expect(enterButton).toBeVisible();
-  await enterButton.click();
-  await expect(page.getByRole('link', { name: 'Catalog' })).toBeVisible();
+  const guestButton = page.getByRole('button', { name: 'Continue as Guest' });
+  await expect(guestButton).toBeVisible();
+  await guestButton.click();
+  await expect(page.locator('[data-testid="app-top-bar"]')).toBeVisible();
 
   await page.goto('/search');
   await page.waitForLoadState('networkidle');
