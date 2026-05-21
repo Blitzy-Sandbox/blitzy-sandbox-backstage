@@ -48,6 +48,18 @@ Backstage 的文档包括：
 - [Backstage 设计](https://backstage.io/docs/dls/design)
 - [Storybook - UI 组件](https://backstage.io/storybook)
 
+### Blitzy Sandbox 分支说明
+
+本仓库是 Backstage 的 Blitzy 定制分支：原侧边栏被移除，改为位于页面右上角的**顶部栏**（非可点击的 Blitzy 徽标、设置按钮、显示 `support@blitzy.com` 的支持按钮）；应用**着陆页**为 `/catalog`（裸路径 `/` 自动重定向），原 Dashboard 已删除。**权限策略** `BlitzyPermissionPolicy` 将所有非 `@blitzy.com` 邮箱用户与 Guest 会话限制为只读访问；GitHub 登录与项目访问通过 `AuditorService` 进行**审计**（事件 ID：`user-login`、`entity-access`）。
+
+分支专属文档：
+
+- [入职指南补充](docs/refactor/onboarding-addendum.md)
+- [决策日志](docs/refactor/decision-log.md)
+- [需求溯源矩阵](docs/refactor/traceability-matrix.md)
+- [重构前后架构图](docs/refactor/architecture-before-after.md)
+- [后续任务清单](docs/refactor/next-tasks.md)
+
 ## 社区
 
 要参与我们的社区，您可以使用以下资源：
