@@ -48,6 +48,18 @@ La documentation de Backstage inclut:
 - [Designing for Backstage](https://backstage.io/docs/dls/design)
 - [Storybook - UI components](https://backstage.io/storybook)
 
+### Spécificités Blitzy Sandbox
+
+Ce dépôt est le fork Blitzy de Backstage : la barre latérale d'origine est remplacée par une **barre supérieure** en haut à droite (logo Blitzy non cliquable, bouton Réglages, bouton Support affichant `support@blitzy.com`) ; la **page d'accueil** est `/catalog` (le chemin `/` est redirigé automatiquement ; l'ancien Dashboard a été supprimé). La **politique d'autorisation** `BlitzyPermissionPolicy` restreint les utilisateurs dont le domaine d'e-mail n'est pas `@blitzy.com` ainsi que les sessions Guest à un accès **en lecture seule** ; les connexions GitHub et les accès aux projets sont **audités** via `AuditorService` (identifiants d'événement : `user-login`, `entity-access`).
+
+Documentation spécifique au fork :
+
+- [Addendum d'intégration](docs/refactor/onboarding-addendum.md)
+- [Journal des décisions](docs/refactor/decision-log.md)
+- [Matrice de traçabilité](docs/refactor/traceability-matrix.md)
+- [Architecture avant/après](docs/refactor/architecture-before-after.md)
+- [Prochaines tâches](docs/refactor/next-tasks.md)
+
 ## Communauté
 
 Si vous voulez contribuer et vous impliquer dans notre communauté, voici les ressources à votre disposition :
