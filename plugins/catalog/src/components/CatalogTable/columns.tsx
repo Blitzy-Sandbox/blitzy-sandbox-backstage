@@ -16,7 +16,6 @@
 import {
   humanizeEntityRef,
   EntityRefLink,
-  EntityRefLinks,
 } from '@backstage/plugin-catalog-react';
 import { CatalogTableRow } from './types';
 import {
@@ -95,42 +94,6 @@ export const columnFactories = Object.freeze({
       ),
     };
   },
-  createSystemColumn(): TableColumn<CatalogTableRow> {
-    return {
-      title: <EntityTableColumnTitle translationKey="system" />,
-      field: 'resolved.partOfSystemRelationTitle',
-      customFilterAndSearch: (query, row) => {
-        if (!row.resolved.partOfSystemRelations) {
-          return false;
-        }
-
-        const systemNames = row.resolved.partOfSystemRelations.map(
-          ref => ref.name,
-        ); // Extract system names from entityRefs
-
-        const searchText = systemNames.join(', ').toLocaleUpperCase('en-US');
-        return searchText.includes(query.toLocaleUpperCase('en-US'));
-      },
-      render: ({ resolved }) => (
-        <EntityRefLinks
-          entityRefs={resolved.partOfSystemRelations}
-          defaultKind="system"
-        />
-      ),
-    };
-  },
-  createOwnerColumn(): TableColumn<CatalogTableRow> {
-    return {
-      title: <EntityTableColumnTitle translationKey="owner" />,
-      field: 'resolved.ownedByRelationsTitle',
-      render: ({ resolved }) => (
-        <EntityRefLinks
-          entityRefs={resolved.ownedByRelations}
-          defaultKind="group"
-        />
-      ),
-    };
-  },
   createSpecTargetsColumn(): TableColumn<CatalogTableRow> {
     return {
       title: <EntityTableColumnTitle translationKey="targets" />,
@@ -176,9 +139,24 @@ export const columnFactories = Object.freeze({
       width: 'auto',
       render: ({ entity }) => {
         const type = entity.spec?.type as string | undefined;
-        return type ? (
-          <Badge variant={typeBadgeVariant(type)}>{type}</Badge>
-        ) : null;
+        if (!type) return null;
+        // Apply a visible border around the badge when the entity type is
+        // "library" so library entries are visually distinguished in the
+        // catalog type column. Comparison is case-insensitive to match the
+        // pattern used by `typeBadgeVariant` above. The border uses
+        // `border-current` so its color follows the badge's foreground color
+        // for the chosen variant.
+        const isLibrary = type.toLowerCase() === 'library';
+        return (
+          <Badge
+            variant={typeBadgeVariant(type)}
+            className={
+              isLibrary ? 'border-2 border-current rounded' : undefined
+            }
+          >
+            {type}
+          </Badge>
+        );
       },
     };
   },
