@@ -1,0 +1,169 @@
+# =============================================================================
+# Docker Compose for LocalGCP Emulators
+# =============================================================================
+#
+# This compose file provisions a containerized LocalGCP installation so that
+# CI runners and developer machines without the host binary can still emulate
+# Google Cloud Storage, Pub/Sub, and Firestore for integration tests.
+#
+# Per Agent Action Plan (Sections 0.4.3, 0.6.1.5, 0.6.2) and Rule R6
+# (Section 0.7.1.6 — LocalGCP Verification), every GCP service interaction
+# MUST be verifiable against LocalGCP with zero live GCP dependencies and no
+# CI step may require real GCP credentials.
+#
+# -----------------------------------------------------------------------------
+# Usage
+# -----------------------------------------------------------------------------
+#
+#   # Start emulators in the background
+#   docker compose -f docker-compose.localgcp.yml up -d
+#
+#   # Inspect status
+#   docker compose -f docker-compose.localgcp.yml ps
+#
+#   # Tail logs
+#   docker compose -f docker-compose.localgcp.yml logs -f localgcp
+#
+#   # Tear down (preserve volume)
+#   docker compose -f docker-compose.localgcp.yml down
+#
+#   # Tear down (delete persisted emulator data)
+#   docker compose -f docker-compose.localgcp.yml down --volumes
+#
+# This stack can run side-by-side with the main application stack
+# (docker-compose.yaml, name=blitzy-sandbox-backstage) and the dependency
+# services stack (docker-compose.deps.yml, name=backstage) without conflict.
+#
+# -----------------------------------------------------------------------------
+# Integration test opt-in (env vars)
+# -----------------------------------------------------------------------------
+#
+# Tests that exercise GCP services pick up the emulator endpoints via:
+#
+#   STORAGE_EMULATOR_HOST=localhost:4443
+#   PUBSUB_EMULATOR_HOST=localhost:8085
+#   FIRESTORE_EMULATOR_HOST=localhost:8088
+#
+# IMPORTANT: For @google-cloud/storage v7, the SDK splits JSON API and upload
+# URL derivation into two separate paths, making the STORAGE_EMULATOR_HOST env
+# var alone insufficient. In any backend code that instantiates Storage:
+#
+#   const rawHost = process.env.STORAGE_EMULATOR_HOST.replace(/^https?:\/\//, '');
+#   delete process.env.STORAGE_EMULATOR_HOST;
+#   const storage = new Storage({
+#     projectId: PROJECT_ID,
+#     apiEndpoint: `http://${rawHost}`,
+#   });
+#
+# Also required on file.save() calls:
+#
+#   file.save(buffer, {
+#     resumable: false,
+#     validation: false,
+#     metadata: { name: filePath },
+#   });
+#
+# PUBSUB_EMULATOR_HOST and FIRESTORE_EMULATOR_HOST work as-is with no SDK
+# workaround needed.
+#
+# See docs/refactor/onboarding-addendum.md for the full canonical workaround
+# documentation and CI integration guidance.
+#
+# -----------------------------------------------------------------------------
+# Image and Port Notes
+# -----------------------------------------------------------------------------
+#
+# Image: ghcr.io/slokam-ai/localgcp (official LocalGCP container image per
+#        the canonical upstream documentation at https://localgcp.com/docs/).
+#
+# Default native service ports exposed by the LocalGCP container image
+# (from `docker run ... ghcr.io/slokam-ai/localgcp`):
+#
+#   4443  Cloud Storage (REST/JSON+XML API)         [EXPOSED]
+#   8085  Pub/Sub        (gRPC)                     [EXPOSED]
+#   8086  Secret Manager (gRPC)                     [available, not exposed]
+#   8088  Firestore      (gRPC)                     [EXPOSED]
+#   8089  Cloud Tasks    (gRPC)                     [available, not exposed]
+#   8090  Vertex AI      (REST)                     [available, not exposed]
+#   8091  Cloud KMS                                 [available, not exposed]
+#   8092  Cloud Logging                             [available, not exposed]
+#   8093  Cloud Run                                 [available, not exposed]
+#
+# This file exposes the three services explicitly enumerated in the AAP
+# (GCS, Pub/Sub, Firestore). Additional native service ports can be added
+# to the `ports:` block on demand without changing the image or command.
+#
+# Each port mapping uses an env var override pattern
+# (`${LOCALGCP_*_PORT:-default}:internal`) so developers can avoid host-side
+# port collisions on shared machines.
+#
+# =============================================================================
+
+name: blitzy-sandbox-localgcp
+
+services:
+  localgcp:
+    # Official LocalGCP container image from GitHub Container Registry.
+    # See https://localgcp.com/docs/ for the canonical reference.
+    image: ghcr.io/slokam-ai/localgcp:latest
+    container_name: blitzy-sandbox-localgcp
+
+    # Host-to-container port mappings. The host port can be overridden via
+    # env var to avoid collisions; the container port matches the LocalGCP
+    # binary's native defaults.
+    ports:
+      # Google Cloud Storage REST API (JSON + XML upload paths)
+      - '${LOCALGCP_GCS_PORT:-4443}:4443'
+      # Pub/Sub gRPC
+      - '${LOCALGCP_PUBSUB_PORT:-8085}:8085'
+      # Firestore gRPC
+      - '${LOCALGCP_FIRESTORE_PORT:-8088}:8088'
+
+    # Emulator-level configuration. The data directory inside the container
+    # is bound to the named volume below so emulator state persists across
+    # container restarts.
+    environment:
+      LOCALGCP_DATA_DIR: /data/.localgcp
+      LOCALGCP_LOG_LEVEL: ${LOCALGCP_LOG_LEVEL:-info}
+
+    # Persistent storage for emulator state (buckets, topics, documents).
+    # Mounted as a named volume — not a bind mount — so the data directory
+    # is portable across machines and survives container deletion.
+    volumes:
+      - localgcp-data:/data/.localgcp
+
+    # Explicit `up` invocation with the same --data-dir as the host CLI
+    # convention (./.localgcp). The --no-docker flag disables orchestrated
+    # services (Spanner, Bigtable, Cloud SQL, Memorystore, BigQuery) that
+    # would otherwise require Docker-in-Docker — none of those are needed
+    # by the current Backstage refactor and disabling them keeps the
+    # container self-contained.
+    command: ['up', '--data-dir=/data/.localgcp', '--no-docker']
+
+    # Healthcheck probes the Cloud Storage REST endpoint which returns
+    # `{"kind":"storage#serviceAccount","service":"localgcp"}` once the
+    # emulator is ready. The compose `start_period` accommodates the
+    # ~3-second native-service startup plus a generous safety margin.
+    # `curl` is preferred but `wget` is attempted as a fallback in case
+    # the image's base layer changes.
+    healthcheck:
+      test:
+        - 'CMD-SHELL'
+        - 'curl -fsS http://localhost:4443/ || wget -q -O - http://localhost:4443/ || exit 1'
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+    # Automatically restart unless explicitly stopped, so emulators come
+    # back after Docker daemon restarts during long-running CI jobs and
+    # developer sessions.
+    restart: unless-stopped
+
+# Named volume for emulator data persistence. The explicit `name:` keeps
+# the volume identifier stable across `docker compose down` / `up` cycles
+# and prevents the default project-prefixed name (which would vary by
+# compose project name).
+volumes:
+  localgcp-data:
+    name: blitzy-sandbox-localgcp-data
