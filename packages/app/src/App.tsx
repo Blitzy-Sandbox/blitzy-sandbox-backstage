@@ -51,7 +51,7 @@ import {
 } from '@backstage/core-compat-api';
 import { convertLegacyEntityContentExtension } from '@backstage/plugin-catalog-react/alpha';
 import { pluginInfoResolver } from './pluginInfoResolver';
-import { appModuleNav } from './modules/appModuleNav';
+import { appModuleTopBar } from './modules/appModuleTopBar';
 import catalogPlugin from '@backstage/plugin-catalog/alpha';
 import apiDocsPlugin from '@backstage/plugin-api-docs/alpha';
 import searchPlugin from '@backstage/plugin-search/alpha';
@@ -390,7 +390,7 @@ const app = createApp({
     apiDocsPlugin,
     searchPlugin,
     notFoundErrorPageModule,
-    appModuleNav,
+    appModuleTopBar,
     customHomePageModule,
     guestSignInPageModule,
     techDocsMermaidAddonModule,
