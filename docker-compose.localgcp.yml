@@ -24,11 +24,12 @@
 #   # Tail logs
 #   docker compose -f docker-compose.localgcp.yml logs -f localgcp
 #
-#   # Tear down (preserve volume)
+#   # Tear down (preserve emulator data under ./.localgcp/)
 #   docker compose -f docker-compose.localgcp.yml down
 #
-#   # Tear down (delete persisted emulator data)
-#   docker compose -f docker-compose.localgcp.yml down --volumes
+#   # Tear down and delete persisted emulator data
+#   docker compose -f docker-compose.localgcp.yml down
+#   rm -rf ./.localgcp/
 #
 # This stack can run side-by-side with the main application stack
 # (docker-compose.yaml, name=blitzy-sandbox-backstage) and the dependency
@@ -66,8 +67,9 @@
 # PUBSUB_EMULATOR_HOST and FIRESTORE_EMULATOR_HOST work as-is with no SDK
 # workaround needed.
 #
-# See docs/refactor/onboarding-addendum.md for the full canonical workaround
-# documentation and CI integration guidance.
+# For the full canonical workaround documentation and CI integration guidance,
+# see docs/refactor/onboarding-addendum.md (forthcoming — Checkpoint 4
+# documentation deliverable per Agent Action Plan §0.6.1.7).
 #
 # -----------------------------------------------------------------------------
 # Image and Port Notes
@@ -75,6 +77,15 @@
 #
 # Image: ghcr.io/slokam-ai/localgcp (official LocalGCP container image per
 #        the canonical upstream documentation at https://localgcp.com/docs/).
+#
+# The image tag is pinned to a concrete version rather than `:latest` so that
+# CI and developer environments deterministically resolve the same emulator
+# binary across machines and across time (R6 LocalGCP Verification — every
+# GCP service interaction MUST be verifiable against a reproducible emulator
+# without supply-chain drift). The pinned tag matches the Setup Status Log's
+# "LocalGCP v0.6.0 (running)" entry. Bumping this pin should be a deliberate,
+# tested action accompanied by a decision-log entry rather than an implicit
+# upgrade triggered by re-pulling `:latest`.
 #
 # Default native service ports exposed by the LocalGCP container image
 # (from `docker run ... ghcr.io/slokam-ai/localgcp`):
@@ -105,7 +116,14 @@ services:
   localgcp:
     # Official LocalGCP container image from GitHub Container Registry.
     # See https://localgcp.com/docs/ for the canonical reference.
-    image: ghcr.io/slokam-ai/localgcp:latest
+    #
+    # Pinned to v0.6.0 (matching the Setup Status Log) for deterministic
+    # CI / local emulator behavior. Do NOT replace this with `:latest`; an
+    # unpinned tag breaks reproducibility and creates a supply-chain drift
+    # risk (R6 LocalGCP Verification). To bump, update the tag here, refresh
+    # the decision log, and verify the new image with the integration test
+    # suite before merging.
+    image: ghcr.io/slokam-ai/localgcp:v0.6.0
     container_name: blitzy-sandbox-localgcp
 
     # Host-to-container port mappings. The host port can be overridden via
@@ -120,17 +138,30 @@ services:
       - '${LOCALGCP_FIRESTORE_PORT:-8088}:8088'
 
     # Emulator-level configuration. The data directory inside the container
-    # is bound to the named volume below so emulator state persists across
-    # container restarts.
+    # is bound to a host directory at the repository root so the on-disk
+    # layout matches the host-binary invocation `localgcp up --data-dir=./.localgcp`
+    # and the `.localgcp/` entry in `.gitignore`.
     environment:
       LOCALGCP_DATA_DIR: /data/.localgcp
       LOCALGCP_LOG_LEVEL: ${LOCALGCP_LOG_LEVEL:-info}
 
     # Persistent storage for emulator state (buckets, topics, documents).
-    # Mounted as a named volume — not a bind mount — so the data directory
-    # is portable across machines and survives container deletion.
+    #
+    # This is a host bind mount (not a Docker named volume) so emulator
+    # state persists into `./.localgcp/` at the repository root — matching
+    # the host-binary CLI convention `localgcp up --data-dir=./.localgcp`
+    # documented in the project setup instructions and the Setup Status Log.
+    # The host path is gitignored (see `.gitignore` entry `.localgcp/`), so
+    # generated emulator state never enters version control.
+    #
+    # Using a bind mount instead of a named volume guarantees parity between
+    # the containerized compose workflow and the host-binary workflow:
+    # `docker compose -f docker-compose.localgcp.yml up -d` populates the
+    # same directory that `localgcp up --data-dir=./.localgcp &` does. This
+    # in turn lets integration tests share a single data directory across
+    # local and CI runs, which is the R6 LocalGCP Verification posture.
     volumes:
-      - localgcp-data:/data/.localgcp
+      - ./.localgcp:/data/.localgcp
 
     # Explicit `up` invocation with the same --data-dir as the host CLI
     # convention (./.localgcp). The --no-docker flag disables orchestrated
@@ -160,10 +191,7 @@ services:
     # developer sessions.
     restart: unless-stopped
 
-# Named volume for emulator data persistence. The explicit `name:` keeps
-# the volume identifier stable across `docker compose down` / `up` cycles
-# and prevents the default project-prefixed name (which would vary by
-# compose project name).
-volumes:
-  localgcp-data:
-    name: blitzy-sandbox-localgcp-data
+# No `volumes:` block is required: emulator state is persisted via the host
+# bind mount declared under `services.localgcp.volumes` above (./.localgcp),
+# which matches the `localgcp up --data-dir=./.localgcp` host-binary CLI
+# convention and the `.localgcp/` entry in `.gitignore`.
