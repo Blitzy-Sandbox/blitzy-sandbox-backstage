@@ -46,7 +46,6 @@ import {
   InspectEntityDialog,
   UnregisterEntityDialog,
   EntityDisplayName,
-  FavoriteEntity,
 } from '@backstage/plugin-catalog-react';
 
 import { EntityLabels } from '../EntityLabels';
@@ -98,12 +97,17 @@ function EntityHeaderTitle() {
   const { entity } = useAsyncEntity();
   const { kind, namespace, name } = useRouteRefParams(entityRouteRef);
   const { headerTitle: title } = headerProps(kind, namespace, name, entity);
+  // Per AAP §0.5.1.2: "Remove the star icon from the project's title".
+  // The `<FavoriteEntity entity={entity} />` affordance was removed here
+  // (it was previously rendered at the end of this title block) so that
+  // alpha-catalog entity pages — wired via `customizedCatalog` in
+  // `packages/app/src/App.tsx` and rendered through the alpha EntityLayout —
+  // no longer surface the favorite-star toggle.
   return (
     <div className="inline-flex items-center gap-1 h-[1em] max-w-full">
       <span className="overflow-hidden text-ellipsis whitespace-nowrap">
         {entity ? <EntityDisplayName entityRef={entity} hideIcon /> : title}
       </span>
-      {entity && <FavoriteEntity entity={entity} />}
     </div>
   );
 }

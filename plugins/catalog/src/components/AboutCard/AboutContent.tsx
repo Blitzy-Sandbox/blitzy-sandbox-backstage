@@ -17,7 +17,6 @@
 import {
   Entity,
   getEntitySourceLocation,
-  RELATION_OWNED_BY,
   RELATION_PART_OF,
 } from '@backstage/catalog-model';
 import {
@@ -97,9 +96,12 @@ export function AboutContent(props: AboutContentProps) {
   const isLocation = entity.kind.toLocaleLowerCase('en-US') === 'location';
   const isGroup = entity.kind.toLocaleLowerCase('en-US') === 'group';
 
-  const partOfSystemRelations = getEntityRelations(entity, RELATION_PART_OF, {
-    kind: 'system',
-  });
+  // Per AAP §0.5.1.2 / §0.7.2 (CRITICAL): the System and Owner AboutField
+  // blocks were removed below. The `partOfSystemRelations` and
+  // `ownedByRelations` derivations that previously powered those blocks
+  // have therefore been removed as well. `partOfComponentRelations` and
+  // `partOfDomainRelations` remain because they continue to drive the
+  // Parent Component and Domain AboutField blocks respectively.
   const partOfComponentRelations = getEntityRelations(
     entity,
     RELATION_PART_OF,
@@ -110,7 +112,6 @@ export function AboutContent(props: AboutContentProps) {
   const partOfDomainRelations = getEntityRelations(entity, RELATION_PART_OF, {
     kind: 'domain',
   });
-  const ownedByRelations = getEntityRelations(entity, RELATION_OWNED_BY);
 
   let entitySourceLocation:
     | {
@@ -151,18 +152,10 @@ export function AboutContent(props: AboutContentProps) {
         </AboutField>
       )}
 
-      <AboutField
-        label={t('aboutCard.ownerField.label')}
-        value={t('aboutCard.ownerField.value')}
-      >
-        {ownedByRelations.length > 0 && (
-          <EntityRefLinks
-            entityRefs={ownedByRelations}
-            defaultKind="group"
-            hideIcons
-          />
-        )}
-      </AboutField>
+      {/* Per AAP §0.5.1.2 / §0.7.2 (CRITICAL): the Owner `AboutField` block
+          was removed here. "remove the ability to click on or access the
+          'Owner' link/element. Perform a full removal of this
+          functionality across the application." */}
 
       {(isSystem || partOfDomainRelations.length > 0) && (
         <AboutField
@@ -179,23 +172,10 @@ export function AboutContent(props: AboutContentProps) {
         </AboutField>
       )}
 
-      {(isAPI ||
-        isComponent ||
-        isResource ||
-        partOfSystemRelations.length > 0) && (
-        <AboutField
-          label={t('aboutCard.systemField.label')}
-          value={t('aboutCard.systemField.value')}
-        >
-          {partOfSystemRelations.length > 0 && (
-            <EntityRefLinks
-              entityRefs={partOfSystemRelations}
-              defaultKind="system"
-              hideIcons
-            />
-          )}
-        </AboutField>
-      )}
+      {/* Per AAP §0.5.1.2 / §0.7.2 (CRITICAL): the System `AboutField`
+          block was removed here. "remove the ability to click on or
+          access the 'System' link/element. Perform a full removal of
+          this functionality across the application." */}
 
       {isComponent && partOfComponentRelations.length > 0 && (
         <AboutField

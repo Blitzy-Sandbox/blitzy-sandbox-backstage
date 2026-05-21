@@ -23,9 +23,16 @@ import {
 import { EntityTable } from '@backstage/plugin-catalog-react';
 import { TableColumn } from '@backstage/core-components';
 
+// Per AAP §0.5.1.2 / §0.7.2 (CRITICAL): "remove the ability to click on or
+// access the 'Owner' link/element. Perform a full removal of this
+// functionality across the application." The
+// `EntityTable.columns.createOwnerColumn()` invocations were removed from
+// every preset below so that the Owner column does not surface in any of
+// the 8 consumer cards (HasComponentsCard, HasSubcomponentsCard,
+// DependsOnComponentsCard, DependencyOfComponentsCard, HasResourcesCard,
+// DependsOnResourcesCard, HasSystemsCard, HasSubdomainsCard).
 export const componentEntityColumns: TableColumn<ComponentEntity>[] = [
   EntityTable.columns.createEntityRefColumn({ defaultKind: 'component' }),
-  EntityTable.columns.createOwnerColumn(),
   EntityTable.columns.createSpecTypeColumn(),
   EntityTable.columns.createSpecLifecycleColumn(),
   EntityTable.columns.createMetadataDescriptionColumn(),
@@ -37,7 +44,6 @@ export const asComponentEntities = (entities: Entity[]): ComponentEntity[] =>
 
 export const resourceEntityColumns: TableColumn<ResourceEntity>[] = [
   EntityTable.columns.createEntityRefColumn({ defaultKind: 'resource' }),
-  EntityTable.columns.createOwnerColumn(),
   EntityTable.columns.createSpecTypeColumn(),
   EntityTable.columns.createSpecLifecycleColumn(),
   EntityTable.columns.createMetadataDescriptionColumn(),
@@ -49,7 +55,6 @@ export const asResourceEntities = (entities: Entity[]): ResourceEntity[] =>
 
 export const systemEntityColumns: TableColumn<SystemEntity>[] = [
   EntityTable.columns.createEntityRefColumn({ defaultKind: 'system' }),
-  EntityTable.columns.createOwnerColumn(),
   EntityTable.columns.createMetadataDescriptionColumn(),
 ];
 export const systemEntityHelpLink: string =
@@ -59,7 +64,6 @@ export const asSystemEntities = (entities: Entity[]): SystemEntity[] =>
 
 export const domainEntityColumns: TableColumn<DomainEntity>[] = [
   EntityTable.columns.createEntityRefColumn({ defaultKind: 'domain' }),
-  EntityTable.columns.createOwnerColumn(),
   EntityTable.columns.createMetadataDescriptionColumn(),
 ];
 export const domainEntityHelpLink: string =
