@@ -32599,6 +32599,7 @@ __metadata:
     "@backstage/plugin-search-backend-node": "workspace:^"
     "@backstage/plugin-signals-backend": "workspace:^"
     "@backstage/plugin-techdocs-backend": "workspace:^"
+    "@backstage/types": "workspace:^"
     "@internal/plugin-catalog-backend-module-access-audit": "workspace:^"
     "@internal/plugin-permission-backend-module-blitzy-policy": "workspace:^"
     "@opentelemetry/api": "npm:^1.9.0"
@@ -32608,6 +32609,7 @@ __metadata:
     better-sqlite3: "npm:^11.0.0"
     example-app: "link:../app"
     express: "npm:^4.22.0"
+    jose: "npm:^5.0.0"
   languageName: unknown
   linkType: soft
 

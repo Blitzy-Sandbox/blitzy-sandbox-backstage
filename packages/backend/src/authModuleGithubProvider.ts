@@ -34,6 +34,7 @@ import {
 } from '@backstage/plugin-auth-node';
 
 import { bucketSignInEmailDomain, userLoginTotal } from './metrics';
+import { cacheUserEmail } from './userEmailCache';
 
 /**
  * Selects the verified primary email from a GitHub `PassportProfile.emails`
@@ -220,12 +221,27 @@ export function createBlitzyGithubSignInResolver(
           // Custom claim so the BlitzyPermissionPolicy can read the user's
           // verified email when making authorization decisions. The
           // policy decodes this claim from `BackstageCredentials.token`
-          // (the validated user JWT) — it is NOT propagated through
-          // `BackstageUserInfo` because the default UserInfoService only
-          // reads `sub` and `ent`.
+          // (the validated user JWT) — it is NOT propagated through the
+          // default `BackstageUserInfo` because the upstream
+          // UserInfoService only reads `sub` and `ent`. We deploy a
+          // custom user-info service (`BlitzyUserInfoService` in
+          // `packages/backend/src/userInfoServiceFactory.ts`) that also
+          // reads `email` from the JWT (and from the cache populated
+          // below); see that file's JSDoc for the architectural
+          // rationale.
           email: primaryEmail,
         },
       });
+
+      // Populate the in-process email cache so that subsequent
+      // on-behalf-of permission checks for this user can resolve the
+      // email even when the original JWT's `email` claim has been
+      // dropped during the on-behalf-of token exchange (`AuthService.
+      // getPluginRequestToken({ onBehalfOf, targetPluginId })`).
+      // Without this write the catalog/permission integration would
+      // DENY writes for @blitzy.com users (QA CP5 Critical Defect #2).
+      cacheUserEmail(userEntityRef, primaryEmail);
+
       await auditorEvent.success({
         meta: {
           entityRef: userEntityRef,

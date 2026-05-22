@@ -41,22 +41,41 @@ import { blitzyPermissionDecisionsTotal, bucketEmailDomain } from './metrics';
  *    - All other principals (missing email, non-Blitzy domain,
  *      spoofed-domain subdomain, etc.) are denied.
  *
- * Email propagation: the augmented GitHub `signInResolver` in
- * `packages/backend/src/authModuleGithubProvider.ts` issues an identity
- * token with a custom `email` claim. Backstage's default
- * `UserInfoService` only extracts `sub` and `ent` from that token, so
- * `user.info.email` is NEVER populated by the default pipeline. This
- * policy therefore decodes the user's verified JWT directly from
- * `user.credentials.token` to read the `email` claim. The JWT was
- * already cryptographically verified by `DefaultAuthService.authenticate`
- * before the credentials object reaches this policy, so we use
- * `jose.decodeJwt` (non-verifying decode) here — verifying again would
- * be redundant work without any security improvement.
+ * Email propagation — two-source architecture:
  *
- * The `user.info.email` field is still consulted FIRST as a forward-
- * compatible path: if a future deployment installs a custom
- * `UserInfoService` that surfaces email through `BackstageUserInfo`, the
- * policy will pick it up without further code change.
+ *  1. PRIMARY (preferred): `user.info.email` is populated by the custom
+ *     `BlitzyUserInfoService` registered via
+ *     `packages/backend/src/userInfoServiceFactory.ts`. That service
+ *     replaces the default `userInfoServiceFactory` from
+ *     `@backstage/backend-defaults` and reads the email either (a) from
+ *     the JWT carried in the credentials object when present, or (b)
+ *     from an in-process email cache populated by the auth resolvers
+ *     at sign-in time. This is the path that works for INTERNAL
+ *     plugin-to-plugin permission checks (e.g., when the catalog
+ *     backend calls the permission backend on-behalf-of a user via
+ *     `AuthService.getPluginRequestToken({ onBehalfOf, targetPluginId })`).
+ *     The on-behalf-of token drops the user's original `email` claim,
+ *     so the JWT-decode fallback below cannot recover it — only the
+ *     cache lookup can. See `userInfoServiceFactory.ts` for the full
+ *     two-source design (JWT-then-cache).
+ *
+ *  2. FALLBACK: `user.credentials.token` is decoded via `jose.decodeJwt`
+ *     (non-verifying — `DefaultAuthService.authenticate` already
+ *     cryptographically verified the token before the credentials
+ *     object reached this policy). This path covers direct user-
+ *     credentialed calls (e.g., the frontend POSTing to
+ *     `/api/permission/authorize` with the user's original JWT) where
+ *     the user-info service has not yet been called. It also acts as
+ *     a defense-in-depth backstop in case the custom user-info
+ *     service is not deployed.
+ *
+ * The augmented sign-in resolvers in
+ * `packages/backend/src/authModuleGithubProvider.ts` and
+ * `packages/backend/src/authModuleBlitzyE2E.ts` both (a) issue identity
+ * tokens with a custom `email` claim AND (b) call
+ * `cacheUserEmail(userEntityRef, email)` after successful token
+ * issuance. This dual-write ensures the cache is populated for the
+ * subsequent on-behalf-of permission-check path.
  *
  * The policy is stateless, side-effect-free, and O(1). It never trusts
  * client-asserted email; it reads only the server-validated JWT claims
@@ -143,15 +162,28 @@ function isGuestPrincipal(user?: PolicyQueryUser): boolean {
  * Extracts the user's verified email from the policy query user object.
  *
  * Lookup order:
- *   1. `user.info.email` — used when a custom `UserInfoService` has
- *      hydrated this field. The Backstage default `UserInfoService` does
- *      NOT populate this, so step 2 is the actual production path.
+ *   1. `user.info.email` — populated by `BlitzyUserInfoService`
+ *      (`packages/backend/src/userInfoServiceFactory.ts`). This is the
+ *      PRIMARY production path. The custom user-info service surfaces
+ *      email by (a) decoding the credentials' JWT when it carries an
+ *      `email` claim, or (b) looking up the user's email from an
+ *      in-process cache populated by the augmented sign-in resolvers
+ *      (`packages/backend/src/userEmailCache.ts`). The cache lookup
+ *      is what closes the on-behalf-of token gap — when a plugin
+ *      (e.g., catalog backend) calls the permission backend on-behalf-
+ *      of a user, the on-behalf-of token does NOT carry the user's
+ *      original `email` claim, so a JWT decode of that token alone
+ *      cannot recover the email. The cache (populated at sign-in)
+ *      bridges the gap.
  *   2. The `email` claim on the validated JWT carried by
- *      `user.credentials.token`. The token was signed by the auth
- *      backend after the augmented GitHub `signInResolver` set the
- *      `email` claim, and it was cryptographically verified by
- *      `DefaultAuthService` before reaching this policy. Decoding here
- *      is a pure read of an already-verified token.
+ *      `user.credentials.token` — fallback path. Used when a direct
+ *      user-credentialed call reaches this policy (e.g., the frontend
+ *      POSTing to `/api/permission/authorize` with the user's original
+ *      JWT) and the user-info service has not yet been consulted, OR
+ *      as a defense-in-depth backstop if the custom user-info service
+ *      is not deployed. The token was already cryptographically
+ *      verified by `DefaultAuthService` before reaching this policy,
+ *      so decoding here is a pure read of an already-verified token.
  *
  * Returns `undefined` when no email is available (missing token,
  * malformed token, missing claim, or non-string claim). Callers treat
@@ -163,19 +195,22 @@ export function extractEmail(user?: PolicyQueryUser): string | undefined {
   if (!user) {
     return undefined;
   }
-  // Forward-compatible path: if a custom UserInfoService populates
-  // `info.email`, use it directly. The Backstage default
-  // UserInfoService never sets this.
+  // PRIMARY production path: read email from the user info populated by
+  // BlitzyUserInfoService. The custom user-info service hydrates this
+  // field from either the JWT (when the email claim is present) or the
+  // sign-in email cache (when the on-behalf-of token has stripped the
+  // claim). See packages/backend/src/userInfoServiceFactory.ts.
   const infoEmail = (user.info as { email?: string } | undefined)?.email;
   if (typeof infoEmail === 'string' && infoEmail.length > 0) {
     return infoEmail;
   }
 
-  // Production path: decode the validated JWT carried by the
-  // credentials object. The token is stored as a non-enumerable
-  // property on the internal `BackstageCredentials` shape — accessing it
-  // via a structural type assertion is the established pattern used by
-  // `packages/backend-defaults/src/entrypoints/userInfo/DefaultUserInfoService.ts`
+  // FALLBACK path: decode the validated JWT carried by the credentials
+  // object. Used when the user-info service has not been consulted
+  // upstream OR as a defense-in-depth backstop. The token is stored as
+  // a property on the internal `BackstageCredentials` shape — accessing
+  // it via a structural type assertion is the established pattern used
+  // by `packages/backend-defaults/src/entrypoints/userInfo/DefaultUserInfoService.ts`
   // and elsewhere in the Backstage backend.
   const credentialsToken = (user.credentials as { token?: string } | undefined)
     ?.token;

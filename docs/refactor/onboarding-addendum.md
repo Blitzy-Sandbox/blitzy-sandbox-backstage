@@ -218,6 +218,32 @@ Audit events are emitted via the injected `auditor` service. Construct the event
 
 The policy is wired in `packages/backend/src/index.ts` via `backend.add(import('@internal/plugin-permission-backend-module-blitzy-policy'))`. To swap policies (for example, back to `allow-all` for a debug session), comment out the Blitzy module line and uncomment the `allow-all` line (or replace with another module). Only one `PermissionPolicy` may be registered at a time — registering both produces a startup error. The catalog access audit module is registered separately at `backend.add(import('@internal/plugin-catalog-backend-module-access-audit'))`. These two modules are independent — swapping the policy does not change audit emission, and disabling the audit module does not change permission decisions.
 
+### 6.6 Email propagation — the two-source architecture
+
+The policy's read of `email` from `PolicyQueryUser` involves three pieces of code that work together to close the **on-behalf-of token gap**. This is the architectural fix that resolves QA CP5 Critical Defect #2 ("@blitzy.com users DENIED writes through real Backstage endpoints"). Before this fix, internal plugin-to-plugin permission checks (e.g., catalog → permission) were denied for ALL users — including `@blitzy.com` — because the on-behalf-of token that the permission backend router constructs does NOT carry the user's original `email` claim. The decode in `policy.ts` returned `undefined`, the policy classified the user as non-Blitzy, and the write was denied.
+
+The three pieces:
+
+1. **The email cache** (`packages/backend/src/userEmailCache.ts`) — a module-scoped `Map<userEntityRef, email>` with FIFO eviction at 10,000 entries. The cache is process-local and reset on every backend restart; there is no persistence layer. Two functions are exported: `cacheUserEmail(userEntityRef, email)` and `lookupUserEmail(userEntityRef)`. The cache is intentionally simple — it is a memoization of the email claim across a user's authenticated session, not a database.
+2. **The custom UserInfoService** (`packages/backend/src/userInfoServiceFactory.ts`) — registers a `BlitzyUserInfoService` that overrides the default `userInfoServiceFactory` from `@backstage/backend-defaults`. The custom service's `getUserInfo()` method reads the `email` claim from the credentials' JWT when present; when the on-behalf-of token has stripped the claim, it falls back to `lookupUserEmail(userEntityRef)`. The returned `BackstageUserInfo` includes an additional `email` field (typed as `BlitzyBackstageUserInfo = BackstageUserInfo & { email?: string }` via structural cast — the upstream interface does not declare `email`, but the policy reads it via the same structural cast pattern). This is the source of `user.info.email` that the policy reads as its PRIMARY path.
+3. **The auth resolvers** (`packages/backend/src/authModuleGithubProvider.ts` and `packages/backend/src/authModuleBlitzyE2E.ts`) — both call `cacheUserEmail(userEntityRef, email)` AFTER successful `ctx.issueToken()` and BEFORE the auditor's `.success()` call. This dual-write populates the cache for the subsequent on-behalf-of permission-check path.
+
+Why these three pieces and not a simpler design:
+
+- **Why not just decode the on-behalf-of token in the policy?** The on-behalf-of token is minted by `auth.getPluginRequestToken({ onBehalfOf, targetPluginId })` and contains only `sub`, `ent`, `act`, `aud` — the user's original `email` claim is stripped. A decode at the policy is exactly what was failing before this fix.
+- **Why not query the catalog for the user's email entity?** This would add a network round-trip to every permission check, breaking the policy's O(1) stateless contract and adding a hard dependency on the catalog backend being reachable at policy evaluation time.
+- **Why not persist the cache?** A persistent cache would require a database, schema migrations, and cache invalidation logic. The in-process cache is good enough because (a) it is populated synchronously at sign-in, before any permission check can occur for the new session, and (b) a stale cache entry is harmless — the policy fails closed (DENY) when the email is missing, and the cache only grows monotonically until eviction.
+- **Why FIFO eviction at 10,000 entries?** 10,000 simultaneous authenticated sessions exceeds Backstage's typical deployment scale by an order of magnitude. FIFO is the simplest eviction policy that bounds memory. LRU would be marginally better but adds bookkeeping cost on every lookup; for the cache's actual scale, FIFO is indistinguishable.
+
+When you debug a permission denial:
+
+1. First, verify the policy's `email` lookup path. The policy reads `user.info.email` FIRST (the custom user-info service's output) and falls back to `decodeJwt(user.credentials.token).email`. If `user.info.email` is missing, check the custom user-info service is registered in `packages/backend/src/index.ts` via `backend.add(blitzyUserInfoServiceFactory)` (the factory is exported from `userInfoServiceFactory.ts`).
+2. Verify the cache is populated for the user. Add a temporary log statement in `userInfoServiceFactory.ts` showing `[userEntityRef, lookupResult]` to confirm the cache lookup is finding the user.
+3. Verify the sign-in resolver populated the cache. Both `authModuleGithubProvider.ts` and `authModuleBlitzyE2E.ts` should log a `Cached email for <userEntityRef>` line at sign-in time. If it is missing, the resolver short-circuited before the cache write (e.g., `ctx.issueToken` threw, in which case the cache write is intentionally skipped).
+4. Confirm the Prometheus counter `blitzy_permission_decisions_total` increments with `email_domain="blitzy.com"` rather than `"other"` for the affected user's writes. The bucket label is the unambiguous signal that the email was found.
+
+The unit tests at `packages/backend/src/userInfoServiceFactory.test.ts` exercise the full JWT-then-cache path with a mocked discovery service. The unit tests at `packages/backend/src/userEmailCache.test.ts` exercise the FIFO eviction at the 10,000-entry boundary.
+
 ---
 
 ## 7. Audit Log Location
@@ -277,7 +303,70 @@ The following issues account for most of the new-contributor support questions. 
 
 ---
 
-## 9. See also
+## 9. Production Deployment Hardening
+
+The local-development defaults of the Backstage backend are tuned for developer ergonomics, not production security. Before promoting any build to a production environment (Railway, Fly.io, Docker, Kubernetes, etc.), apply the following checklist. Each item resolves a known information-disclosure or operational risk surfaced by QA Checkpoint 5.
+
+### 9.1 Set `NODE_ENV=production`
+
+The single most important deployment toggle. The Backstage backend's default error middleware emits full JavaScript stack traces (including absolute filesystem paths like `/tmp/blitzy/.../plugins/catalog-backend/src/service/AuthorizedRefreshService.ts:45:13`) in 4xx and 5xx response bodies when `NODE_ENV !== 'production'`. This is acceptable for local debugging and intentionally enabled for developer experience, but it leaks server-side implementation details that an attacker can use to fingerprint the deployment, locate vulnerable middleware versions, and craft targeted attacks. Set `NODE_ENV=production` in every production process manager:
+
+```bash
+# systemd / shell scripts
+NODE_ENV=production node packages/backend/dist/index.cjs.js
+
+# Dockerfile (verify Dockerfile.railway already sets this)
+ENV NODE_ENV=production
+
+# Railway, Fly.io, Vercel, etc.
+# Set NODE_ENV=production in the platform's environment variable UI
+```
+
+Verify the suppression is active by issuing a deliberately failing request against the deployed backend and inspecting the response body:
+
+```bash
+# A request guaranteed to 401 (no Authorization header on a protected endpoint)
+curl -s -i https://your-deployment.example.com/api/catalog/refresh \
+     -X POST -H "Content-Type: application/json" \
+     -d '{"entityRef":"component:default/test"}' \
+     | tee /tmp/prod-error-response.txt
+
+# Confirm the response body does NOT contain a "stack" field or absolute paths
+grep -E '"stack"|/usr/|/app/|/tmp/' /tmp/prod-error-response.txt
+# Expected: zero matches in production
+```
+
+The Dockerfile at `Dockerfile.railway` already exports `NODE_ENV=production` for Railway deployments. The development Dockerfile (`Dockerfile.dev`) deliberately does NOT — that image is intended for local container development and reproduces the developer-mode behavior. Confirm the production image is the one being deployed.
+
+### 9.2 Disable the test-only `blitzy-e2e` auth provider
+
+The custom `blitzy-e2e` auth provider (`packages/backend/src/authModuleBlitzyE2E.ts`) and its associated audit-events HTTP endpoint (`packages/backend/src/blitzyE2EAuditCapture.ts`) are gated behind the environment variable `BLITZY_E2E_TEST_MODE`. In production these MUST remain unset (or set to anything other than `true`). The provider issues tokens for arbitrary `email` and `username` values passed via HTTP headers — that is exactly the surface attackers look for. Confirm with `printenv | grep BLITZY_E2E_TEST_MODE` on the running container; the expected output is an empty string.
+
+The audit-events HTTP endpoint at `/api/blitzy-e2e/audit-events` is registered via `createBackendPlugin({ pluginId: 'blitzy-e2e' })` and is also gated by the same env var. When the var is unset, the plugin is not added to the backend and the endpoint returns 404 — the desired production posture.
+
+### 9.3 Verify Prometheus metrics endpoint is not publicly exposed
+
+The OpenTelemetry Prometheus exporter binds to `:9464/metrics`. In production, this port should be bound to localhost only (or to a private network) so that only the metric scraper (Prometheus server, Grafana Cloud agent, Datadog agent, etc.) can reach it. Verify with `ss -tlnp | grep 9464` or `netstat -tlnp | grep 9464` on the production host — the bind address should be `127.0.0.1:9464` or a private interface, never `0.0.0.0:9464`. The exporter currently emits histogram buckets that label by `email_domain` (`blitzy.com`, `other`, `guest`) and `action` — these labels are PII-safe (no email addresses), but exposure of the volume itself reveals the user population size to anyone who can scrape the endpoint.
+
+### 9.4 Audit log retention and rotation
+
+Audit events are emitted to stdout via `coreServices.logger`. Production deployments MUST capture stdout to a durable log destination (Cloud Logging, Splunk, Datadog, ELK, etc.) and apply a retention policy that satisfies the organization's compliance posture. The default container runtime (Docker, containerd, Kubernetes) captures stdout but applies its own rotation that may discard events. Verify the log shipping pipeline is configured to capture lines matching `"isAuditEvent":true` (the AuditorService channel marker) or `"eventId":"user-login"|"entity-access"|"entity-mutate"` (the specific event IDs) BEFORE any rotation discards them.
+
+### 9.5 JWT secret material
+
+Backstage backend secret material (the signing key for the identity tokens that carry the `email` claim and drive the permission policy) must be loaded from `app-config.production.yaml`'s `backend.auth.keys` array — not from the in-repo `app-config.yaml`. Verify with `grep -A3 'auth:' app-config.production.yaml` on the production deployment; the entries should reference environment variables (`${BACKEND_SECRET}` style) rather than literal strings. Rotate keys per the organization's policy; the policy and audit emission paths are agnostic to key rotation because they read pre-verified tokens.
+
+### 9.6 Email cache memory bound
+
+The email cache at `packages/backend/src/userEmailCache.ts` is bounded at 10,000 entries with FIFO eviction. Production deployments serving more than 10,000 simultaneously authenticated users will see cache thrash — older sessions' emails are evicted, and the next on-behalf-of permission check for those users will fall through to the JWT decode (which fails for the email-stripped on-behalf-of token), resulting in DENY for legitimate users. If the deployment serves more than 10,000 simultaneous sessions, raise the constant `MAX_CACHE_ENTRIES` in `userEmailCache.ts` and rebuild. The memory cost is approximately 0.5 KB per entry, so 10,000 entries cost ~5 MB; 100,000 would cost ~50 MB.
+
+### 9.7 LocalGCP must NOT be used in production
+
+The LocalGCP emulator (Section 2 above) is for local development and CI only. Production deployments that exercise GCS, Pub/Sub, or Firestore MUST use real GCP service endpoints with real credentials. Confirm `STORAGE_EMULATOR_HOST`, `PUBSUB_EMULATOR_HOST`, and `FIRESTORE_EMULATOR_HOST` are unset in production with `printenv | grep -E 'EMULATOR_HOST'` — the expected output is empty.
+
+---
+
+## 10. See also
 
 - [`decision-log.md`](decision-log.md) — Why each non-trivial refactor choice was made.
 - [`traceability-matrix.md`](traceability-matrix.md) — Requirement to file and test mapping.

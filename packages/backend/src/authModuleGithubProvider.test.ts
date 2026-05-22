@@ -24,6 +24,11 @@ import {
   selectPrimaryGithubEmail,
 } from './authModuleGithubProvider';
 import { bucketSignInEmailDomain, userLoginTotal } from './metrics';
+import {
+  _testOnlyCacheSize,
+  _testOnlyClearUserEmailCache,
+  lookupUserEmail,
+} from './userEmailCache';
 
 type ResolverInput = {
   result: OAuthAuthenticatorResult<PassportProfile>;
@@ -672,6 +677,212 @@ describe('createBlitzyGithubSignInResolver', () => {
         email_domain: 'blitzy.com',
       });
     });
+  });
+});
+
+describe('createBlitzyGithubSignInResolver — email cache population', () => {
+  // Sign-in must populate the in-process email cache so that subsequent
+  // on-behalf-of permission checks for this user can resolve the email
+  // even when the original JWT's `email` claim has been dropped during
+  // the plugin-to-plugin token exchange. Without this write the
+  // catalog/permission integration would DENY writes for @blitzy.com
+  // users (QA CP5 Critical Defect #2).
+  function makeResolverCtxLocal(options: { issueTokenImpl?: jest.Mock } = {}) {
+    const issueToken =
+      options.issueTokenImpl ??
+      jest.fn(async () => ({
+        token: 'signed-jwt',
+        identity: {
+          type: 'user' as const,
+          userEntityRef: 'user:default/alex',
+          ownershipEntityRefs: ['user:default/alex'],
+        },
+        providerInfo: {},
+      }));
+    return {
+      issueToken,
+      findCatalogUser: jest.fn(),
+      signInWithCatalogUser: jest.fn(),
+    };
+  }
+
+  function makeAuditorMockLocal() {
+    const successFn = jest.fn();
+    const failFn = jest.fn();
+    const createEvent = jest.fn(async (_options?: unknown) => ({
+      success: successFn,
+      fail: failFn,
+    }));
+    const auditor = mockServices.auditor.mock({ createEvent });
+    return { auditor, createEvent, successFn, failFn };
+  }
+
+  function makeOAuthResultLocal(options: {
+    username?: string;
+    emails?: Array<{ value: string; primary?: boolean; verified?: boolean }>;
+    userinfoEmail?: string;
+  }): OAuthAuthenticatorResult<PassportProfile> {
+    const profile: Partial<PassportProfile> = {
+      username: options.username,
+      emails: options.emails as PassportProfile['emails'],
+    };
+    const result: Partial<OAuthAuthenticatorResult<PassportProfile>> & {
+      userinfo?: { email?: string };
+    } = {
+      fullProfile: profile as PassportProfile,
+      session: {
+        accessToken: 'gh-access-token',
+        tokenType: 'bearer',
+        scope: 'read:user user:email',
+      },
+    };
+    if (options.userinfoEmail !== undefined) {
+      result.userinfo = { email: options.userinfoEmail };
+    }
+    return result as OAuthAuthenticatorResult<PassportProfile>;
+  }
+
+  function callResolverLocal(
+    resolver: ReturnType<typeof createBlitzyGithubSignInResolver>,
+    input: { result: OAuthAuthenticatorResult<PassportProfile> },
+    ctx: ReturnType<typeof makeResolverCtxLocal>,
+  ) {
+    return resolver(
+      input as Parameters<typeof resolver>[0],
+      ctx as unknown as Parameters<typeof resolver>[1],
+    );
+  }
+
+  beforeEach(() => {
+    _testOnlyClearUserEmailCache();
+  });
+
+  it('caches the verified primary email keyed by userEntityRef on success', async () => {
+    const { auditor } = makeAuditorMockLocal();
+    const resolver = createBlitzyGithubSignInResolver(auditor);
+    const ctx = makeResolverCtxLocal();
+    await callResolverLocal(
+      resolver,
+      {
+        result: makeOAuthResultLocal({
+          username: 'alex',
+          emails: [{ value: 'alex@blitzy.com' }],
+        }),
+      },
+      ctx,
+    );
+    expect(lookupUserEmail('user:default/alex')).toBe('alex@blitzy.com');
+    expect(_testOnlyCacheSize()).toBe(1);
+  });
+
+  it('caches the email even for non-Blitzy domains (policy filters, cache is domain-agnostic)', async () => {
+    const { auditor } = makeAuditorMockLocal();
+    const resolver = createBlitzyGithubSignInResolver(auditor);
+    const ctx = makeResolverCtxLocal();
+    await callResolverLocal(
+      resolver,
+      {
+        result: makeOAuthResultLocal({
+          username: 'bob',
+          emails: [{ value: 'bob@example.com' }],
+        }),
+      },
+      ctx,
+    );
+    expect(lookupUserEmail('user:default/bob')).toBe('bob@example.com');
+  });
+
+  it('caches the fallback unknown.invalid email when no source is available', async () => {
+    const { auditor } = makeAuditorMockLocal();
+    const resolver = createBlitzyGithubSignInResolver(auditor);
+    const ctx = makeResolverCtxLocal();
+    await callResolverLocal(
+      resolver,
+      { result: makeOAuthResultLocal({ username: 'no-email' }) },
+      ctx,
+    );
+    expect(lookupUserEmail('user:default/no-email')).toBe(
+      'no-email@unknown.invalid',
+    );
+  });
+
+  it('does NOT cache the email when issueToken throws (the user is not signed in)', async () => {
+    const issueError = new Error('token issuance failed');
+    const issueTokenImpl = jest.fn().mockRejectedValue(issueError);
+    const { auditor } = makeAuditorMockLocal();
+    const resolver = createBlitzyGithubSignInResolver(auditor);
+    const ctx = makeResolverCtxLocal({ issueTokenImpl });
+    await expect(
+      callResolverLocal(
+        resolver,
+        {
+          result: makeOAuthResultLocal({
+            username: 'alex',
+            emails: [{ value: 'alex@blitzy.com' }],
+          }),
+        },
+        ctx,
+      ),
+    ).rejects.toBe(issueError);
+    // The user did NOT successfully sign in — the cache must remain
+    // empty so that a stale or fraudulent association cannot survive
+    // an unsuccessful sign-in attempt.
+    expect(_testOnlyCacheSize()).toBe(0);
+    expect(lookupUserEmail('user:default/alex')).toBeUndefined();
+  });
+
+  it('does NOT cache the email when auditor.createEvent throws (no token issued)', async () => {
+    const createErr = new Error('audit transport down');
+    const createEvent = jest.fn(async () => {
+      throw createErr;
+    });
+    const auditor = mockServices.auditor.mock({ createEvent });
+    const resolver = createBlitzyGithubSignInResolver(auditor);
+    const ctx = makeResolverCtxLocal();
+    await expect(
+      callResolverLocal(
+        resolver,
+        {
+          result: makeOAuthResultLocal({
+            username: 'alex',
+            emails: [{ value: 'alex@blitzy.com' }],
+          }),
+        },
+        ctx,
+      ),
+    ).rejects.toBe(createErr);
+    expect(_testOnlyCacheSize()).toBe(0);
+  });
+
+  it('updates the cache when the same user re-signs in with a different email', async () => {
+    const { auditor } = makeAuditorMockLocal();
+    const resolver = createBlitzyGithubSignInResolver(auditor);
+
+    await callResolverLocal(
+      resolver,
+      {
+        result: makeOAuthResultLocal({
+          username: 'alex',
+          emails: [{ value: 'alex.old@example.com' }],
+        }),
+      },
+      makeResolverCtxLocal(),
+    );
+    expect(lookupUserEmail('user:default/alex')).toBe('alex.old@example.com');
+
+    // The same user signs in again with a different verified email.
+    await callResolverLocal(
+      resolver,
+      {
+        result: makeOAuthResultLocal({
+          username: 'alex',
+          emails: [{ value: 'alex@blitzy.com' }],
+        }),
+      },
+      makeResolverCtxLocal(),
+    );
+    expect(lookupUserEmail('user:default/alex')).toBe('alex@blitzy.com');
+    expect(_testOnlyCacheSize()).toBe(1);
   });
 });
 

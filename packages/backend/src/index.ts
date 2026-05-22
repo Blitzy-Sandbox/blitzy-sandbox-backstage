@@ -21,8 +21,22 @@ import {
   createBackendFeatureLoader,
 } from '@backstage/backend-plugin-api';
 import { blitzyE2EAuditorServiceFactory } from './blitzyE2EAuditCapture';
+import { blitzyUserInfoServiceFactory } from './userInfoServiceFactory';
 
 const backend = createBackend();
+
+// Replace the default `userInfoServiceFactory` from
+// `@backstage/backend-defaults` with the Blitzy custom factory. The
+// custom factory surfaces the verified user email (from the JWT
+// `email` claim or the in-process email cache) via the returned
+// `BackstageUserInfo`. Without this override, internal plugin-to-plugin
+// permission checks would have no way to read the user's email — the
+// on-behalf-of token issued by `AuthService.getPluginRequestToken()`
+// drops the `email` claim — and the `BlitzyPermissionPolicy` would
+// DENY all writes including for `@blitzy.com` users (QA CP5 Critical
+// Defect #2). See `userInfoServiceFactory.ts` for the full
+// architectural rationale.
+backend.add(blitzyUserInfoServiceFactory);
 
 // An example of how to group together and load multiple features. You can also
 // access root-scoped services by adding `deps`.

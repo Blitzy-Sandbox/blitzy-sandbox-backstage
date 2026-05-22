@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
+import { randomUUID } from 'node:crypto';
 import {
+  AuditorService,
   coreServices,
   createBackendModule,
 } from '@backstage/backend-plugin-api';
@@ -29,6 +31,9 @@ import {
   createProxyAuthProviderFactory,
   SignInResolver,
 } from '@backstage/plugin-auth-node';
+
+import { bucketSignInEmailDomain, userLoginTotal } from './metrics';
+import { cacheUserEmail } from './userEmailCache';
 
 /**
  * The HTTP request headers used by the BlitzyE2E proxy authenticator to
@@ -129,35 +134,160 @@ const blitzyE2EAuthenticator = createProxyAuthenticator({
 });
 
 /**
- * `blitzyE2ESignInResolver` mints a Backstage identity token whose JWT
- * claims include the test-supplied `email`. This is the same shape the
- * production GitHub resolver produces (see
- * `authModuleGithubProvider.ts`), so the token flows through the auth
- * middleware, user-info service, and `BlitzyPermissionPolicy` exactly
- * the same way a real GitHub-issued token does.
+ * Creates the BlitzyE2E sign-in resolver augmented with audit event
+ * emission and email caching. Mirrors the production
+ * `createBlitzyGithubSignInResolver` (see
+ * `authModuleGithubProvider.ts`) so that the audit-event lifecycle and
+ * email-cache population are identical between the GitHub OAuth flow
+ * and the E2E proxy flow.
  *
- * The resolver issues the token directly (without a catalog lookup) so
- * that the E2E test does not require a `user:default/<username>` entity
- * to exist in the catalog. Both `signInWithCatalogUser` and
- * `issueToken` produce tokens accepted by the auth middleware.
+ * The returned resolver:
+ *
+ *  - Derives the user entity ref from `result.username` and issues an
+ *    identity token whose claims include `sub`, `ent`, and `email` —
+ *    the same shape produced by the GitHub resolver. This allows the
+ *    `BlitzyPermissionPolicy` to decode the email directly from the
+ *    JWT for direct user-credentialed calls and via the custom
+ *    `BlitzyUserInfoService` (see
+ *    `packages/backend/src/userInfoServiceFactory.ts`) for
+ *    on-behalf-of plugin-to-plugin calls.
+ *
+ *  - Emits a `user-login` audit event on both success and failure
+ *    paths. The audit metadata records `provider: 'blitzy-e2e'`,
+ *    `username`, `emailDomain` (NOT the full email), `userEntityRef`,
+ *    and a synthetic `correlationId`. This addresses QA CP5 Major
+ *    Issue #3 ("user-login emission has zero runtime test coverage").
+ *
+ *  - Calls `cacheUserEmail(userEntityRef, email)` after successful
+ *    token issuance so that subsequent on-behalf-of permission checks
+ *    can resolve the email via the cache lookup in
+ *    `BlitzyUserInfoService.getUserInfo()`. Without this write the
+ *    catalog/permission integration would DENY writes for @blitzy.com
+ *    E2E users — the same bug as the production GitHub flow before
+ *    the cache write was added (QA CP5 Critical Defect #2).
+ *
+ *  - Increments the `userLoginTotal` Prometheus counter with
+ *    `provider: 'blitzy-e2e'` so dashboards include test-driven sign-
+ *    ins. The counter is bucketed by `email_domain` (blitzy.com / other
+ *    / unknown) so dashboards can distinguish E2E coverage of the
+ *    different authorization branches.
+ *
+ * SECURITY: The audit metadata intentionally OMITS the full email
+ * value, the OAuth access/refresh tokens, and the raw OAuth result
+ * payload. Only the `emailDomain` is recorded for permission
+ * observability.
+ *
+ * AUDIT LIFECYCLE GUARANTEES — same as the GitHub resolver:
+ *  - `createEvent` is awaited in its own try/catch. If `createEvent`
+ *    itself rejects (auditor service unavailable), the resolver
+ *    rethrows so the auth flow surfaces the failure rather than
+ *    silently signing the user in without an audit trail. Token
+ *    issuance is NOT attempted in this branch.
+ *  - On successful token issuance the resolver calls
+ *    `auditorEvent.success({ meta: { entityRef, correlationId } })`
+ *    AND populates the email cache.
+ *  - On any failure after `createEvent` succeeds, the resolver calls
+ *    `auditorEvent.fail({ error, meta })` and rethrows so the upstream
+ *    auth flow sees the failure. The cache is NOT populated.
+ *
+ * Exported for unit testing; the runtime registration is in the
+ * default export below.
  */
-const blitzyE2ESignInResolver: SignInResolver<BlitzyE2EResult> = async (
-  { result },
-  ctx,
-) => {
-  const userEntityRef = stringifyEntityRef({
-    kind: 'User',
-    name: result.username,
-    namespace: DEFAULT_NAMESPACE,
-  });
-  return ctx.issueToken({
-    claims: {
-      sub: userEntityRef,
-      ent: [userEntityRef],
-      email: result.email,
-    },
-  });
-};
+export function createBlitzyE2ESignInResolver(
+  auditor: AuditorService,
+): SignInResolver<BlitzyE2EResult> {
+  return async ({ result }, ctx) => {
+    const userEntityRef = stringifyEntityRef({
+      kind: 'User',
+      name: result.username,
+      namespace: DEFAULT_NAMESPACE,
+    });
+
+    // Synthetic correlation id for this sign-in attempt. SignInResolver
+    // does not expose the express Request object so the correlationId
+    // is the documented correlation mechanism between the audit log
+    // and the auth-backend HTTP access log (matches the GitHub
+    // resolver's behavior; see `authModuleGithubProvider.ts`).
+    const correlationId = randomUUID();
+    const emailDomain =
+      result.email.split('@')[1]?.toLowerCase() ?? 'unknown.invalid';
+
+    // Increment the user-login counter exactly once per sign-in
+    // attempt. Recorded before `auditor.createEvent` so the metric
+    // tracks resolver-observed sign-in attempts even when the auditor
+    // itself is unhealthy.
+    userLoginTotal.add(1, {
+      provider: 'blitzy-e2e',
+      email_domain: bucketSignInEmailDomain(emailDomain),
+    });
+
+    // Audit event creation is wrapped in its own try so that an
+    // auditor service failure (e.g., transport down) does not silently
+    // sign the user in. If createEvent rejects we surface the failure
+    // to the auth caller. Note: there is no `auditorEvent` to call
+    // `.fail` on at this point — that lifecycle method only exists
+    // after a successful `createEvent` returns.
+    let auditorEvent;
+    try {
+      auditorEvent = await auditor.createEvent({
+        eventId: 'user-login',
+        severityLevel: 'medium',
+        meta: {
+          provider: 'blitzy-e2e',
+          username: result.username,
+          emailDomain,
+          userEntityRef,
+          correlationId,
+        },
+      });
+    } catch (createErr) {
+      // Auditor service itself failed. Fail closed: do not issue a
+      // token without an audit trail.
+      throw createErr;
+    }
+
+    // From here the audit lifecycle is owned: every code path must end
+    // with either `.success(...)` or `.fail(...)`.
+    try {
+      const signedIn = await ctx.issueToken({
+        claims: {
+          sub: userEntityRef,
+          ent: [userEntityRef],
+          // Custom claim — see `authModuleGithubProvider.ts` for the
+          // full rationale on why we include `email` as a JWT claim
+          // and ALSO write it through to the user-email cache below.
+          email: result.email,
+        },
+      });
+
+      // Populate the in-process email cache so that subsequent
+      // on-behalf-of permission checks for this user can resolve the
+      // email even when the original JWT's `email` claim has been
+      // dropped during the on-behalf-of token exchange. Without this
+      // write the catalog/permission integration would DENY writes for
+      // @blitzy.com E2E users (the same bug as QA CP5 Critical Defect
+      // #2 affecting the production GitHub flow).
+      cacheUserEmail(userEntityRef, result.email);
+
+      await auditorEvent.success({
+        meta: {
+          entityRef: userEntityRef,
+          correlationId,
+        },
+      });
+      return signedIn;
+    } catch (err) {
+      await auditorEvent.fail({
+        error: err as Error,
+        meta: {
+          entityRef: userEntityRef,
+          correlationId,
+        },
+      });
+      throw err;
+    }
+  };
+}
 
 /**
  * `authModuleBlitzyE2E` is the conditional Backstage backend module
@@ -197,8 +327,9 @@ export const authModuleBlitzyE2E = createBackendModule({
       deps: {
         providers: authProvidersExtensionPoint,
         logger: coreServices.logger,
+        auditor: coreServices.auditor,
       },
-      async init({ providers, logger }) {
+      async init({ providers, logger, auditor }) {
         logger.warn(
           'Registering blitzy-e2e test-only auth provider — this MUST NOT ' +
             'be enabled in a production deployment. Set ' +
@@ -208,7 +339,7 @@ export const authModuleBlitzyE2E = createBackendModule({
           providerId: 'blitzy-e2e',
           factory: createProxyAuthProviderFactory({
             authenticator: blitzyE2EAuthenticator,
-            signInResolver: blitzyE2ESignInResolver,
+            signInResolver: createBlitzyE2ESignInResolver(auditor),
           }),
         });
       },

@@ -34,13 +34,15 @@
  *      ONLY registered in `packages/backend/src/index.ts` when
  *      `BLITZY_E2E_TEST_MODE === 'true'`.
  *
- *   3. `blitzyE2EAuditEndpointModule` — a backend module that mounts a
+ *   3. `blitzyE2EAuditEndpointPlugin` — a backend PLUGIN that mounts a
  *      read-only HTTP endpoint at
  *      `GET /api/blitzy-e2e/audit-events` returning the captured
  *      events. The route also exposes
  *      `DELETE /api/blitzy-e2e/audit-events` to clear the buffer
  *      between test cases. Both routes refuse to operate unless
- *      `BLITZY_E2E_TEST_MODE === 'true'`.
+ *      `BLITZY_E2E_TEST_MODE === 'true'`. This is a plugin (not a
+ *      module) so that it self-registers — see the JSDoc on the
+ *      plugin declaration below for the architectural rationale.
  *
  * SECURITY: nothing in this module is reachable in a production
  * deployment because (a) the env-var gate prevents `backend.add()`
@@ -52,7 +54,7 @@
 
 import {
   coreServices,
-  createBackendModule,
+  createBackendPlugin,
   createServiceFactory,
 } from '@backstage/backend-plugin-api';
 import type {
@@ -187,7 +189,7 @@ export const blitzyE2EAuditorServiceFactory = createServiceFactory({
 });
 
 /**
- * Backstage backend module that exposes a read-only test-only HTTP
+ * Backstage backend PLUGIN that exposes a read-only test-only HTTP
  * endpoint to query and clear the captured audit-event buffer.
  *
  * Routes:
@@ -196,20 +198,34 @@ export const blitzyE2EAuditorServiceFactory = createServiceFactory({
  *   GET    /api/blitzy-e2e/audit-events?eventId=... — filter by eventId
  *   DELETE /api/blitzy-e2e/audit-events             — clear the buffer
  *
- * Registered as a separate plugin (`pluginId: 'blitzy-e2e'`) so the
- * paths above resolve via the default plugin HTTP router mount
- * (`/api/<pluginId>/<route>`).
+ * This is implemented as a `createBackendPlugin` (NOT a
+ * `createBackendModule`) so that the plugin self-registers when added
+ * to the backend via `backend.add(import('./blitzyE2EAuditCapture'))`.
  *
- * SECURITY: same triple gate as `authModuleBlitzyE2E.ts`. The module
+ * Historical note (QA CP5 Critical Defect #1): an earlier revision
+ * declared this as `createBackendModule({pluginId: 'blitzy-e2e',
+ * moduleId: 'audit-events-endpoint'})`. The Backstage backend system
+ * only initializes modules whose declared `pluginId` matches a plugin
+ * that has been registered separately (see
+ * `packages/backend-app-api/src/wiring/BackendInitializer.ts` lines
+ * 360-378 — modules without a corresponding plugin are silently
+ * dropped). Because no plugin with `pluginId: 'blitzy-e2e'` was
+ * registered anywhere, the module's `init()` was never called, the
+ * routes were never mounted, and `GET /api/blitzy-e2e/audit-events`
+ * returned 404 — blocking the Playwright auditing E2E tests. Converting
+ * to `createBackendPlugin` is the correct fix because the audit-events
+ * endpoint IS the plugin (there is no separate plugin for the
+ * audit-events surface to attach to as a module).
+ *
+ * SECURITY: same triple gate as `authModuleBlitzyE2E.ts`. The plugin
  * is only imported by `packages/backend/src/index.ts` when
  * `BLITZY_E2E_TEST_MODE === 'true'`, AND every route refuses to
  * respond with anything other than 404 when the env var is not true.
  *
  * @public
  */
-export const blitzyE2EAuditEndpointModule = createBackendModule({
+export const blitzyE2EAuditEndpointPlugin = createBackendPlugin({
   pluginId: 'blitzy-e2e',
-  moduleId: 'audit-events-endpoint',
   register(reg) {
     reg.registerInit({
       deps: {
@@ -270,4 +286,4 @@ export const blitzyE2EAuditEndpointModule = createBackendModule({
   },
 });
 
-export default blitzyE2EAuditEndpointModule;
+export default blitzyE2EAuditEndpointPlugin;
