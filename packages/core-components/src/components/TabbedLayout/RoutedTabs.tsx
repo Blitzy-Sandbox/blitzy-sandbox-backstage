@@ -83,10 +83,26 @@ export function RoutedTabs(props: { routes: SubRoute[] }) {
        */}
       <div className="[grid-area:pageSubheader] min-w-0 overflow-x-auto">
         <ShadcnTabs value={currentTabValue}>
+          {/*
+           * CP8 Issue #7 fix: TabsList itself needs `overflow-x-auto` because
+           * the previous CP7 fix that placed `overflow-x-auto` only on the
+           * outer wrapper div was not sufficient. When TabsList has both
+           * `inline-flex` (radix default) and `w-full`, its rendered width is
+           * exactly equal to the wrapper's width — so the wrapper sees no
+           * overflow and never triggers its scrollbar. The actual overflow
+           * happens at the TabTriggers level (each has `whitespace-nowrap`),
+           * which paints outside TabsList's box but does not register as
+           * wrapper-level overflow. Adding `overflow-x-auto` on TabsList itself
+           * makes the tab strip scrollable inside its own bounds at narrow
+           * viewports (375px), surfacing the FEATURE FLAGS tab on mobile.
+           * `min-w-0` allows TabsList to shrink below its content's natural
+           * width inside the inline-flex / w-full constraint stack.
+           */}
           <TabsList
             className={cn(
               'bg-transparent h-auto w-full justify-start',
               'rounded-none border-b border-border p-0',
+              'min-w-0 overflow-x-auto',
             )}
           >
             {routes.map(t => {

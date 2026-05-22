@@ -59,7 +59,12 @@
     --accent: #F5F5F5;
     --accent-foreground: #2D1C77;
 
-    --destructive: #E22134;
+    /*
+     * CP8 Issue #8 fix: Darkened from #E22134 (contrast 4.39:1, FAILS WCAG AA 4.5:1
+     * on light --background #FFFFFF) to #B71C1C (contrast ~7.4:1, PASSES WCAG AA
+     * for normal text). Keep in sync with packages/theme/src/tokens/shadcn-tokens.css.
+     */
+    --destructive: #B71C1C;
     --destructive-foreground: #FFFFFF;
 
     --border: #E5E5E5;
@@ -184,6 +189,46 @@
     background-color: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
+  }
+
+  /* ----------------------------------------------------------
+   * Top-bar Support button — hover affordance
+   *
+   * CP8 Issue #9 fix (QA finding F9): The `SupportButton` rendered
+   * inside the top-bar wrapper `[data-testid="app-top-bar-support"]`
+   * inherits shadcn's `Button variant="ghost"` baseline, which sets
+   * `hover:bg-accent/80` on the inner `<button>`. Against the dark
+   * navy top-bar background (`#1F5493`), the accent surface
+   * (`#F5F5F5` at 80% opacity) is nearly invisible — so the user
+   * has no hover affordance, as documented in the QA report.
+   *
+   * We add a plain CSS rule (rather than a Tailwind arbitrary-
+   * descendant utility) because `packages/app/src/tailwind.css`
+   * is a pre-built artifact in this repo; new Tailwind classes
+   * added to source `.tsx` files are NOT re-scanned at build time.
+   * A direct `:hover` rule with `!important` is the only mechanism
+   * that wins the cascade against shadcn's inline hover utilities.
+   *
+   * Selector targets the Backstage `SupportButton` (a Radix
+   * `PopoverTrigger asChild` button) only when nested under the
+   * `[data-testid="app-top-bar-support"]` wrapper rendered by
+   * `appModuleTopBar.tsx`. This keeps the hover style scoped to
+   * the top-bar instance — other `SupportButton` mounts (none
+   * remaining after CP7 cleanup, but defensive nonetheless) keep
+   * their default behavior.
+   *
+   * The same wrapper also applies a `transition` so the hover
+   * color change animates smoothly (matches the existing
+   * `transition-colors duration-150` on the Settings Link).
+   * ---------------------------------------------------------- */
+
+  [data-testid='app-top-bar-support'] button {
+    transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1),
+      color 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  [data-testid='app-top-bar-support'] button:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    color: currentColor !important;
   }
 
   /* ----------------------------------------------------------

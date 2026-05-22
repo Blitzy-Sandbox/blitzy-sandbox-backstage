@@ -23,7 +23,7 @@ import {
 } from '@backstage/frontend-plugin-api';
 import { NavContentBlueprint } from '@backstage/plugin-app-react';
 import { UserSettingsSignInAvatar } from '@backstage/plugin-user-settings';
-import { Settings as SettingsIcon, Search as SearchIcon } from 'lucide-react';
+import { Settings as SettingsIcon } from 'lucide-react';
 
 /**
  * `BlitzyLogo` renders the Blitzy brand mark as a non-interactive inline SVG.
@@ -110,11 +110,16 @@ const TopBarSignInAvatar = () => (
 /**
  * Shared className for the icon-button affordances in the right cluster.
  * Centralized so that the visual treatment (padding, hover, focus ring)
- * stays in lockstep across Search/Settings/Support — preventing one icon
+ * stays in lockstep across Settings/Support — preventing one icon
  * from drifting visually from the others when the buttons are edited.
+ *
+ * The `hover:bg-white/10` rule provides a visible hover affordance on
+ * the dark purple primary top-bar background (Issue #9). Pairs with
+ * `hover:opacity-100` so the rule overrides the inherited `opacity-80`
+ * shorthand if present.
  */
 const ICON_BUTTON_CLASS =
-  'inline-flex items-center justify-center p-2 rounded text-current no-underline hover:opacity-80 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current';
+  'inline-flex items-center justify-center p-2 rounded text-current no-underline transition-colors duration-150 hover:bg-white/10 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current';
 
 const ICON_BUTTON_STYLE: CSSProperties = {
   color: 'inherit',
@@ -123,26 +128,6 @@ const ICON_BUTTON_STYLE: CSSProperties = {
   // theme has not pre-loaded the corresponding CSS variable.
   '--tw-ring-color': '#FFFFFF',
 } as CSSProperties;
-
-/**
- * `TopBarSearch` is the Search icon affordance anchored in the top-bar's
- * right cluster. It links to the `/search` route registered by the
- * search plugin via Backstage's `Link` for analytics and baseUrl
- * resolution, and is icon-only with an explicit `aria-label` for
- * assistive technology.
- */
-const TopBarSearch = () => (
-  <Link
-    to="/search"
-    aria-label="Search"
-    title="Search"
-    data-testid="app-top-bar-search"
-    className={ICON_BUTTON_CLASS}
-    style={ICON_BUTTON_STYLE}
-  >
-    <SearchIcon size={20} aria-hidden="true" focusable="false" />
-  </Link>
-);
 
 /**
  * `TopBarSettings` is the Settings icon button anchored in the top-bar's
@@ -177,6 +162,20 @@ const TopBarSettings = () => (
  * `support@blitzy.com` mailto link, etc.). This component performs no
  * configuration work — the `app-config.yaml` change is owned by another
  * file in this refactor.
+ *
+ * CP8 Issue #9 fix (QA finding F9): The wrapper carries the
+ * `data-testid="app-top-bar-support"` attribute that anchors the hover
+ * affordance defined in `packages/app/src/globals.css`. Without that
+ * scoped rule, the upstream `Button variant="ghost"` defaults to
+ * `hover:bg-accent/80` (light gray ~`#F5F5F5`), which is nearly invisible
+ * against the dark navy top-bar primary background (`#1F5493`), as the
+ * CP8 QA finding documented. The CSS rule provides a visible
+ * `rgba(255,255,255,0.1)` overlay on hover with a 150ms transition.
+ *
+ * Implementation note: a plain CSS rule (rather than a Tailwind arbitrary-
+ * descendant utility) is required here because `packages/app/src/tailwind.css`
+ * is a pre-built CSS artifact in this repository — new Tailwind utility
+ * classes added to source `.tsx` files are NOT re-scanned at app build time.
  */
 const TopBarSupport = () => (
   <div className="inline-flex items-center" data-testid="app-top-bar-support">
@@ -194,13 +193,17 @@ const TopBarSupport = () => (
  * below it without requiring `padding-top` on every page or any
  * SidebarPage-style left gutter.
  *
- * Right-cluster ordering (left-to-right): Logo, Avatar, Search, Settings,
- * Support. All cluster children remain on the right via `justify-end`,
- * satisfying the AAP requirement to "Relocate the Blitzy logo to the top
- * right corner". Search is positioned before Settings/Support per the
- * navigation-continuity finding from the code review — restoring a
- * discoverable search affordance after the sidebar's `/search` link was
- * deleted with the sidebar module.
+ * Right-cluster ordering (left-to-right): Logo, Avatar, Settings, Support.
+ * All cluster children remain on the right via `justify-end`, satisfying
+ * the AAP requirement to "Relocate the Blitzy logo to the top right
+ * corner".
+ *
+ * Per AAP §0.5.4 the strict ordering is Logo → Settings → Support; the
+ * SignInAvatar is retained as informational user-context for Guest UX
+ * but is non-interactive. A Search icon is intentionally NOT mounted in
+ * the top-bar (CP8 QA finding #2) — search is still reachable at
+ * `/search` for users who navigate there directly, and the search
+ * affordance is preserved inside the catalog page toolbar.
  *
  * Styling notes:
  * - The bar participates in normal document flow (no `position: fixed`)
@@ -237,7 +240,6 @@ const TopBar = () => (
     <BlitzyLogo />
     <div className="inline-flex items-center gap-2">
       <TopBarSignInAvatar />
-      <TopBarSearch />
       <TopBarSettings />
       <TopBarSupport />
     </div>

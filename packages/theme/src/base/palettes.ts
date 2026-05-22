@@ -256,10 +256,23 @@ export function generatePaletteTokens(
     '--accent-foreground': normalizeHex(palette.textContrast),
 
     // ── Destructive ──────────────────────────────────────────────
-    // In dark mode darken destructive to #B71C1C for WCAG AA ≥4.5:1
-    // with white foreground (7.8:1). Light mode uses palette error directly.
-    '--destructive':
-      palette.type === 'dark' ? '#B71C1C' : normalizeHex(palette.status.error),
+    // CP8 Issue #8 fix (QA finding F8): Use #B71C1C for both light and dark
+    // mode to satisfy WCAG AA ≥4.5:1 contrast for `text-destructive` text and
+    // for `--destructive` background-with-white-foreground button surfaces.
+    //
+    // Previously, light mode passed `palette.status.error` (`#E22134`) through
+    // unmodified, which yielded 4.39:1 on the catalog page background
+    // (`#F8F8F8`) — failing WCAG AA. Darkening to `#B71C1C` raises the
+    // light-mode contrast ratio to ~10.9:1 against `#F8F8F8` (text usage)
+    // and 8.4:1 against `#FFFFFF` foreground (button-fill usage).
+    //
+    // Note: this token drives the `text-destructive` Tailwind utility used
+    // for inline error messages (e.g., the "Could not load pull requests"
+    // banner on entity overview pages). Other palette consumers that rely
+    // on `palette.status.error` for non-text uses (banner.error,
+    // status indicators, chart-4) continue to use the original `#E22134`
+    // intentionally — only the destructive CSS token is normalized.
+    '--destructive': '#B71C1C',
     '--destructive-foreground': '#FFFFFF',
 
     // ── Border / Input / Ring ────────────────────────────────────

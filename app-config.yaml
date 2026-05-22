@@ -29,6 +29,26 @@ app:
 
   packageName: example-app
 
+  # Frontend extensions config — declarative override of extension props.
+  # See https://backstage.io/docs/frontend-system/architecture/configuring-extensions
+  #
+  # CP8 QA finding F6: restore Language selector in Settings → Appearance card.
+  # The `UserSettingsLanguageToggle` upstream component renders `null` when
+  # only one language is registered (see
+  # plugins/user-settings/src/components/General/UserSettingsLanguageToggle.tsx
+  # L43–L45: "if (languages.length <= 1) return null;").
+  #
+  # The repository ships four README locale variants per AAP §0.6.1.7
+  # (English, French, Korean, Simplified Chinese), so we register the
+  # matching locale codes here. This causes the Language selector to
+  # render alongside the Theme selector, restoring the CP7-fix-03
+  # baseline behavior.
+  extensions:
+    - api:app/app-language:
+        config:
+          availableLanguages: ['en', 'fr', 'ko', 'zh-Hans']
+          defaultLanguage: 'en'
+
 backend:
   # Used for enabling authentication, secret is shared by all backend plugins
   # See https://backstage.io/docs/auth/service-to-service-auth for
