@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 The Backstage Authors
+ * Copyright 2023 The Backstage Authors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,9 @@
  */
 
 /**
- * The Blitzy permission policy backend module for the Backstage `permission`
- * plugin.
- *
- * @remarks
- *
- * This package installs `BlitzyPermissionPolicy`, which enforces
- * read-only access for any user whose verified email domain is not
- * `@blitzy.com` and for Backstage Guest principals (including anonymous
- * callers). It replaces the registration of
- * `@backstage/plugin-permission-backend-module-allow-all-policy` in
- * `packages/backend/src/index.ts`.
+ * The blitzy permission policy backend module for the permission plugin.
  *
  * @packageDocumentation
  */
 
 export { permissionModuleBlitzyPolicy as default } from './module';
-export { BlitzyPermissionPolicy } from './policy';
