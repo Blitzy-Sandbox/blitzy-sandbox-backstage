@@ -57,7 +57,16 @@ const searchLoader = createBackendFeatureLoader({
 
 backend.add(import('@backstage/plugin-auth-backend'));
 backend.add(import('./authModuleGithubProvider'));
-backend.add(import('@backstage/plugin-auth-backend-module-guest-provider'));
+// Replace the upstream default `@backstage/plugin-auth-backend-module-
+// guest-provider` with the Blitzy-augmented Guest provider that emits a
+// `user-login` audit event on every Guest sign-in attempt. Both modules
+// declare the same pluginId/moduleId/providerId so this is a clean
+// drop-in replacement. Required by AAP §0.1.3 Critical Test Scenario
+// "User Tracking: Verify Guest login and project access events are
+// accurately recorded" and addresses QA CP6 Critical Finding F-002.
+// See `./authModuleGuestProvider.ts` for the full audit lifecycle
+// guarantees and the rationale for the recreated authenticator.
+backend.add(import('./authModuleGuestProvider'));
 backend.add(import('@backstage/plugin-auth-backend-module-openshift-provider'));
 
 // E2E TEST-ONLY: when BLITZY_E2E_TEST_MODE=true, register the

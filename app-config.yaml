@@ -353,6 +353,21 @@ auth:
         clientSecret: ${AUTH_ATLASSIAN_CLIENT_SECRET}
         scope: ${AUTH_ATLASSIAN_SCOPES}
     myproxy: {}
+    # E2E TEST-ONLY proxy auth provider. Registered as a backend module
+    # at `packages/backend/src/authModuleBlitzyE2E.ts` ONLY when
+    # `BLITZY_E2E_TEST_MODE=true` is set on the backend process. The
+    # auth-backend requires a corresponding `auth.providers.<id>` config
+    # entry (even if empty) to mount the OAuth routes for the provider —
+    # without this entry the `POST /api/auth/blitzy-e2e/refresh` endpoint
+    # returns 404 "No auth provider registered" even though the module is
+    # registered (QA CP6 Finding F-001). The empty object form matches
+    # the `myproxy: {}` precedent above. The provider's authenticator
+    # additionally gates itself on `BLITZY_E2E_TEST_MODE === 'true'`
+    # (see `blitzyE2EAuthenticator.initialize`/`authenticate` in
+    # `authModuleBlitzyE2E.ts`) so any production deployment that
+    # somehow carried this config block would still reject every
+    # request with `NotAllowedError` — defense in depth.
+    blitzy-e2e: {}
     guest:
       dangerouslyAllowOutsideDevelopment: true
 

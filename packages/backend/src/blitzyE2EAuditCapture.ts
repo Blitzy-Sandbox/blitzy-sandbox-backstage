@@ -62,6 +62,7 @@ import type {
   AuditorLogFunction,
 } from '@backstage/backend-defaults/auditor';
 import { DefaultAuditorService } from '@backstage/backend-defaults/auditor';
+import { trace } from '@opentelemetry/api';
 import { Router } from 'express';
 
 /**
@@ -73,15 +74,38 @@ import { Router } from 'express';
 const MAX_CAPTURED_EVENTS = 5000;
 
 /**
+ * OpenTelemetry trace correlation fields injected into every captured
+ * audit event when an active span is present at capture time. Captured
+ * via {@link captureTraceContext}; missing fields are omitted so test
+ * assertions can use a `toMatchObject({...})` shape without needing to
+ * handle a `null`/`undefined` distinction.
+ *
+ * Format matches the Winston structured-log shape produced by
+ * `@opentelemetry/instrumentation` (lowercase snake-cased keys) so the
+ * test buffer correlates with the production stdout audit log without
+ * requiring downstream consumers to re-key the fields.
+ */
+type CapturedTraceContext = {
+  trace_id?: string;
+  span_id?: string;
+  trace_flags?: number;
+};
+
+/**
  * The in-process capture buffer. EXPORTED for unit tests only — never
  * read by application code outside this module.
  *
  * Each entry is the full `AuditorEvent` object the default
- * `DefaultAuditorService.log()` would have passed to Winston, plus a
- * `_capturedAt` ISO-8601 timestamp added by the capture layer for
- * test ordering assertions.
+ * `DefaultAuditorService.log()` would have passed to Winston, plus
+ * `_capturedAt` (ISO-8601 timestamp) and the OpenTelemetry trace
+ * correlation fields (`trace_id`, `span_id`, `trace_flags`) captured
+ * via {@link captureTraceContext} so test assertions can correlate
+ * audit events against the OpenTelemetry trace produced by the same
+ * request (QA CP6 Finding F-006).
  */
-type CapturedEvent = AuditorEvent & { _capturedAt: string };
+type CapturedEvent = AuditorEvent & {
+  _capturedAt: string;
+} & CapturedTraceContext;
 const capturedAuditEvents: CapturedEvent[] = [];
 
 /**
@@ -99,13 +123,72 @@ export function _testOnlyClearCapturedEvents(): void {
 }
 
 /**
+ * Reads the current active OpenTelemetry span context and returns a
+ * structured-log-shaped trace correlation object. Returns an empty
+ * object when no active span is present, when the span context is
+ * invalid (the OpenTelemetry NoOp tracer's INVALID_SPAN_CONTEXT), or
+ * when the OpenTelemetry API has not been initialized.
+ *
+ * The function is intentionally defensive: it never throws and never
+ * propagates a degraded trace state into the captured event. Any
+ * unexpected failure is treated as "no active span" and the captured
+ * event simply omits the trace fields.
+ *
+ * Field shape matches the Winston structured-log keys produced by
+ * `@opentelemetry/instrumentation-winston` and emitted by the backend
+ * process when `--require=./src/instrumentation.js` is honored on
+ * startup. This alignment lets test fixtures correlate buffer entries
+ * with stdout log lines via the same `trace_id` value.
+ *
+ * @internal exported for testing
+ */
+export function captureTraceContext(): CapturedTraceContext {
+  try {
+    const activeSpan = trace.getActiveSpan();
+    if (!activeSpan) {
+      return {};
+    }
+    const ctx = activeSpan.spanContext();
+    // OpenTelemetry's `isSpanContextValid` is implicit in the trace and
+    // span ID format: invalid contexts use all-zero ids which we can
+    // detect cheaply without importing the helper.
+    if (
+      !ctx.traceId ||
+      ctx.traceId === '00000000000000000000000000000000' ||
+      !ctx.spanId ||
+      ctx.spanId === '0000000000000000'
+    ) {
+      return {};
+    }
+    return {
+      trace_id: ctx.traceId,
+      span_id: ctx.spanId,
+      trace_flags: ctx.traceFlags,
+    };
+  } catch {
+    // Defensive: any failure (e.g., OTel API not initialized in unit
+    // tests) collapses to "no active span" so the capture buffer never
+    // crashes the request that produced the audit event.
+    return {};
+  }
+}
+
+/**
  * Records an audit event into the in-memory buffer with FIFO eviction
  * when the buffer is full.
+ *
+ * Captures the current OpenTelemetry trace context (`trace_id`,
+ * `span_id`, `trace_flags`) onto the captured event so Playwright
+ * fixtures can correlate audit events with the OTel trace produced by
+ * the same request (QA CP6 F-006). When no active span is present
+ * (e.g., during unit tests that do not initialize the OTel SDK), the
+ * trace fields are simply omitted.
  */
 function captureAuditEvent(event: AuditorEvent): void {
   capturedAuditEvents.push({
     ...event,
     _capturedAt: new Date().toISOString(),
+    ...captureTraceContext(),
   });
   if (capturedAuditEvents.length > MAX_CAPTURED_EVENTS) {
     capturedAuditEvents.splice(

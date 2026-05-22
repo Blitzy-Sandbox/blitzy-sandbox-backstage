@@ -47,6 +47,23 @@ metadata:
 spec:
   type: library
   lifecycle: production
+  # Component entities require `spec.owner` per the Backstage Component
+  # entity schema (see
+  # `@backstage/plugin-catalog-backend-module-scaffolder-entity-model`
+  # / `@backstage/catalog-model`'s entity policy). Without an owner the
+  # catalog processor flags the entity with a validation error
+  # (`spec.owner is required to be a non-empty string`) and the entity
+  # never finishes processing — blocking the AAP §0.5.5 Catalog Count
+  # Fix E2E test from exercising real data (QA CP6 F-005).
+  #
+  # The owner is a synthetic reference that does NOT need to be present
+  # in the catalog for the seed entities to validate (catalog validation
+  # only enforces the field's presence and shape, not the existence of
+  # the referenced entity). Using `user:default/blitzy-e2e` keeps the
+  # owner ref namespaced under the same `blitzy-e2e-` prefix as the
+  # consumer entities, making it trivially identifiable in catalog
+  # queries and easy to exclude from non-test queries.
+  owner: user:default/blitzy-e2e
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
@@ -59,6 +76,7 @@ metadata:
 spec:
   type: service
   lifecycle: production
+  owner: user:default/blitzy-e2e
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
@@ -70,3 +88,4 @@ metadata:
 spec:
   type: service
   lifecycle: experimental
+  owner: user:default/blitzy-e2e
