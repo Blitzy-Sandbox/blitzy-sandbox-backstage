@@ -31,4 +31,4 @@
  */
 
 export { permissionModuleBlitzyPolicy as default } from './module';
-export { BlitzyPermissionPolicy, extractEmail } from './policy';
+export { BlitzyPermissionPolicy } from './policy';
