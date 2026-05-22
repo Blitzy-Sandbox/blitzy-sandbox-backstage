@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import { InfoCard, useSidebarPinState } from '@backstage/core-components';
-import { UserSettingsPinToggle } from './UserSettingsPinToggle';
+import { InfoCard } from '@backstage/core-components';
 import { UserSettingsThemeToggle } from './UserSettingsThemeToggle';
 import { UserSettingsLanguageToggle } from './UserSettingsLanguageToggle';
 import { useTranslationRef } from '@backstage/frontend-plugin-api';
@@ -23,15 +22,24 @@ import { userSettingsTranslationRef } from '../../translation';
 
 /** @public */
 export const UserSettingsAppearanceCard = () => {
-  const { isMobile } = useSidebarPinState();
   const { t } = useTranslationRef(userSettingsTranslationRef);
 
+  // QA finding F3 (CP7) — the `<UserSettingsPinToggle />` (and its
+  // surrounding `!isMobile` guard from `useSidebarPinState`) has been
+  // removed from this card. The toggle controlled whether the sidebar
+  // remained pinned open, but the sidebar itself has been fully removed
+  // per AAP §0.5.1.1 ("Sidebar removed; replaced with a top-bar
+  // layout"). Continuing to surface a setting that has no observable
+  // effect creates confusion and noise for users — particularly for
+  // screen-reader users who would hear the option announced. The
+  // `UserSettingsPinToggle` component still exists in this folder for
+  // any downstream fork that re-introduces a sidebar; it is simply no
+  // longer composed into the canonical Appearance card.
   return (
     <InfoCard title={t('appearanceCard.title')} variant="gridItem">
       <div className="space-y-1">
         <UserSettingsThemeToggle />
         <UserSettingsLanguageToggle />
-        {!isMobile && <UserSettingsPinToggle />}
       </div>
     </InfoCard>
   );

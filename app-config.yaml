@@ -48,6 +48,15 @@ backend:
     # is require for the backend-next to work in this repo
     dangerouslyDisableDefaultAuthPolicy: true
 
+  # HTTP error response shape control.
+  # The root HTTP router serializes errors into a JSON envelope. By default
+  # the envelope omits the `stack` field so internal filesystem paths and
+  # code structure are never disclosed to clients. To opt back in for local
+  # plugin debugging, set the flag below to `true`. Errors are always logged
+  # server-side with full stack traces regardless of this setting.
+  # error:
+  #   includeStack: true
+
   baseUrl: http://localhost:7007
   listen:
     port: 7007

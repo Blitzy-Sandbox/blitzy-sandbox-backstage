@@ -13,27 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { render, screen } from '@testing-library/react';
 import { columnFactories } from './columns';
-import { mockApis, MockErrorApi, TestApiProvider } from '@backstage/test-utils';
-import { errorApiRef } from '@backstage/core-plugin-api';
-import { translationApiRef } from '@backstage/core-plugin-api/alpha';
 
-describe('columns', () => {
-  it('should render owner title', async () => {
-    const { title } = columnFactories.createOwnerColumn();
+describe('columns (EntityTable column factories)', () => {
+  // AAP §0.1.2 / §0.6.1.2 — Owner and System affordances are fully removed
+  // from the application. The corresponding column factories MUST NOT be
+  // exported from this module, so that any consumer that previously called
+  // them now fails fast at type-check / runtime rather than silently
+  // resurrecting the removed UI surface.
+  it('does not export a createOwnerColumn factory', () => {
+    expect(
+      (columnFactories as unknown as Record<string, unknown>).createOwnerColumn,
+    ).toBeUndefined();
+  });
 
-    render(
-      <TestApiProvider
-        apis={[
-          [errorApiRef, new MockErrorApi()],
-          [translationApiRef, mockApis.translation()],
-        ]}
-      >
-        {title}
-      </TestApiProvider>,
+  it('does not export a createSystemColumn factory', () => {
+    expect(
+      (columnFactories as unknown as Record<string, unknown>)
+        .createSystemColumn,
+    ).toBeUndefined();
+  });
+
+  it('still exports the remaining canonical column factories', () => {
+    expect(typeof columnFactories.createEntityRefColumn).toBe('function');
+    expect(typeof columnFactories.createEntityRelationColumn).toBe('function');
+    expect(typeof columnFactories.createDomainColumn).toBe('function');
+    expect(typeof columnFactories.createMetadataDescriptionColumn).toBe(
+      'function',
     );
-
-    expect(await screen.findByText('Owner')).toBeInTheDocument();
+    expect(typeof columnFactories.createSpecLifecycleColumn).toBe('function');
+    expect(typeof columnFactories.createSpecTypeColumn).toBe('function');
   });
 });

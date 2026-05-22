@@ -23,7 +23,11 @@ import {
   PolicyQuery,
   PolicyQueryUser,
 } from '@backstage/plugin-permission-node';
-import { BlitzyPermissionPolicy, extractEmail } from './policy';
+import {
+  BlitzyPermissionPolicy,
+  extractEmail,
+  isGuestPrincipal,
+} from './policy';
 import { blitzyPermissionDecisionsTotal, bucketEmailDomain } from './metrics';
 
 /**
@@ -207,6 +211,57 @@ describe('BlitzyPermissionPolicy', () => {
       });
       const decision = await policy.handle(writePermission('create'), user);
       expect(decision).toEqual({ result: AuthorizeResult.DENY });
+    });
+
+    // QA finding F1 (CP7) — the Backstage Guest sign-in resolver in
+    // `packages/backend/src/authModuleGuestProvider.ts` issues an
+    // identity ref of `user:development/guest`, NOT the default
+    // namespace. Earlier versions of this policy hard-coded
+    // `user:default/guest` and therefore failed to recognize the dev-
+    // namespace guest at the entity-ref level. Functional enforcement
+    // still worked via the principal-type fallback, but the metric
+    // bucket was wrong (guests showed up as `email_domain="other"`).
+    // These cases lock in the corrected detection logic.
+
+    it.each(['create', 'update', 'delete'] as const)(
+      'denies %s action for development-namespace guest entity ref (F1 regression)',
+      async action => {
+        const user = await makeUser({
+          userEntityRef: 'user:development/guest',
+        });
+        const decision = await policy.handle(writePermission(action), user);
+        expect(decision).toEqual({ result: AuthorizeResult.DENY });
+      },
+    );
+
+    it('treats user:development/guest as a guest principal (isGuestPrincipal helper)', async () => {
+      const user = await makeUser({
+        userEntityRef: 'user:development/guest',
+      });
+      expect(isGuestPrincipal(user)).toBe(true);
+    });
+
+    it('treats USER:Default/Guest (case-insensitive) as a guest principal', async () => {
+      const user = await makeUser({
+        userEntityRef: 'USER:Default/Guest',
+      });
+      expect(isGuestPrincipal(user)).toBe(true);
+    });
+
+    it('does not treat user:default/guests (similar-but-different name) as guest', async () => {
+      const user = await makeUser({
+        userEntityRef: 'user:default/guests',
+        email: 'guests@blitzy.com',
+      });
+      expect(isGuestPrincipal(user)).toBe(false);
+    });
+
+    it('does not treat user:default/guest-account as guest', async () => {
+      const user = await makeUser({
+        userEntityRef: 'user:default/guest-account',
+        email: 'guest-account@blitzy.com',
+      });
+      expect(isGuestPrincipal(user)).toBe(false);
     });
   });
 
@@ -399,6 +454,43 @@ describe('BlitzyPermissionPolicy', () => {
     });
   });
 
+  describe('isGuestPrincipal helper (internal — F1 namespace handling)', () => {
+    it('returns true when no user is supplied (anonymous)', () => {
+      expect(isGuestPrincipal(undefined)).toBe(true);
+    });
+
+    it.each([
+      ['user:default/guest'],
+      ['user:development/guest'],
+      ['user:custom-ns/guest'],
+      ['USER:Default/Guest'],
+      ['User:DEVELOPMENT/GUEST'],
+    ])('returns true for guest entity ref %s', async ref => {
+      const user = await makeUser({ userEntityRef: ref });
+      expect(isGuestPrincipal(user)).toBe(true);
+    });
+
+    it.each([
+      ['user:default/alice'],
+      ['user:default/guests'],
+      ['user:default/guest-account'],
+      ['user:default/guest.account'],
+      ['user:default/guest123'],
+      ['group:default/guest'],
+    ])('returns false for non-guest entity ref %s', async ref => {
+      const user = await makeUser({ userEntityRef: ref });
+      expect(isGuestPrincipal(user)).toBe(false);
+    });
+
+    it('returns true via principal.type fallback even when ref is non-guest', async () => {
+      const user = await makeUser({
+        userEntityRef: 'user:default/alice',
+        principalType: 'guest',
+      });
+      expect(isGuestPrincipal(user)).toBe(true);
+    });
+  });
+
   describe('metrics emission', () => {
     let counterSpy: jest.SpyInstance;
 
@@ -461,6 +553,36 @@ describe('BlitzyPermissionPolicy', () => {
         result: 'DENY',
         email_domain: 'guest',
         action: 'delete',
+      });
+    });
+
+    // QA finding F1 (CP7) — the development-namespace guest must label
+    // as `email_domain="guest"` so the Prometheus counter accurately
+    // describes who was denied. Before the fix, this scenario emitted
+    // `email_domain="other"` which is misleading for audit/observability.
+    it('labels development-namespace guest as "guest" in metrics (F1 regression)', async () => {
+      const user = await makeUser({
+        userEntityRef: 'user:development/guest',
+      });
+      await policy.handle(writePermission('delete'), user);
+      expect(counterSpy).toHaveBeenCalledTimes(1);
+      expect(counterSpy).toHaveBeenCalledWith(1, {
+        result: 'DENY',
+        email_domain: 'guest',
+        action: 'delete',
+      });
+    });
+
+    it('labels development-namespace guest as "guest" on ALLOW read (F1 regression)', async () => {
+      const user = await makeUser({
+        userEntityRef: 'user:development/guest',
+      });
+      await policy.handle(readPermission(), user);
+      expect(counterSpy).toHaveBeenCalledTimes(1);
+      expect(counterSpy).toHaveBeenCalledWith(1, {
+        result: 'ALLOW',
+        email_domain: 'guest',
+        action: 'read',
       });
     });
 

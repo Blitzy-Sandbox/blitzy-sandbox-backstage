@@ -419,7 +419,24 @@ function createAuditMiddleware(deps: {
           try {
             event = await auditor.createEvent({
               eventId: 'entity-access',
-              severityLevel: 'low',
+              // QA finding F9 (CP7) — the previous `'low'` severity
+              // routed entity-access events through the default
+              // severity-to-log-level mapping at
+              // `packages/backend-defaults/src/entrypoints/auditor/utils.ts`
+              // L33-44 (`low → debug`). The default Winston root logger
+              // filters out `debug`, so the events were silently
+              // dropped from the structured audit log even while the
+              // `entityAccessTotal` counter continued incrementing.
+              // This contradicts AAP §0.1.1 ("captures an immutable
+              // audit trail of every … project (catalog entity)
+              // access"). Promoting to `'medium'` maps to log level
+              // `'info'` which is persisted by the default logger and
+              // by any downstream log aggregator that consumes Winston
+              // output. The severity choice aligns with the GitHub
+              // `user-login` event which is also recorded at
+              // `'medium'` (see
+              // `packages/backend/src/authModuleGithubProvider.ts`).
+              severityLevel: 'medium',
               request: req,
               meta,
             });

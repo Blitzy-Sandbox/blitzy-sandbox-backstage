@@ -104,7 +104,21 @@ export interface MiddlewareFactoryErrorOptions {
   /**
    * Whether error response bodies should show error stack traces or not.
    *
-   * If not specified, by default shows stack traces only in development mode.
+   * Resolution order, from highest precedence to lowest:
+   *
+   * 1. If `showStackTraces` is explicitly passed to {@link MiddlewareFactory.error},
+   *    that value wins.
+   * 2. Otherwise, the value of the `backend.error.includeStack` configuration
+   *    key is used (defaults to `false`).
+   *
+   * The default is `false` — meaning stack traces are never leaked into HTTP
+   * error response bodies regardless of `NODE_ENV`. This is a security
+   * default: stack traces can disclose filesystem paths, code layout, and
+   * dependency versions to unauthenticated clients. Errors are still logged
+   * server-side with full stack traces; only the wire response is redacted.
+   *
+   * To opt in to client-visible stack traces (e.g. for local plugin
+   * development), set `backend.error.includeStack: true` in app-config.
    */
   showStackTraces?: boolean;
 
@@ -291,8 +305,15 @@ export class MiddlewareFactory {
    * @returns An Express error request handler
    */
   error(options: MiddlewareFactoryErrorOptions = {}): ErrorRequestHandler {
+    // Resolve whether stack traces should be embedded in HTTP error response
+    // bodies. The default is `false` — never leak server stack traces to
+    // clients. See the `MiddlewareFactoryErrorOptions.showStackTraces` JSDoc
+    // for the full precedence order and the security rationale.
+    const configIncludeStack = this.#config.getOptionalBoolean(
+      'backend.error.includeStack',
+    );
     const showStackTraces =
-      options.showStackTraces ?? process.env.NODE_ENV === 'development';
+      options.showStackTraces ?? configIncludeStack ?? false;
 
     const logger = this.#logger.child({
       type: 'errorHandler',

@@ -112,11 +112,18 @@ export function CatalogSearchResultListItem(
               {t('searchResultItem.lifecycle')}: {result.lifecycle}
             </Badge>
           )}
-          {result.owner && (
-            <Badge variant="secondary">
-              {t('searchResultItem.owner')}: {result.owner}
-            </Badge>
-          )}
+          {/*
+           * Owner badge intentionally omitted — Owner functionality has been
+           * fully removed across the application per AAP §0.1.2 ("CRITICAL:
+           * Perform a full removal of this functionality across the
+           * application" for Owner). The previous `result.owner` render is
+           * deleted here, the source field is no longer serialized by the
+           * default catalog collator transformer
+           * (`plugins/search-backend-module-catalog/src/collators/
+           * defaultCatalogCollatorEntityTransformer.ts`), and the
+           * `searchResultItem.owner` translation key has been removed from
+           * `plugins/catalog/src/alpha/translation.ts`.
+           */}
         </div>
       </div>
     </div>

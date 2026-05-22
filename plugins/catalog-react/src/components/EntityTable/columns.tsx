@@ -17,7 +17,6 @@
 import {
   Entity,
   CompoundEntityRef,
-  RELATION_OWNED_BY,
   RELATION_PART_OF,
 } from '@backstage/catalog-model';
 import { OverflowTooltip, TableColumn } from '@backstage/core-components';
@@ -106,13 +105,15 @@ export const columnFactories = Object.freeze({
       },
     };
   },
-  createOwnerColumn<T extends Entity>(): TableColumn<T> {
-    return this.createEntityRelationColumn({
-      title: <EntityTableColumnTitle translationKey="owner" />,
-      relation: RELATION_OWNED_BY,
-      defaultKind: 'group',
-    });
-  },
+  // `createOwnerColumn` and `createSystemColumn` factories were removed
+  // per AAP §0.1.2 and §0.6.1.2 ("delete `createOwnerColumn`" and "delete
+  // `createSystemColumn`"). Owner and System functionality has been fully
+  // removed across the application; these factories are no longer
+  // exported from `columnFactories` so that no consumer can resurrect a
+  // hidden Owner/System column anywhere in the UI. Downstream catalog
+  // surfaces that previously composed these factories
+  // (e.g., `RelatedEntitiesCard/presets.ts`) have already been updated
+  // to drop those usages in earlier refactor passes.
   createDomainColumn<T extends Entity>(): TableColumn<T> {
     return this.createEntityRelationColumn({
       title: <EntityTableColumnTitle translationKey="domain" />,
@@ -120,16 +121,6 @@ export const columnFactories = Object.freeze({
       defaultKind: 'domain',
       filter: {
         kind: 'domain',
-      },
-    });
-  },
-  createSystemColumn<T extends Entity>(): TableColumn<T> {
-    return this.createEntityRelationColumn({
-      title: <EntityTableColumnTitle translationKey="system" />,
-      relation: RELATION_PART_OF,
-      defaultKind: 'system',
-      filter: {
-        kind: 'system',
       },
     });
   },

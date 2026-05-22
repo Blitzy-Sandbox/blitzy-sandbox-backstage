@@ -190,9 +190,12 @@ describe('catalogModuleAccessAudit', () => {
     await flushAsync();
 
     expect(auditorMock.createEvent).toHaveBeenCalledTimes(1);
+    // QA finding F9 (CP7) — severity is `medium` so the default
+    // severityLogLevelMappings route entity-access events to log level
+    // `info`, ensuring they are persisted in the structured audit log.
     expect(auditorMock.createEvent).toHaveBeenCalledWith({
       eventId: 'entity-access',
-      severityLevel: 'low',
+      severityLevel: 'medium',
       request: req,
       meta: {
         entityRef: 'component:default/my-service',
@@ -233,7 +236,9 @@ describe('catalogModuleAccessAudit', () => {
     expect(auditorMock.createEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         eventId: 'entity-access',
-        severityLevel: 'low',
+        // F9 — severity bumped from 'low' to 'medium' so events are
+        // persisted in the structured audit log (see module.ts).
+        severityLevel: 'medium',
         meta: expect.objectContaining({
           entityUid: 'abc-123',
           action: 'read',

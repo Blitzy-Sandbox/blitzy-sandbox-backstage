@@ -137,17 +137,47 @@ function isReadAction(permission: PolicyQuery['permission']): boolean {
   return permission.attributes?.action === 'read';
 }
 
-function isGuestPrincipal(user?: PolicyQueryUser): boolean {
+/**
+ * Detects whether the calling principal is a Backstage Guest.
+ *
+ * History — QA finding F1 (CP7) discovered that the Guest sign-in
+ * resolver in `packages/backend/src/authModuleGuestProvider.ts` issues
+ * an identity with `userEntityRef = 'user:development/guest'` (namespace
+ * `development`), not the canonical `user:default/guest`. The previous
+ * implementation only matched the `default` namespace, which caused
+ * (a) the `bucketEmailDomain` helper to label Guest decisions as
+ * `email_domain="other"` in the Prometheus counter (observability
+ * defect) and (b) the principal-type fallback to be the only thing
+ * keeping enforcement honest (functional enforcement was correct but
+ * brittle). We now treat ANY entity ref of the form
+ * `user:<namespace>/guest` (case-insensitive on `user:` and `/guest`)
+ * as a Guest principal so the detection survives both namespace
+ * variants and any future provider that issues guests in a different
+ * namespace.
+ *
+ * The principal-type literal check remains as a defensive secondary
+ * pathway for forward compatibility with providers that surface a
+ * structured `principal.type === 'guest'`.
+ *
+ * @internal exported for testing
+ */
+export function isGuestPrincipal(user?: PolicyQueryUser): boolean {
   if (!user) {
     // Anonymous / missing identity is treated as a guest by Backstage's
     // permission framework (no token => no user object passed in).
     return true;
   }
-  // Primary detection: canonical guest entity ref produced by the
-  // Backstage Guest sign-in flow.
-  if (user.info?.userEntityRef === 'user:default/guest') {
+
+  // Primary detection: canonical or development-namespace guest entity
+  // ref. Matches `user:default/guest`, `user:development/guest`, and
+  // any other namespace that issues a guest with the well-known local
+  // name. The comparison is case-insensitive because entity refs in
+  // Backstage are case-insensitive by spec.
+  const ref = user.info?.userEntityRef;
+  if (typeof ref === 'string' && isGuestEntityRef(ref)) {
     return true;
   }
+
   // Defensive secondary: forward-compatibility for any future provider
   // that introduces a `'guest'` principal type literal.
   const principalType = (user.credentials as { principal?: { type?: string } })
@@ -156,6 +186,29 @@ function isGuestPrincipal(user?: PolicyQueryUser): boolean {
     return true;
   }
   return false;
+}
+
+/**
+ * Returns true for any entity ref that points to the well-known Guest
+ * user, regardless of namespace. Matches `user:default/guest`,
+ * `user:development/guest`, and any future variant of the same form.
+ * Case-insensitive per Backstage entity-ref spec.
+ *
+ * @internal
+ */
+function isGuestEntityRef(ref: string): boolean {
+  const lower = ref.toLowerCase();
+  if (!lower.startsWith('user:')) {
+    return false;
+  }
+  // The local name segment (after the namespace separator) must be
+  // exactly `guest` — we deliberately do not match `user:default/guests`
+  // or `user:default/guest-account`.
+  const slashIndex = lower.indexOf('/');
+  if (slashIndex < 0) {
+    return false;
+  }
+  return lower.substring(slashIndex + 1) === 'guest';
 }
 
 /**

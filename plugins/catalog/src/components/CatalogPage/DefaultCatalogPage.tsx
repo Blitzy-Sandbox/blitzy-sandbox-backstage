@@ -16,9 +16,7 @@
 
 import {
   Content,
-  ContentHeader,
   PageWithHeader,
-  SupportButton,
   TableColumn,
   TableProps,
 } from '@backstage/core-components';
@@ -51,9 +49,18 @@ export function BaseCatalogPage(props: BaseCatalogPageProps) {
   return (
     <PageWithHeader title={t('indexPage.title', { orgName })} themeId="home">
       <Content>
-        <ContentHeader title="">
-          <SupportButton>{t('indexPage.supportButtonContent')}</SupportButton>
-        </ContentHeader>
+        {/*
+         * QA finding F2 (CP7) — the global top-bar (registered by
+         * `packages/app/src/modules/appModuleTopBar.tsx`) already mounts a
+         * single application-wide Support button sourced from
+         * `app.support.items` in app-config. The previous in-page
+         * `<ContentHeader><SupportButton>...</SupportButton></ContentHeader>`
+         * block rendered a second, redundant Support affordance directly
+         * below the top-bar on every catalog page, violating AAP §0.5.1.1
+         * ("a single Support button per page"). The ContentHeader wrapper
+         * is removed along with the button because the only content it
+         * carried was that one button.
+         */}
         <EntityListProvider pagination={pagination}>
           <div style={{ display: 'none' }}>
             <EntityKindPicker initialFilter="component" />

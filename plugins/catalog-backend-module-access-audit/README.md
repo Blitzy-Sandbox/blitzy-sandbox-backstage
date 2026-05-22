@@ -23,7 +23,7 @@ No additional configuration is required. The module reuses the auditor implement
 Each intercepted entity read produces a single audit event with the following shape:
 
 - `eventId`: `'entity-access'`
-- `severityLevel`: `'low'`
+- `severityLevel`: `'medium'` — chosen so the default `severityLogLevelMappings` (defined in `packages/backend-defaults/src/entrypoints/auditor/utils.ts`) route the event to log level `info`, which is persisted by the default Winston root logger. The previous `'low'` severity mapped to `debug` and was therefore silently filtered out of the structured audit log even while the `entity_access_total` Prometheus counter continued incrementing — see QA finding F9 (CP7) for the regression history.
 - `meta.entityRef`: the canonical stringified entity ref (for example, `'component:default/my-service'`). For `/entities/by-name/:kind/:namespace/:name` reads this is parsed directly from the request path. For `/entities/by-uid/:uid` reads it is recovered from the canonicalized response body; if the body cannot be canonicalized (for example, on a 404 or a malformed response) `entityRef` is omitted and the audit trail records `entityUid` alone.
 - `meta.entityUid`: for `/entities/by-uid/:uid` reads only, the opaque UID parsed from the request path. Always populated for by-uid reads so the audit trail remains non-empty even when the canonical ref cannot be recovered.
 - `meta.principal`: an object describing the authenticated caller, with:
