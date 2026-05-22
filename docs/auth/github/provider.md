@@ -112,3 +112,65 @@ backend.add(import('@backstage/plugin-auth-backend-module-github-provider'));
 To add the provider to the frontend, add the `githubAuthApi` reference and
 `SignInPage` component as shown in
 [Adding the provider to the sign-in page](../index.md#sign-in-configuration).
+
+## Audit Event Emission (Blitzy Sandbox Customization)
+
+> This section documents a Blitzy Sandbox–specific customization layered on top of the upstream GitHub authentication provider. For the high-level narrative across the auth surface, see [`../index.md#audit-event-emission`](../index.md). For the resolver implementation walkthrough, see [`../identity-resolver.md#augmented-github-sign-in-resolver-blitzy-sandbox`](../identity-resolver.md).
+
+In the Blitzy Sandbox fork of Backstage, the GitHub `signInResolver` emits a `user-login` audit event via Backstage's `coreServices.auditor` on every sign-in attempt.
+
+### Event identity
+
+- **Event ID:** `user-login`
+- **Severity level:** `medium`
+- **Source:** the augmented `signInResolver` in `packages/backend/src/authModuleGithubProvider.ts`
+
+### Metadata fields
+
+The event's `meta` payload contains:
+
+- `provider` — Always `github` for events emitted by this provider.
+- `username` — The GitHub login (e.g., `octocat`), sourced from `result.fullProfile.username`.
+- `emailDomain` — The domain portion of the user's verified primary email (e.g., `blitzy.com`, `gmail.com`, `unknown.invalid`). The full email is NEVER included — only the domain bucket. This is a privacy invariant enforced by unit tests in `packages/backend/src/authModuleGithubProvider.test.ts`.
+
+### Lifecycle
+
+The resolver creates the event at the start of the sign-in attempt and finalizes it based on outcome:
+
+- On successful resolution: `auditor.createEvent({...}).success({ meta: { entityRef } })` — the entity ref of the resolved catalog user is appended to the meta.
+- On resolver failure: `auditor.createEvent({...}).fail({ error, meta: { provider: 'github', username } })` — the failure cause is recorded and the original error is re-thrown so the upstream auth pipeline can surface it.
+
+The audit event carries the same correlation ID as the HTTP request that triggered the sign-in, so administrators can join the audit event to the request and to OpenTelemetry trace spans via the correlation ID.
+
+### Operator references
+
+- See [`../identity-resolver.md`](../identity-resolver.md) for the full resolver lifecycle and illustrative pseudo-code.
+- See [`../index.md#audit-event-emission`](../index.md) for the high-level narrative across the auth surface.
+
+## Email-Domain Authorization (Blitzy Sandbox Customization)
+
+> This section documents how the GitHub provider's verified email is propagated into the identity profile and consumed by the `BlitzyPermissionPolicy` to enforce read-only access for non-`@blitzy.com` principals. For the high-level decision sketch, see [`../index.md#email-domain-authorization`](../index.md).
+
+### Email extraction
+
+The augmented `signInResolver` extracts the user's verified primary email from the GitHub OAuth result with the following priority chain:
+
+1. **Primary:** `result.fullProfile.emails?.[0]?.value` — the typical GitHub OAuth scope `user:email` populates this with the user's verified primary email.
+2. **Fallback:** `result.userinfo?.email` — used when the rich GitHub profile does not include an emails array.
+3. **Sentinel:** Synthesized as `<username>@unknown.invalid` — used when neither source is available (rare; only when the GitHub user has set their email to private and the OAuth scope does not request `user:email`). The `unknown.invalid` domain is RFC 2606 reserved and cannot match `@blitzy.com`, so it is safe to use as a non-Blitzy fallback.
+
+### Propagation into the identity profile
+
+After extraction, the resolver populates the email into `BackstageIdentityResponse.profile.email`. The `BlitzyPermissionPolicy.handle()` method reads this field on every authorization check — no second catalog lookup is required, and no outbound API call to GitHub is required on every request.
+
+### Privacy posture
+
+Only the extracted email value is propagated into the identity profile. The OAuth access token, OAuth refresh token, and the raw OAuth result payload are NEVER attached to the identity profile or recorded in audit events. The `emailDomain` field in the audit event records only the domain bucket, not the full email. These invariants are verified by unit tests in `packages/backend/src/authModuleGithubProvider.test.ts`.
+
+### Operator references
+
+- See [`../identity-resolver.md`](../identity-resolver.md) for the resolver lifecycle and the illustrative pseudo-code that shows email extraction in context.
+- See [`../index.md#email-domain-authorization`](../index.md) for the policy decision sketch (5 branches: read, Blitzy + write, non-Blitzy + write, Guest + write, missing email).
+- See [`../../refactor/decision-log.md`](../../refactor/decision-log.md) for the rationale behind the email-source priority chain.
+- See [`../../observability/dashboards.md`](../../observability/dashboards.md) for the Prometheus counters that visualize the policy decisions.
+- See [`../../permissions/writing-a-policy.md`](../../permissions/writing-a-policy.md) for upstream Backstage patterns on permission policy authoring.
