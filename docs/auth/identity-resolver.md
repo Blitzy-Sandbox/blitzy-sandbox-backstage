@@ -550,3 +550,78 @@ The second common error is: "Failed to sign-in, unable to resolve user identity"
 ![Failed to sign-in, unable to resolve user identity](../assets/auth/github-unable-to-reolve-identity.png)
 
 This error is caused by the Sign-In Resolver you configured being unable to find a matching User in the Catalog. To fix this you need to import User, and Group, data from some source of truth for this data at your Organization. To do this you can use one of the existing Org Data providers like the ones for [Entra ID (Azure AD/MS Graph)](../integrations/azure/org.md), [GitHub](../integrations/github/org.md), [GitLab](../integrations/gitlab/org.md), etc. or if none of those fit your needs you can create a [Custom Entity Provider](../features/software-catalog/external-integrations.md#custom-entity-providers).
+
+## Augmented GitHub Sign-In Resolver (Blitzy Sandbox)
+
+> This section documents Blitzy Sandbox–specific customizations to the GitHub authentication provider's sign-in resolver. The customizations are layered on top of the upstream Backstage resolver patterns documented above (see [Building Custom Resolvers](#building-custom-resolvers)).
+
+The GitHub `signInResolver` in `packages/backend/src/authModuleGithubProvider.ts` has been augmented to:
+
+1. Emit a `user-login` audit event via `coreServices.auditor` on every sign-in attempt — recording success or failure outcomes so administrators have a tamper-evident record of authentication events.
+2. Extract the verified primary email from the GitHub OAuth result and populate it into `BackstageIdentityResponse.profile.email` so that the downstream `BlitzyPermissionPolicy` can read the email domain without performing a second catalog lookup.
+
+### Module dependency on `coreServices.auditor`
+
+The backend module declares an explicit dependency on the auditor service through the `deps` block of `createBackendModule`. The auditor service is provided by `@backstage/backend-plugin-api` and is the canonical channel for emitting immutable audit events that flow into the structured log channel (and on into the Prometheus counter inventory documented in [`../observability/dashboards.md`](../observability/dashboards.md)).
+
+### Resolver lifecycle
+
+On every sign-in:
+
+1. The resolver resolves the GitHub user record via `ctx.signInWithCatalogUser({ entityRef: { name: result.fullProfile.username } })` — the same call documented in [Building Custom Resolvers](#building-custom-resolvers).
+2. The resolver extracts the user's verified primary email from `result.fullProfile.emails?.[0]?.value` (the typical GitHub OAuth scope `user:email` populates this). If the primary email is unavailable, the resolver falls back to `result.userinfo?.email`. If both are absent (rare; only when the GitHub user has set their email to private and the OAuth scope does not request `user:email`), the resolver synthesizes a sentinel domain (`<username>@unknown.invalid`) so the downstream policy has a deterministic non-Blitzy value to evaluate.
+3. The resolver computes `emailDomain = email.split('@')[1] ?? 'unknown.invalid'` and emits a `user-login` audit event with that domain in the `meta` payload. The full email is NOT placed in the meta payload — only the domain bucket is recorded. This is a privacy invariant; see [`../observability/dashboards.md`](../observability/dashboards.md) Section 6.4 (Privacy posture).
+4. On a successful resolution, the resolver emits `auditor.createEvent({...}).success({ meta: { entityRef } })` and returns a `BackstageIdentityResponse` with the email populated in the `profile` field.
+5. On a failure (e.g., the catalog user lookup throws `NotFoundError`), the resolver emits `auditor.createEvent({...}).fail({ error, meta })` and re-throws the original error so the upstream Backstage auth pipeline can surface it to the client.
+
+### Illustrative pseudo-code
+
+The following snippet illustrates the augmented resolver shape. It is illustrative and is NOT a literal copy of the production source — consult `packages/backend/src/authModuleGithubProvider.ts` for the authoritative implementation:
+
+```typescript
+// Illustrative pseudo-code — see packages/backend/src/authModuleGithubProvider.ts
+const signInResolver = async (info, ctx) => {
+  const username = info.result.fullProfile.username;
+  const email =
+    info.result.fullProfile.emails?.[0]?.value ?? info.result.userinfo?.email;
+  const emailDomain = email?.split('@')[1] ?? 'unknown.invalid';
+
+  const event = auditor.createEvent({
+    eventId: 'user-login',
+    severityLevel: 'medium',
+    request: ctx.request,
+    meta: { provider: 'github', username, emailDomain },
+  });
+
+  try {
+    const result = await ctx.signInWithCatalogUser({
+      entityRef: { name: username },
+    });
+    await event.success({
+      meta: { entityRef: result.identity.userEntityRef },
+    });
+    return {
+      ...result,
+      profile: { ...result.profile, email },
+    };
+  } catch (error) {
+    await event.fail({ error, meta: { provider: 'github', username } });
+    throw error;
+  }
+};
+```
+
+### Downstream consumers of `profile.email`
+
+The populated `profile.email` field is read by the `BlitzyPermissionPolicy` (defined in `plugins/permission-backend-module-blitzy-policy/src/policy.ts`) to determine whether the principal's domain is `@blitzy.com`. The policy enforces a deny-by-default posture for write actions when the domain is anything other than `@blitzy.com` (or when the principal is a Guest). See [`./index.md#email-domain-authorization`](./index.md#email-domain-authorization) for the high-level narrative and [`../permissions/writing-a-policy.md`](../permissions/writing-a-policy.md) for upstream Backstage patterns on which the policy is built.
+
+### Rationale and decision history
+
+The fallback chain for email extraction (`fullProfile.emails[0].value` → `userinfo.email` → synthetic `@unknown.invalid`) is a deliberate choice. The alternative options (relying solely on `userinfo.email`, or making an additional `GET /user/emails` API call to GitHub on every sign-in) were considered and rejected. The full rationale, alternatives, and accepted risks are captured in [`../refactor/decision-log.md`](../refactor/decision-log.md) under the row titled "Email source priority for the policy's domain check".
+
+### See also
+
+- [`./index.md`](./index.md) — High-level overview of the audit event emission and email-domain authorization layers in this fork.
+- [`./github/provider.md`](./github/provider.md) — Configuration of the GitHub provider, including audit emission and email-domain authorization sections.
+- [`../observability/dashboards.md`](../observability/dashboards.md) — The Prometheus counter `user_login_total{provider, email_domain}` and the Grafana dashboard panel that visualize the audit events emitted here.
+- [`../refactor/decision-log.md`](../refactor/decision-log.md) — Rationale for the email-source priority and the deny-by-default policy posture.
