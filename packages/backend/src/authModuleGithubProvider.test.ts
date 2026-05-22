@@ -23,6 +23,7 @@ import {
   createBlitzyGithubSignInResolver,
   selectPrimaryGithubEmail,
 } from './authModuleGithubProvider';
+import { bucketSignInEmailDomain, userLoginTotal } from './metrics';
 
 type ResolverInput = {
   result: OAuthAuthenticatorResult<PassportProfile>;
@@ -567,5 +568,128 @@ describe('createBlitzyGithubSignInResolver', () => {
       ).meta;
       expect(createEventMeta.emailDomain).toBe('blitzy.com');
     });
+  });
+
+  describe('metrics emission', () => {
+    let counterSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      counterSpy = jest.spyOn(userLoginTotal, 'add');
+    });
+
+    afterEach(() => {
+      counterSpy.mockRestore();
+    });
+
+    it('increments user_login_total once with bucketed blitzy.com domain on success', async () => {
+      const { auditor } = makeAuditorMock();
+      const resolver = createBlitzyGithubSignInResolver(auditor);
+      const ctx = makeResolverCtx();
+      await callResolver(
+        resolver,
+        {
+          result: makeOAuthResult({
+            username: 'alex',
+            emails: [{ value: 'alex@blitzy.com' }],
+          }),
+        },
+        ctx,
+      );
+      expect(counterSpy).toHaveBeenCalledTimes(1);
+      expect(counterSpy).toHaveBeenCalledWith(1, {
+        provider: 'github',
+        email_domain: 'blitzy.com',
+      });
+    });
+
+    it('increments user_login_total with bucket "other" for non-blitzy domains', async () => {
+      const { auditor } = makeAuditorMock();
+      const resolver = createBlitzyGithubSignInResolver(auditor);
+      const ctx = makeResolverCtx();
+      await callResolver(
+        resolver,
+        {
+          result: makeOAuthResult({
+            username: 'alex',
+            emails: [{ value: 'alex@example.com' }],
+          }),
+        },
+        ctx,
+      );
+      expect(counterSpy).toHaveBeenCalledTimes(1);
+      expect(counterSpy).toHaveBeenCalledWith(1, {
+        provider: 'github',
+        email_domain: 'other',
+      });
+    });
+
+    it('increments user_login_total with bucket "unknown" when no email is available', async () => {
+      const { auditor } = makeAuditorMock();
+      const resolver = createBlitzyGithubSignInResolver(auditor);
+      const ctx = makeResolverCtx();
+      await callResolver(
+        resolver,
+        {
+          result: makeOAuthResult({
+            username: 'alex',
+            // No emails and no userinfo email — resolver will fall back
+            // to the synthetic `<username>@unknown.invalid` placeholder,
+            // which buckets to "unknown".
+          }),
+        },
+        ctx,
+      );
+      expect(counterSpy).toHaveBeenCalledTimes(1);
+      expect(counterSpy).toHaveBeenCalledWith(1, {
+        provider: 'github',
+        email_domain: 'unknown',
+      });
+    });
+
+    it('increments user_login_total even when token issuance fails', async () => {
+      const { auditor } = makeAuditorMock();
+      const resolver = createBlitzyGithubSignInResolver(auditor);
+      const ctx = makeResolverCtx();
+      // Force token issuance to fail; the counter still records the
+      // observed sign-in attempt because it is recorded before the
+      // auditor.createEvent call.
+      ctx.issueToken.mockRejectedValueOnce(new Error('token issuance failed'));
+      await expect(
+        callResolver(
+          resolver,
+          {
+            result: makeOAuthResult({
+              username: 'alex',
+              emails: [{ value: 'alex@blitzy.com' }],
+            }),
+          },
+          ctx,
+        ),
+      ).rejects.toThrow('token issuance failed');
+      expect(counterSpy).toHaveBeenCalledTimes(1);
+      expect(counterSpy).toHaveBeenCalledWith(1, {
+        provider: 'github',
+        email_domain: 'blitzy.com',
+      });
+    });
+  });
+});
+
+describe('bucketSignInEmailDomain', () => {
+  it('returns "blitzy.com" for the blitzy domain', () => {
+    expect(bucketSignInEmailDomain('blitzy.com')).toBe('blitzy.com');
+    expect(bucketSignInEmailDomain('BLITZY.COM')).toBe('blitzy.com');
+  });
+
+  it('returns "other" for non-blitzy domains', () => {
+    expect(bucketSignInEmailDomain('example.com')).toBe('other');
+    expect(bucketSignInEmailDomain('dev.blitzy.com')).toBe('other');
+    expect(bucketSignInEmailDomain('notblitzy.com')).toBe('other');
+  });
+
+  it('returns "unknown" for empty, missing, or unknown.invalid', () => {
+    expect(bucketSignInEmailDomain(undefined)).toBe('unknown');
+    expect(bucketSignInEmailDomain('')).toBe('unknown');
+    expect(bucketSignInEmailDomain('unknown.invalid')).toBe('unknown');
   });
 });

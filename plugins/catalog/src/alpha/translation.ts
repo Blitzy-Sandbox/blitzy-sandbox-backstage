@@ -117,10 +117,6 @@ export const catalogTranslationRef = createTranslationRef({
     },
     entityLabels: {
       warningPanelTitle: 'Entity not found',
-      // The Owner HeaderLabel was removed from the alpha entity header
-      // per AAP §0.1.3 CRITICAL "Perform a full removal of this
-      // functionality across the application"; the `ownerLabel` key has
-      // been deleted because it is no longer referenced by any component.
       lifecycleLabel: 'Lifecycle',
     },
     entityLinksCard: {

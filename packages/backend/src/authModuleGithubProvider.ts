@@ -33,6 +33,8 @@ import {
   SignInResolver,
 } from '@backstage/plugin-auth-node';
 
+import { bucketSignInEmailDomain, userLoginTotal } from './metrics';
+
 /**
  * Selects the verified primary email from a GitHub `PassportProfile.emails`
  * array. Returns `undefined` when no candidate is present.
@@ -132,8 +134,7 @@ export function selectPrimaryGithubEmail(
  *    the user in without an audit trail. Token issuance is NOT attempted
  *    in this branch.
  *  - On successful token issuance the resolver calls
- *    `auditorEvent.success({ meta: { entityRef: userEntityRef } })` as
- *    required by AAP §0.5.1.3.
+ *    `auditorEvent.success({ meta: { entityRef: userEntityRef } })`.
  *  - On any failure after `createEvent` succeeds, the resolver calls
  *    `auditorEvent.fail({ error, meta })` and rethrows so the upstream
  *    OAuth flow sees the failure.
@@ -173,6 +174,16 @@ export function createBlitzyGithubSignInResolver(
       `${userId}@unknown.invalid`;
     const emailDomain =
       primaryEmail.split('@')[1]?.toLowerCase() ?? 'unknown.invalid';
+
+    // Increment the user-login counter exactly once per sign-in
+    // attempt. Recorded before auditor.createEvent so the metric is
+    // not skipped if the auditor itself fails (the counter tracks
+    // resolver-observed sign-in attempts, not successful audit
+    // emissions).
+    userLoginTotal.add(1, {
+      provider: 'github',
+      email_domain: bucketSignInEmailDomain(emailDomain),
+    });
 
     // Audit event creation is wrapped in its own try so that an auditor
     // service failure (e.g., transport down) does not silently sign the

@@ -26,6 +26,8 @@ import {
 import { stringifyEntityRef } from '@backstage/catalog-model';
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 
+import { entityAccessTotal } from './metrics';
+
 /**
  * Regex matching exact `GET /entities/by-name/:kind/:namespace/:name` paths,
  * relative to the catalog plugin's base path. Allows an optional trailing
@@ -405,6 +407,13 @@ function createAuditMiddleware(deps: {
           if (entityUid) {
             meta.entityUid = entityUid;
           }
+
+          // Increment the entity-access counter exactly once per
+          // observed read. Recorded before createEvent so the metric is
+          // not skipped if the auditor itself fails (the counter
+          // tracks middleware-observed reads, not successful audit
+          // emissions).
+          entityAccessTotal.add(1, { action: meta.action });
 
           let event: AuditorServiceEvent;
           try {

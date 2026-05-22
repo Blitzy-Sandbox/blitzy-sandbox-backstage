@@ -126,17 +126,9 @@ const ICON_BUTTON_STYLE: CSSProperties = {
 
 /**
  * `TopBarSearch` is the Search icon affordance anchored in the top-bar's
- * right cluster.
- *
- * The previous `appModuleNav` sidebar mounted a global Search entry next
- * to Catalog, APIs, and Docs. Removing the sidebar without a replacement
- * would have orphaned that affordance (the AAP §0.1.1 prerequisite
- * "Sidebar replacement, not just deletion" warns against this). This
- * button restores discoverable Search access from anywhere in the app,
- * linking to the `/search` route registered by the search plugin.
- *
- * Like `TopBarSettings`, it uses Backstage's `Link` for analytics +
- * baseUrl resolution and is icon-only with an explicit `aria-label` for
+ * right cluster. It links to the `/search` route registered by the
+ * search plugin via Backstage's `Link` for analytics and baseUrl
+ * resolution, and is icon-only with an explicit `aria-label` for
  * assistive technology.
  */
 const TopBarSearch = () => (

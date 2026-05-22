@@ -46,13 +46,6 @@ export const HasApisCard = (props: {
   tableOptions?: TableOptions;
 }) => {
   const { t } = useTranslationRef(apiDocsTranslationRef);
-  // Per AAP §0.1.3 CRITICAL ("remove the ability to click on or access the
-  // 'Owner' link/element. Perform a full removal of this functionality across
-  // the application"), the Owner column factory is intentionally omitted
-  // from the HasApisCard column set. It was previously surfaced as a column
-  // header on the System entity's "APIs" related-entities card and, when an
-  // API entity carried an `ownedBy` relation, would have rendered as a
-  // clickable link to the owning Group entity.
   const presetColumns: TableColumn<ApiEntity>[] = useMemo(() => {
     return [
       EntityTable.columns.createEntityRefColumn({ defaultKind: 'API' }),

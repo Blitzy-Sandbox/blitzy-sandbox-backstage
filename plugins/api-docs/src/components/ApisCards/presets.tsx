@@ -68,15 +68,6 @@ function createApiDefinitionColumn(
   };
 }
 
-// Per AAP §0.1.3 CRITICAL ("remove the ability to click on or access the
-// 'System' link/element" and "remove the ability to click on or access the
-// 'Owner' link/element. Perform a full removal of this functionality across
-// the application"), the System and Owner column factories are intentionally
-// omitted from the api-docs ApisCards column set. They were previously
-// surfaced as column headers in the Provided APIs and Consumed APIs tables
-// on every entity Overview tab and, when an API entity carried `system` or
-// `ownedBy` relations, would have rendered as clickable links to the System
-// or Group entity respectively.
 export const getApiEntityColumns = (
   t: TranslationFunction<typeof apiDocsTranslationRef.T>,
 ): TableColumn<ApiEntity>[] => {

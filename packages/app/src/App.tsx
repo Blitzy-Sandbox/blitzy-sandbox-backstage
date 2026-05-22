@@ -78,17 +78,10 @@ TODO:
 /* app.tsx */
 
 /**
- * TechDocs does support the new frontend system so this conversion is not
- * strictly necessary, but it's left here to provide a demo of the utilities for
- * converting legacy plugins.
- *
- * Only TechDocsReaderPage is registered globally; the per-entity TechDocs
- * content extension stays. The global /docs index page is intentionally
- * removed — TechDocs are reachable only after clicking into a project entity,
- * per the refactor requirements. The reader path omits the trailing wildcard
- * because the AppRoutes extension already appends "/*" to every route path —
- * including a duplicate wildcard would produce an invalid double-star pattern
- * that React Router v6 cannot match correctly.
+ * Registers the TechDocs reader route and the per-entity TechDocs content
+ * extension via the legacy-plugin compatibility utilities. The reader path
+ * omits a trailing wildcard because the AppRoutes extension already appends
+ * "/*" to every route path.
  */
 const convertedTechdocsPlugin = convertLegacyPlugin(techdocsPlugin, {
   extensions: [

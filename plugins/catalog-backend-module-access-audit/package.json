@@ -30,7 +30,8 @@
   },
   "dependencies": {
     "@backstage/backend-plugin-api": "workspace:^",
-    "@backstage/catalog-model": "workspace:^"
+    "@backstage/catalog-model": "workspace:^",
+    "@opentelemetry/api": "^1.9.0"
   },
   "devDependencies": {
     "@backstage/backend-test-utils": "workspace:^",

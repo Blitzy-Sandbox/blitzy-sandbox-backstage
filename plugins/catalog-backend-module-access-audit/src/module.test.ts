@@ -26,6 +26,7 @@ import {
 } from '@backstage/backend-test-utils';
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import { catalogModuleAccessAudit } from './module';
+import { entityAccessTotal } from './metrics';
 
 /**
  * Builds a minimal Response-like object using an EventEmitter so that the
@@ -770,5 +771,103 @@ describe('catalogModuleAccessAudit', () => {
     const [arg] = (auditorMock.createEvent as jest.Mock).mock.calls[0];
     expect(arg.meta.entityRef).toBeUndefined();
     expect(arg.meta.entityUid).toBe('uid-7');
+  });
+
+  describe('metrics emission', () => {
+    let counterSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      counterSpy = jest.spyOn(entityAccessTotal, 'add');
+    });
+
+    afterEach(() => {
+      counterSpy.mockRestore();
+    });
+
+    it('increments entity_access_total once per audited by-name read', async () => {
+      const { handler } = await bootBackend();
+      const req = createMockRequest(
+        'GET',
+        '/entities/by-name/component/default/my-service',
+      );
+      const res = createMockResponse(200);
+      const next = jest.fn() as NextFunction;
+
+      handler(req, res, next);
+      res.triggerFinish();
+      await flushAsync();
+
+      expect(counterSpy).toHaveBeenCalledTimes(1);
+      expect(counterSpy).toHaveBeenCalledWith(1, { action: 'read' });
+    });
+
+    it('does not increment for non-GET requests', async () => {
+      const { handler } = await bootBackend();
+      const req = createMockRequest(
+        'POST',
+        '/entities/by-name/component/default/my-service',
+      );
+      const res = createMockResponse(200);
+      const next = jest.fn() as NextFunction;
+
+      handler(req, res, next);
+      res.triggerFinish();
+      await flushAsync();
+
+      expect(counterSpy).not.toHaveBeenCalled();
+    });
+
+    it('does not increment for collection endpoints', async () => {
+      const { handler } = await bootBackend();
+      const req = createMockRequest('GET', '/entities');
+      const res = createMockResponse(200);
+      const next = jest.fn() as NextFunction;
+
+      handler(req, res, next);
+      res.triggerFinish();
+      await flushAsync();
+
+      expect(counterSpy).not.toHaveBeenCalled();
+    });
+
+    it('increments entity_access_total exactly once even when both finish and close fire', async () => {
+      const { handler } = await bootBackend();
+      const req = createMockRequest(
+        'GET',
+        '/entities/by-name/component/default/my-service',
+      );
+      const res = createMockResponse(200);
+      const next = jest.fn() as NextFunction;
+
+      handler(req, res, next);
+      res.triggerFinish();
+      res.triggerClose();
+      await flushAsync();
+
+      expect(counterSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('increments entity_access_total once even when the auditor fails', async () => {
+      const { handler, loggerMock } = await bootBackend({
+        auditorImpl: {
+          createEvent: jest.fn().mockRejectedValue(new Error('auditor down')),
+        },
+      });
+      const req = createMockRequest(
+        'GET',
+        '/entities/by-name/component/default/my-service',
+      );
+      const res = createMockResponse(200);
+      const next = jest.fn() as NextFunction;
+
+      handler(req, res, next);
+      res.triggerFinish();
+      await flushAsync();
+
+      // Counter still records the observed read; only the audit
+      // emission degraded.
+      expect(counterSpy).toHaveBeenCalledTimes(1);
+      expect(loggerMock.warn).toHaveBeenCalled();
+    });
   });
 });

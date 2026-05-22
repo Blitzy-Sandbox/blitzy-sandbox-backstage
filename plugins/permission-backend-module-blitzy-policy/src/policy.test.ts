@@ -24,6 +24,7 @@ import {
   PolicyQueryUser,
 } from '@backstage/plugin-permission-node';
 import { BlitzyPermissionPolicy, extractEmail } from './policy';
+import { blitzyPermissionDecisionsTotal, bucketEmailDomain } from './metrics';
 
 /**
  * Signs a minimal JWT carrying the supplied claims for use in tests.
@@ -395,6 +396,108 @@ describe('BlitzyPermissionPolicy', () => {
         }),
       });
       expect(extractEmail(user)).toBeUndefined();
+    });
+  });
+
+  describe('metrics emission', () => {
+    let counterSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      // Spy on the shared counter so each test can assert that handle()
+      // increments exactly once with the bucketed labels. The counter is
+      // a singleton across the module's lifetime; spying-and-restoring
+      // keeps the spec hermetic.
+      counterSpy = jest.spyOn(blitzyPermissionDecisionsTotal, 'add');
+    });
+
+    afterEach(() => {
+      counterSpy.mockRestore();
+    });
+
+    it('increments once per handle() call with ALLOW for read action by guest', async () => {
+      const user = await makeUser({ userEntityRef: 'user:default/guest' });
+      await policy.handle(readPermission(), user);
+      expect(counterSpy).toHaveBeenCalledTimes(1);
+      expect(counterSpy).toHaveBeenCalledWith(1, {
+        result: 'ALLOW',
+        email_domain: 'guest',
+        action: 'read',
+      });
+    });
+
+    it('increments once with ALLOW + blitzy.com for blitzy write', async () => {
+      const user = await makeUser({
+        userEntityRef: 'user:default/alex',
+        email: 'alex@blitzy.com',
+      });
+      await policy.handle(writePermission('create'), user);
+      expect(counterSpy).toHaveBeenCalledTimes(1);
+      expect(counterSpy).toHaveBeenCalledWith(1, {
+        result: 'ALLOW',
+        email_domain: 'blitzy.com',
+        action: 'create',
+      });
+    });
+
+    it('increments once with DENY + other for non-blitzy write', async () => {
+      const user = await makeUser({
+        userEntityRef: 'user:default/external',
+        email: 'external@example.com',
+      });
+      await policy.handle(writePermission('update'), user);
+      expect(counterSpy).toHaveBeenCalledTimes(1);
+      expect(counterSpy).toHaveBeenCalledWith(1, {
+        result: 'DENY',
+        email_domain: 'other',
+        action: 'update',
+      });
+    });
+
+    it('increments once with DENY + guest for guest write', async () => {
+      const user = await makeUser({ userEntityRef: 'user:default/guest' });
+      await policy.handle(writePermission('delete'), user);
+      expect(counterSpy).toHaveBeenCalledTimes(1);
+      expect(counterSpy).toHaveBeenCalledWith(1, {
+        result: 'DENY',
+        email_domain: 'guest',
+        action: 'delete',
+      });
+    });
+
+    it('increments with action=unknown when permission has no attribute', async () => {
+      const user = await makeUser({ userEntityRef: 'user:default/guest' });
+      const query: PolicyQuery = {
+        permission: createPermission({
+          name: 'something.weird',
+          attributes: {},
+        }),
+      };
+      await policy.handle(query, user);
+      expect(counterSpy).toHaveBeenCalledTimes(1);
+      expect(counterSpy).toHaveBeenCalledWith(
+        1,
+        expect.objectContaining({ action: 'unknown' }),
+      );
+    });
+  });
+
+  describe('bucketEmailDomain (metrics helper)', () => {
+    it('returns "guest" when isGuest is true regardless of email', () => {
+      expect(bucketEmailDomain(undefined, true)).toBe('guest');
+      expect(bucketEmailDomain('alex@blitzy.com', true)).toBe('guest');
+    });
+
+    it('returns "blitzy.com" for blitzy emails when not guest', () => {
+      expect(bucketEmailDomain('alex@blitzy.com', false)).toBe('blitzy.com');
+      expect(bucketEmailDomain('ALEX@BLITZY.COM', false)).toBe('blitzy.com');
+    });
+
+    it('returns "other" for non-blitzy emails and undefined', () => {
+      expect(bucketEmailDomain('alex@example.com', false)).toBe('other');
+      expect(bucketEmailDomain(undefined, false)).toBe('other');
+      // Lookalikes and subdomains are not blitzy.com.
+      expect(bucketEmailDomain('alex@dev.blitzy.com', false)).toBe('other');
+      expect(bucketEmailDomain('alex@notblitzy.com', false)).toBe('other');
     });
   });
 });

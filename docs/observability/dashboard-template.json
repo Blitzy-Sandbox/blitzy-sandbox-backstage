@@ -15,7 +15,7 @@
       }
     ]
   },
-  "description": "Blitzy Sandbox Backstage observability dashboard. Shows catalog query latency, HTTP error rate, Node.js heap usage, and service health (all backed by auto-instrumented metrics that are available today). Two panels — 'Audit Events Per Minute' and 'Permission Decisions (ALLOW / DENY)' — depend on custom counters (`user_login_total`, `entity_access_total`, `blitzy_permission_decisions_total`) that are PLANNED but NOT YET IMPLEMENTED in the source at this checkpoint, and will render 'No data' until the counters are wired into their planned emission sites. Implementation is tracked in docs/refactor/next-tasks.md entry 1. Generated as part of the Blitzy Sandbox Backstage refactor PR. See docs/observability/dashboards.md for import instructions, metric definitions, and the audit-event channel that is the operator's source of truth for sign-in / entity-access signals until the counters land.",
+  "description": "Blitzy Sandbox Backstage observability dashboard. Shows catalog query latency, HTTP error rate, Node.js heap usage, service health (auto-instrumented metrics), audit events per minute (`user_login_total` + `entity_access_total`), and permission decisions (`blitzy_permission_decisions_total`). All custom counters are emitted by the backend at runtime via `@opentelemetry/api`. Generated as part of the Blitzy Sandbox Backstage refactor PR. See docs/observability/dashboards.md for import instructions and metric definitions.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -28,7 +28,7 @@
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
-      "description": "PLANNED — NOT YET EMITTED at this checkpoint. Panel queries `rate(user_login_total[1m])` and `rate(entity_access_total[1m])`, which depend on custom Prometheus counters that are not yet wired into `packages/backend/src/authModuleGithubProvider.ts` and `plugins/catalog-backend-module-access-audit/src/module.ts` respectively. Implementation is tracked in `docs/refactor/next-tasks.md` entry 1. Until the counters land, sign-in and entity-access volume is visible only via the structured audit-event channel (`eventId=user-login` and `eventId=entity-access` log lines emitted by Backstage `AuditorService`). The panel definitions are preserved so the dashboard becomes functional automatically when the counters are added.",
+      "description": "Audit-event volume. Panel queries `rate(user_login_total[1m])` and `rate(entity_access_total[1m])`, populated by the custom Prometheus counters emitted from `packages/backend/src/authModuleGithubProvider.ts` (via `packages/backend/src/metrics.ts`) and `plugins/catalog-backend-module-access-audit/src/module.ts` (via `plugins/catalog-backend-module-access-audit/src/metrics.ts`). Counters are lazy-registered on first observation; exercise sign-in and entity-read paths to populate.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -129,7 +129,7 @@
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
-      "description": "PLANNED — NOT YET EMITTED at this checkpoint. Panel query `sum by (result, email_domain) (rate(blitzy_permission_decisions_total[5m]))` depends on a custom Prometheus counter that is not yet wired into `plugins/permission-backend-module-blitzy-policy/src/policy.ts`. Implementation is tracked in `docs/refactor/next-tasks.md` entry 1. Until the counter lands, ALLOW/DENY decisions are visible only via the structured logs emitted by `BlitzyPermissionPolicy` and via the policy unit tests in `plugins/permission-backend-module-blitzy-policy/src/policy.test.ts`. The panel definition is preserved so the dashboard becomes functional automatically when the counter is added.",
+      "description": "ALLOW/DENY permission decisions per second grouped by result and bucketed email domain. Panel query `sum by (result, email_domain) (rate(blitzy_permission_decisions_total[5m]))`, populated by the custom Prometheus counter emitted from `BlitzyPermissionPolicy.handle()` in `plugins/permission-backend-module-blitzy-policy/src/policy.ts` (via `plugins/permission-backend-module-blitzy-policy/src/metrics.ts`). The counter is incremented exactly once per `handle()` call after the decision is computed. Email domains are bucketed via `bucketEmailDomain()` into `blitzy.com`, `other`, or `guest` to keep cardinality bounded and avoid PII leakage.",
       "fieldConfig": {
         "defaults": {
           "color": {

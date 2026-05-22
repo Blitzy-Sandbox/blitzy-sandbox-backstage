@@ -24,6 +24,7 @@ import {
   PolicyQuery,
   PolicyQueryUser,
 } from '@backstage/plugin-permission-node';
+import { blitzyPermissionDecisionsTotal, bucketEmailDomain } from './metrics';
 
 /**
  * `BlitzyPermissionPolicy` enforces a read-only posture for users whose
@@ -68,6 +69,29 @@ export class BlitzyPermissionPolicy implements PermissionPolicy {
     request: PolicyQuery,
     user?: PolicyQueryUser,
   ): Promise<PolicyDecision> {
+    const action = request.permission.attributes?.action ?? 'unknown';
+    const guest = isGuestPrincipal(user);
+    const email = extractEmail(user);
+    const decision = this.#decide(request, guest, email);
+
+    // Increment the metric exactly once per handle() call, after the
+    // decision is known. Labels are bucketed via bucketEmailDomain so
+    // the cardinality stays at result × {blitzy.com, other, guest} ×
+    // action, which is bounded and PII-safe.
+    blitzyPermissionDecisionsTotal.add(1, {
+      result: decision.result === AuthorizeResult.ALLOW ? 'ALLOW' : 'DENY',
+      email_domain: bucketEmailDomain(email, guest),
+      action,
+    });
+
+    return decision;
+  }
+
+  #decide(
+    request: PolicyQuery,
+    guest: boolean,
+    email: string | undefined,
+  ): PolicyDecision {
     // Step 1: Read actions are always allowed.
     if (isReadAction(request.permission)) {
       return { result: AuthorizeResult.ALLOW };
@@ -75,12 +99,11 @@ export class BlitzyPermissionPolicy implements PermissionPolicy {
 
     // Step 2: Guest principals (and anonymous requests) are read-only for
     // any non-read action.
-    if (isGuestPrincipal(user)) {
+    if (guest) {
       return { result: AuthorizeResult.DENY };
     }
 
     // Step 3: Users with a verified @blitzy.com email may perform writes.
-    const email = extractEmail(user);
     if (isBlitzyDomain(email)) {
       return { result: AuthorizeResult.ALLOW };
     }

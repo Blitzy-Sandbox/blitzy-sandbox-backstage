@@ -71,13 +71,8 @@ export function AboutContent(props: AboutContentProps) {
   const sourceUrl = useEntitySourceUrl(entity);
   const { t } = useTranslationRef(catalogTranslationRef);
 
-  // D4 fix: the AAP-specified `border-border/30` fractional-opacity modifier
-  // on the description divider is not emitted in the app's pre-compiled
-  // Tailwind stylesheet (`packages/app/src/tailwind.css`). Updating the
-  // Tailwind scan paths is OUT OF SCOPE per AAP 0.7.2. Apply the 30%
-  // alpha of the `--border` token (#E6E6E6) imperatively via the DOM
-  // API — Rule 1 compliant (the rule prohibits JSX `style={{}}`, not
-  // imperative DOM mutation).
+  // Apply a 30% alpha of the `--border` token (#E6E6E6) to the
+  // description divider imperatively via the DOM API.
   const descriptionRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     if (descriptionRef.current) {
@@ -96,12 +91,6 @@ export function AboutContent(props: AboutContentProps) {
   const isLocation = entity.kind.toLocaleLowerCase('en-US') === 'location';
   const isGroup = entity.kind.toLocaleLowerCase('en-US') === 'group';
 
-  // Per AAP §0.5.1.2 / §0.7.2 (CRITICAL): the System and Owner AboutField
-  // blocks were removed below. The `partOfSystemRelations` and
-  // `ownedByRelations` derivations that previously powered those blocks
-  // have therefore been removed as well. `partOfComponentRelations` and
-  // `partOfDomainRelations` remain because they continue to drive the
-  // Parent Component and Domain AboutField blocks respectively.
   const partOfComponentRelations = getEntityRelations(
     entity,
     RELATION_PART_OF,
@@ -152,11 +141,6 @@ export function AboutContent(props: AboutContentProps) {
         </AboutField>
       )}
 
-      {/* Per AAP §0.5.1.2 / §0.7.2 (CRITICAL): the Owner `AboutField` block
-          was removed here. "remove the ability to click on or access the
-          'Owner' link/element. Perform a full removal of this
-          functionality across the application." */}
-
       {(isSystem || partOfDomainRelations.length > 0) && (
         <AboutField
           label={t('aboutCard.domainField.label')}
@@ -171,11 +155,6 @@ export function AboutContent(props: AboutContentProps) {
           )}
         </AboutField>
       )}
-
-      {/* Per AAP §0.5.1.2 / §0.7.2 (CRITICAL): the System `AboutField`
-          block was removed here. "remove the ability to click on or
-          access the 'System' link/element. Perform a full removal of
-          this functionality across the application." */}
 
       {isComponent && partOfComponentRelations.length > 0 && (
         <AboutField
