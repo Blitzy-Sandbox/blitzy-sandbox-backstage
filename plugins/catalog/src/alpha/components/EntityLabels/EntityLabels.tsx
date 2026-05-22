@@ -15,11 +15,7 @@
  */
 
 import { HeaderLabel } from '@backstage/core-components';
-import { Entity, RELATION_OWNED_BY } from '@backstage/catalog-model';
-import {
-  EntityRefLinks,
-  getEntityRelations,
-} from '@backstage/plugin-catalog-react';
+import { Entity } from '@backstage/catalog-model';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { catalogTranslationRef } from '../../translation';
 
@@ -27,25 +23,17 @@ type EntityLabelsProps = {
   entity: Entity;
 };
 
+// Per AAP §0.1.3 CRITICAL ("Perform a full removal of this functionality
+// across the application") and §0.5.4 ("The HeaderLabel cluster renders
+// without the Owner label"), the Owner HeaderLabel — together with the
+// embedded EntityRefLinks affordance that navigated to the owning Group
+// entity — has been removed from this alpha entity-page header surface.
+// Only the Lifecycle HeaderLabel remains.
 export function EntityLabels(props: EntityLabelsProps) {
   const { entity } = props;
-  const ownedByRelations = getEntityRelations(entity, RELATION_OWNED_BY);
   const { t } = useTranslationRef(catalogTranslationRef);
   return (
     <>
-      {ownedByRelations.length > 0 && (
-        <HeaderLabel
-          label={t('entityLabels.ownerLabel')}
-          contentTypograpyRootComponent="p"
-          value={
-            <EntityRefLinks
-              entityRefs={ownedByRelations}
-              defaultKind="Group"
-              color="inherit"
-            />
-          }
-        />
-      )}
       {entity.spec?.lifecycle && (
         <HeaderLabel
           label={t('entityLabels.lifecycleLabel')}

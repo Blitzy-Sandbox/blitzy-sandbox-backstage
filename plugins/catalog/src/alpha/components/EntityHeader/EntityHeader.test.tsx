@@ -17,7 +17,9 @@
 /**
  * Component-level tests for the alpha `EntityHeader`.
  *
- * Scope (per AAP §0.5.1.2 and the Checkpoint 3 review finding):
+ * Scope (per AAP §0.5.1.2, §0.1.3 CRITICAL "Perform a full removal",
+ * the Checkpoint 3 review finding, and the Checkpoint 4 QA finding
+ * targeting the Owner HeaderLabel surface):
  *
  *   1. The FavoriteEntity star MUST NOT be rendered next to the entity
  *      title. Previously, `<FavoriteEntity entity={entity} />` was
@@ -38,6 +40,13 @@
  *   4. The EntityContextMenu and entity labels MUST still render so
  *      that catalog navigation, inspect, and unregister flows still
  *      work after the star removal.
+ *
+ *   5. The Owner HeaderLabel MUST NOT be rendered even when the
+ *      entity carries `ownedBy` relations. The Owner label and its
+ *      embedded `EntityRefLinks` to the owning Group entity must be
+ *      fully absent from the alpha `EntityHeader`, matching the
+ *      classic `EntityLayout`/`EntityLabels` contract verified in
+ *      `plugins/catalog/src/components/EntityLayout/EntityLayout.test.tsx`.
  *
  * These tests run as Jest+RTL component tests using
  * `renderInTestApp` and the catalog test API mocks, matching the
@@ -219,6 +228,43 @@ describe('alpha EntityHeader', () => {
     // visible — title removal must not regress the subtitle path.
     expect(screen.getByText('My Component')).toBeInTheDocument();
     expect(screen.getByText('my-system')).toBeInTheDocument();
+  });
+
+  it('does NOT render the Owner HeaderLabel even when ownedBy relations are present', async () => {
+    // Per AAP §0.1.3 CRITICAL ("remove the ability to click on or
+    // access the 'Owner' link/element. Perform a full removal of this
+    // functionality across the application") and §0.5.4 ("the title
+    // row ... renders without the Owner field ... The HeaderLabel
+    // cluster renders without the Owner label"). This test verifies
+    // the Owner HeaderLabel — together with the embedded
+    // `EntityRefLinks` that previously navigated to the owning Group
+    // entity — is absent from the alpha `EntityHeader`. It mirrors the
+    // matching assertion at
+    // `plugins/catalog/src/components/EntityLayout/EntityLayout.test.tsx`
+    // for the classic header, so the contract is identical on both
+    // entity-page surfaces.
+    const mockTargetRef = 'group:default/owner-team';
+    const entity = {
+      apiVersion: 'backstage.io/v1alpha1',
+      kind: 'Component',
+      metadata: {
+        name: 'my-entity',
+        namespace: 'default',
+      },
+      spec: { type: 'service' },
+      relations: [{ type: 'ownedBy', targetRef: mockTargetRef }],
+    } as Entity;
+
+    await renderHeader(entity);
+
+    // The owning entity ref must not appear anywhere in the header
+    // label area as a link or as fallback text.
+    expect(screen.queryByText(mockTargetRef)).not.toBeInTheDocument();
+    expect(screen.queryByText(/owner-team/)).not.toBeInTheDocument();
+    // The Owner HeaderLabel translation key ('Owner') must not be
+    // rendered. The regex matches the exact label text, which is the
+    // only visible artefact the HeaderLabel produces beyond the link.
+    expect(screen.queryByText(/^Owner$/i)).not.toBeInTheDocument();
   });
 
   it('renders the EntityContextMenu (inspect / unregister) trigger', async () => {
