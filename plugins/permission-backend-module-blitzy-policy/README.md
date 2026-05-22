@@ -1,21 +1,13 @@
 # @internal/plugin-permission-backend-module-blitzy-policy
 
 The Blitzy permission policy backend module for the Backstage `permission`
-plugin. This module will install `BlitzyPermissionPolicy` into the permission
+plugin. This module installs `BlitzyPermissionPolicy` into the permission
 backend, replacing the upstream
 `@backstage/plugin-permission-backend-module-allow-all-policy` registration.
 
-> **Status — Checkpoint 1 (foundation):** This package currently contains
-> only its workspace scaffolding and a minimal `src/index.ts` entry-point
-> placeholder. The policy implementation (`src/policy.ts`), backend module
-> wiring (`src/module.ts`), and unit tests (`src/policy.test.ts`) are
-> forthcoming in a subsequent implementation checkpoint per Agent Action
-> Plan §0.6.1.4. The descriptive sections below document the planned
-> behavior so that downstream agents have a stable design contract.
+## What it does
 
-## What it will do
-
-`BlitzyPermissionPolicy` will enforce a deny-by-default posture for any
+`BlitzyPermissionPolicy` enforces a deny-by-default posture for any
 write action (`create`, `update`, `delete`) performed by a user whose
 verified email domain is not `@blitzy.com`, or by a Backstage Guest user.
 Read actions remain unconditionally allowed so that every signed-in user
@@ -36,28 +28,26 @@ strictly assigned read-only access."
 | `create`/`update`/`delete` | User with no email available                                           | `DENY`   |
 
 The policy has no in-memory state of its own; each decision is computed
-from the request and the user identity. It performs a single, cacheable
-catalog lookup per unknown `userEntityRef` to read `spec.profile.email`
-from the corresponding `User` entity (see _How the email is sourced_
-below) — the catalog client's existing entity cache absorbs repeat reads,
-so steady-state throughput is dominated by O(1) string comparisons.
+from the request and the user identity. Email extraction is O(1) — a
+single `jose.decodeJwt` call against the already-verified credentials
+token (see _How the email is sourced_ below) — and there are no catalog
+lookups, so steady-state throughput is dominated by O(1) string
+comparisons.
 
-## Registration (planned)
+## Registration
 
-Once delivered, this module will be registered by
-`packages/backend/src/index.ts` via:
+This module is registered by `packages/backend/src/index.ts` via:
 
 ```ts
 backend.add(import('@internal/plugin-permission-backend-module-blitzy-policy'));
 ```
 
-Registration will replace the previous
+The registration replaces the previous
 `backend.add(import('@backstage/plugin-permission-backend-module-allow-all-policy'))`
 call. Only one permission policy may be installed at a time; mixing this
 module with the allow-all module is not supported.
 
-The permission framework must be enabled in `app-config.yaml` (this is
-already true at Checkpoint 1):
+The permission framework must be enabled in `app-config.yaml`:
 
 ```yaml
 permission:
@@ -68,28 +58,39 @@ permission:
 
 The Backstage `PolicyQueryUser.info` type is `BackstageUserInfo`, which by
 contract exposes only `userEntityRef` and `ownershipEntityRefs` — it does
-**not** carry the user's email. The policy therefore reads the email via the
-canonical upstream pattern:
+**not** carry the user's email by default. The Blitzy implementation
+propagates the email through a custom JWT claim rather than via a catalog
+`User` entity lookup:
 
 1. The augmented GitHub `signInResolver` in
-   `packages/backend/src/authModuleGithubProvider.ts` extracts the email
-   from `result.fullProfile.emails[0].value` (primary) or
-   `result.userinfo.email` during sign-in.
-2. The resolver persists that email onto the corresponding `User` catalog
-   entity at `spec.profile.email` (the same convention used by the
-   upstream AWS ALB auth provider; see
-   `plugins/auth-backend-module-aws-alb-provider/src/resolvers.ts`).
-3. At permission-check time, `BlitzyPermissionPolicy` resolves
-   `user.info.userEntityRef` against the catalog via the injected
-   `catalogService` and reads `spec.profile.email` from the returned
-   `User` entity.
+   `packages/backend/src/authModuleGithubProvider.ts` runs the
+   `selectPrimaryGithubEmail()` helper over the OAuth `fullProfile.emails`
+   array, preferring the entry with `primary === true` before falling
+   back to index 0. If no entry is available, the resolver falls back to
+   `result.userinfo.email`, and finally to the sentinel
+   `<userId>@unknown.invalid` (which guarantees a non-Blitzy domain so
+   the policy fails closed for edge cases).
+2. The resolver calls `ctx.issueToken({ claims: { sub, ent, email } })`
+   to mint the Backstage identity token. The custom `email` claim rides
+   on the JWT and is cryptographically signed by Backstage's default
+   auth pipeline.
+3. At permission-check time, `BlitzyPermissionPolicy.extractEmail(user)`
+   first consults `user.info?.email` (forward-compatible — picks up any
+   future deployment that wires a custom `UserInfoService` exposing
+   email), and then decodes `user.credentials.token` via
+   `jose.decodeJwt` (a non-verifying decode — the token is already
+   cryptographically verified by `DefaultAuthService.authenticate`
+   before the credentials object reaches this policy, so re-verifying
+   here would be redundant work without any security improvement).
 
-The policy never trusts a client-asserted email — it only reads what the
-server-side catalog returned. If the catalog lookup fails or the User
-entity has no `spec.profile.email` (rare GitHub edge case where the user
-has hidden their primary email and the sign-in resolver never persisted
-one), the policy treats the user as non-Blitzy and enforces read-only
-access — failing closed by design.
+The policy never trusts a client-asserted email — it only reads claims
+from the server-validated JWT. If the JWT carries no `email` claim
+(rare GitHub edge case where the user has hidden their primary email
+AND the resolver's fallback chain produced an `@unknown.invalid`
+sentinel), the policy enforces read-only access — failing closed by
+design. See `blitzy/documentation/Technical Specifications.md` IR-2 for
+the as-implemented email propagation path and the rejected
+catalog-lookup alternative.
 
 ## How Guests are detected
 
@@ -109,31 +110,37 @@ guest principal type natively.
   `someone@dev.blitzy.com` is **not** treated as Blitzy (subdomain spoofing
   guard) and `someone@notblitzy.com` is also not treated as Blitzy.
 
-## Extending the allowlist (once the policy lands)
+## Extending the allowlist
 
-Once the policy implementation is delivered, allowing additional email
-domains will be done by editing `src/policy.ts` (forthcoming — Checkpoint
-2/5 deliverable) and broadening the `isBlitzyDomain(email)` helper. The
-change should be documented in the project decision log at
-`docs/refactor/decision-log.md` (forthcoming — Checkpoint 4 documentation
-deliverable per AAP §0.6.1.7). Unit tests in `src/policy.test.ts`
-(forthcoming) should cover each new allowlisted domain.
+Allowing additional email domains is done by editing `src/policy.ts` and
+broadening the `isBlitzyDomain(email)` helper. The change should be
+documented in the project decision log at
+[`docs/refactor/decision-log.md`](../../docs/refactor/decision-log.md).
+Unit tests in `src/policy.test.ts` should cover each new allowlisted
+domain.
 
-## Observability (planned)
+## Observability (planned counter)
 
-Once the policy implementation lands, each policy decision will emit an
-OpenTelemetry counter
+Each policy decision is **planned to** emit an OpenTelemetry counter
 `blitzy_permission_decisions_total{result, email_domain, action}` where
-`email_domain` is bucketed to `blitzy.com`, `other`, or `guest` (no PII).
-The counter will be consumed by the Grafana dashboard at
-`docs/observability/dashboard-template.json` (forthcoming — Checkpoint 4
-deliverable per AAP §0.6.1.7).
+`email_domain` is bucketed to `blitzy.com`, `other`, or `guest` (no
+PII). The counter is currently **not yet emitted** by `src/policy.ts` —
+no `@opentelemetry/api-metrics` import or `Counter.add(...)` call is
+present in the source. The Grafana dashboard at
+[`docs/observability/dashboard-template.json`](../../docs/observability/dashboard-template.json)
+references the counter and the panel will populate automatically once
+the instrumentation lands. See
+[`docs/refactor/next-tasks.md`](../../docs/refactor/next-tasks.md)
+entry 1 for the deferred follow-up tracker, and
+[`blitzy/documentation/Technical Specifications.md`](../../blitzy/documentation/Technical%20Specifications.md)
+IR-5 for the divergence record.
 
 ## Testing
 
-When the policy implementation arrives, this module will ship unit tests
-at `src/policy.test.ts` (forthcoming) covering every branch of
-`BlitzyPermissionPolicy.handle()`. They will be runnable with:
+This module ships unit tests at `src/policy.test.ts` covering every
+branch of `BlitzyPermissionPolicy.handle()` (read action ALLOW,
+Blitzy-domain ALLOW, non-Blitzy DENY, Guest principal DENY,
+missing-email DENY, JWT-decode failure DENY). They are runnable with:
 
 ```bash
 yarn workspace @internal/plugin-permission-backend-module-blitzy-policy test
@@ -146,7 +153,7 @@ mandate. Coverage is verified by running:
 yarn workspace @internal/plugin-permission-backend-module-blitzy-policy test --coverage
 ```
 
-The lint workflow already runs today against the metadata scaffolding:
+The lint workflow is also runnable:
 
 ```bash
 yarn workspace @internal/plugin-permission-backend-module-blitzy-policy lint
@@ -154,15 +161,16 @@ yarn workspace @internal/plugin-permission-backend-module-blitzy-policy lint
 
 ## See also
 
-- `docs/refactor/decision-log.md` (forthcoming — Checkpoint 4 per AAP
-  §0.6.1.7) will record the rationale for choosing a separate plugin
-  module over an inline policy in `packages/backend/src/`, and the
-  rejected alternatives for the email-source resolution path.
-- `docs/permissions/writing-a-policy.md` — Backstage upstream guide to
-  authoring permission policies.
-- `packages/backend/src/authModuleGithubProvider.ts` — the GitHub
-  `signInResolver` that will be augmented to populate
-  `spec.profile.email` on the User catalog entity in a subsequent
-  checkpoint.
+- [`docs/refactor/decision-log.md`](../../docs/refactor/decision-log.md)
+  — rationale for choosing a separate plugin module over an inline
+  policy in `packages/backend/src/`, the rejected alternatives for the
+  email-source resolution path (including the catalog-lookup approach
+  described in earlier drafts of this README), and the deferred custom
+  Prometheus counter.
+- [`docs/permissions/writing-a-policy.md`](../../docs/permissions/writing-a-policy.md)
+  — Backstage upstream guide to authoring permission policies.
+- [`packages/backend/src/authModuleGithubProvider.ts`](../../packages/backend/src/authModuleGithubProvider.ts)
+  — the augmented GitHub `signInResolver` that emits the custom JWT
+  `email` claim consumed by this policy.
 
 _This plugin was created through the Backstage CLI._

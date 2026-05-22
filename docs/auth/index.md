@@ -552,25 +552,31 @@ The Blitzy Sandbox fork of Backstage augments the GitHub authentication provider
 
 ### Event shape
 
-The audit event is created via the standard Backstage `AuditorService` contract:
+The audit event is created via the standard Backstage `AuditorService` contract. The Backstage `SignInResolver` callback signature is `(info, ctx) => Promise<BackstageSignInResult>` and does **not** expose the inbound Express `request` object, so the resolver synthesizes its own `correlationId` (via `crypto.randomUUID()`) and propagates it through the audit `meta` block:
 
 ```typescript
-// Emitted at the start of every sign-in attempt
+// At the start of every sign-in attempt, the resolver mints a synthetic correlation id
+const correlationId = randomUUID();
+
 const event = auditor.createEvent({
   eventId: 'user-login',
   severityLevel: 'medium',
-  request: ctx.request,
-  meta: { provider: 'github', username, emailDomain },
+  // Note: no `request` field — the SignInResolver callback does not expose ctx.request.
+  // The synthetic correlationId in meta is the join key for matching with surrounding HTTP log lines.
+  meta: { provider: 'github', username, emailDomain, correlationId },
 });
 
-// On a successful resolution, the resolver finalizes the event with the entity ref:
-await event.success({ meta: { entityRef } });
+// On a successful resolution, the resolver finalizes the event with the entity ref and the same correlationId:
+await event.success({ meta: { entityRef, correlationId } });
 
-// On a resolver failure, the resolver finalizes the event with the error:
-await event.fail({ error, meta: { provider: 'github', username } });
+// On a resolver failure, the resolver finalizes the event with the error and the same correlationId:
+await event.fail({
+  error,
+  meta: { provider: 'github', username, correlationId },
+});
 ```
 
-Severity is `medium`. The event lands in the structured JSON log alongside ordinary log lines, distinguishable by the presence of the `eventId` field. The same correlation ID that tags the HTTP request that triggered the sign-in also tags the audit event, so administrators can join an audit event to the request and to OpenTelemetry trace spans via the correlation ID.
+Severity is `medium`. The event lands in the structured JSON log alongside ordinary log lines, distinguishable by the presence of the `eventId` field. The synthetic `correlationId` is **not** identical to the inbound HTTP request's correlation id — joining a `user-login` audit event back to its triggering HTTP request is performed by matching surrounding log lines on the same `requestId` field emitted by `coreServices.httpRouter`, or by inspecting the audit-event timestamp against the request log timeline. By contrast, the complementary `entity-access` event emitted from the access-audit middleware does have access to the Express `request` (the middleware runs in request context) and is created with `auditor.createEvent({ request, ... })` so it carries the canonical request-scoped correlation id directly.
 
 ### Surface coverage
 
@@ -582,7 +588,7 @@ A complementary `entity-access` audit event is emitted from the catalog backend 
 
 - See [`./identity-resolver.md`](./identity-resolver.md) (section: "Augmented GitHub Sign-In Resolver (Blitzy Sandbox)") for the resolver implementation walkthrough and illustrative pseudo-code.
 - See [`./github/provider.md`](./github/provider.md) (section: "Audit Event Emission (Blitzy Sandbox Customization)") for GitHub-specific configuration details.
-- See [`../observability/dashboards.md`](../observability/dashboards.md) for the Prometheus counter `user_login_total{provider, email_domain}` and the Grafana panel that visualizes the event rate.
+- See [`../observability/dashboards.md`](../observability/dashboards.md) for the audit-event channel (the operator's source of truth for sign-in volume at this checkpoint) and for the **planned** Prometheus counter `user_login_total{provider, email_domain}` (not yet emitted — implementation tracked in [`../refactor/next-tasks.md`](../refactor/next-tasks.md) entry 1).
 - See [`../refactor/decision-log.md`](../refactor/decision-log.md) for the rationale behind the email-source priority chain and the privacy posture (only the domain bucket is recorded, never the full email).
 
 ## Email-Domain Authorization
@@ -593,7 +599,12 @@ The Blitzy Sandbox fork enforces a deny-by-default authorization posture for all
 
 ### How the email reaches the policy
 
-The augmented GitHub `signInResolver` extracts the verified primary email from `result.fullProfile.emails?.[0]?.value` (with a fallback to `result.userinfo?.email`) and populates the resulting `BackstageIdentityResponse.profile.email` field. The policy reads this field on every `handle()` call — no second catalog lookup is required, and no outbound API call to GitHub is required on every request. See [`./identity-resolver.md`](./identity-resolver.md) for the full resolver lifecycle.
+The augmented GitHub `signInResolver` selects the verified primary email using a `selectPrimaryGithubEmail()` helper that prefers entries with `primary === true` before falling back to `emails[0]`, then to `result.userinfo?.email`, then to a deterministic sentinel `<userId>@unknown.invalid` (an RFC 2606 reserved domain). The resolver then passes the resulting email into the Backstage-issued token as a custom JWT claim via `ctx.issueToken({ claims: { sub: userEntityRef, ent: [userEntityRef], email } })`. On every permission check, `BlitzyPermissionPolicy.handle(request, user)` extracts the email from the user's credentials by:
+
+1. First checking `user.info?.email` (forward-compat path that becomes populated if a future `UserInfoService` implementation surfaces the `email` claim directly — the Backstage default `UserInfoService` populates only `sub` and `ent` today, so this path is currently a no-op).
+2. Otherwise decoding the JWT token at `user.credentials.token` using `jose.decodeJwt(...)` (a non-verifying decode — the token's cryptographic signature has already been verified by `DefaultAuthService.authenticate` before reaching the policy) and reading the `email` claim from the decoded payload.
+
+No second catalog lookup is required, and no outbound API call to GitHub is required on every request — the email travels with the Backstage-issued JWT itself. See [`./identity-resolver.md`](./identity-resolver.md) for the full resolver lifecycle and the `selectPrimaryGithubEmail()` priority chain, and [`./github/provider.md`](./github/provider.md) for the JWT claim flow specific to GitHub.
 
 ### Decision sketch
 
@@ -615,6 +626,6 @@ For upstream Backstage patterns on which the policy is built, see [`../permissio
 
 - See [`./identity-resolver.md`](./identity-resolver.md) (section: "Augmented GitHub Sign-In Resolver (Blitzy Sandbox)") for the email-extraction chain that feeds the policy.
 - See [`./github/provider.md`](./github/provider.md) (section: "Email-Domain Authorization (Blitzy Sandbox Customization)") for GitHub-specific email handling.
-- See [`../observability/dashboards.md`](../observability/dashboards.md) for the Prometheus counter `blitzy_permission_decisions_total{result, email_domain, action}` and the Grafana panel that visualizes ALLOW / DENY decisions over time.
+- See [`../observability/dashboards.md`](../observability/dashboards.md) for the audit-event channel (operator's source of truth at this checkpoint) and for the **planned** Prometheus counter `blitzy_permission_decisions_total{result, email_domain, action}` (not yet emitted — implementation tracked in [`../refactor/next-tasks.md`](../refactor/next-tasks.md) entry 1). Until the counter lands, ALLOW/DENY decisions are visible only via the structured logs emitted by `BlitzyPermissionPolicy` and via the policy unit tests in `plugins/permission-backend-module-blitzy-policy/src/policy.test.ts`.
 - See [`../refactor/decision-log.md`](../refactor/decision-log.md) for the rationale behind the deny-by-default posture and the email-source priority chain.
 - See [`../permissions/writing-a-policy.md`](../permissions/writing-a-policy.md) for upstream Backstage patterns on permission policy authoring.

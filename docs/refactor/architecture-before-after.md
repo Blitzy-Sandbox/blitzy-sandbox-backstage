@@ -139,7 +139,7 @@ sequenceDiagram
 
 ## 3. Catalog Count
 
-The catalog count diagrams visualize how the displayed count at the top of the catalog table relates to the displayed list of catalog rows when one or more tags are selected. The "Before" diagram shows the bug: the count is derived from a backend response that applies OR semantics to the selected tags, while the list is then narrowed by a frontend filter that applies AND semantics — producing a count that exceeds the row count. The "After" diagram shows the fix: the backend filter shape now forces AND semantics so that count and list match.
+The catalog count diagrams visualize how the displayed count at the top of the catalog table relates to the displayed list of catalog rows when one or more tags are selected. The "Before" diagram shows the bug: the count is derived from a backend response that applies OR semantics to the selected tags, while the list is then narrowed by a frontend filter that applies AND semantics — producing a count that exceeds the row count. The "After" diagram shows the fix, which retains the OR-emitting wire shape (the wire format `EntityFilterQuery` has no path to AND across same-key values) and adds a React-layer AND-narrowing pass for both the rendered rows and the displayed total. The rendered rows are narrowed by `EntityTagFilter.filterEntity` using `Array.prototype.every`; the displayed total is narrowed by a secondary unpaginated `catalogApi.getEntities` request whose result is run through the same predicate, fired only when more than one tag value is selected.
 
 ### 3.1 Catalog Count — Before
 
@@ -150,8 +150,8 @@ Legend: Solid box = data source. Dashed arrow = transformation step. Teal-border
 ```mermaid
 flowchart TD
     F1[EntityTagFilter selected tags java AND spring] -. getCatalogFilters .-> F2[backend filter metadata tags is java or spring]
-    F2 -. catalog API .-> F3[response items 50 entities matching java OR spring]
-    F2 -. catalog API .-> F4[response totalItems equals 50]
+    F2 -. catalog API queryEntities .-> F3[response items 50 entities matching java OR spring]
+    F2 -. catalog API queryEntities .-> F4[response totalItems equals 50]
     F3 -. EntityTagFilter filterEntity using every .-> F5[displayed list 12 entities matching java AND spring]
     F4 -. used as count source .-> F6[displayed count 50 BUG mismatch]
     classDef good fill:#F2F0FE,stroke:#94FAD5,color:#333333
@@ -162,19 +162,24 @@ flowchart TD
 
 ### 3.2 Catalog Count — After
 
-After the refactor, `EntityTagFilter.getCatalogFilters()` emits AND-compatible per-tag filter entries. The catalog backend evaluates them as AND. The response's `totalItems` and `items` are both AND-narrowed, so the displayed count and the displayed list match for any combination of selected tags.
+After the refactor, `EntityTagFilter.getCatalogFilters()` still emits the wire-format-compatible OR-shape `{ 'metadata.tags': [tag1, tag2] }` (the catalog backend's filter parser deduplicates same-key values into a single `EntitiesSearchFilter` that is evaluated as OR — there is no wire-format path to AND across same-key values). The fix lives in `plugins/catalog-react/src/hooks/useEntityListProvider.tsx`: the rendered row list is AND-narrowed by `EntityTagFilter.filterEntity` (using `Array.prototype.every`), and the displayed total is AND-narrowed by the `computePaginatedTotalItems` helper, which issues a secondary unpaginated `catalogApi.getEntities` request and applies the same predicate to the unbounded result set. The secondary request only fires when more than one tag is selected; single-tag and tag-cleared interactions continue to use `response.totalItems` directly. If the secondary call fails, the hook falls back to `response.totalItems` (the OR-superset) so the UI is not blocked.
 
-Legend: Same conventions as 3.1; all rendered boxes show correct behavior (teal-bordered) because the bug has been fixed.
+Legend: Same conventions as 3.1. Teal-bordered boxes show correct behavior; the dotted box visually distinguishes the secondary unpaginated call that activates only when multi-tag selection is active. Example values: two tags selected, 50 entities match either, 12 entities match both.
 
 ```mermaid
 flowchart TD
-    F1[EntityTagFilter selected tags java AND spring] -. getCatalogFilters .-> F2[backend filter per-tag clauses AND-combined]
-    F2 -. catalog API .-> F3[response items 12 entities matching java AND spring]
-    F2 -. catalog API .-> F4[response totalItems equals 12]
-    F3 -. EntityTagFilter filterEntity using every .-> F5[displayed list 12 entities]
+    F1[EntityTagFilter selected tags java AND spring] -. getCatalogFilters .-> F2[backend filter metadata tags is java or spring]
+    F2 -. catalog API queryEntities paginated .-> F3[response items 20 entities current page subset of OR]
+    F2 -. catalog API queryEntities paginated .-> F7[response totalItems equals 50 OR superset]
+    F1 -. multi tag active values length greater than 1 triggers secondary call .-> F8[catalog API getEntities unpaginated]
+    F8 -. full items 50 OR matches .-> F9[items filter entityFilter every]
+    F9 -. AND narrow .-> F4[computed totalItems equals 12 AND result]
+    F3 -. EntityTagFilter filterEntity using every .-> F5[displayed list 12 entities matching java AND spring]
     F4 -. used as count source .-> F6[displayed count 12 matches list]
     classDef good fill:#F2F0FE,stroke:#94FAD5,color:#333333
-    class F3,F4,F5,F6 good
+    classDef secondary fill:#F4EFF6,stroke:#5B39F3,color:#333333,stroke-dasharray: 5 5
+    class F3,F4,F5,F6,F9 good
+    class F8 secondary
 ```
 
 ---

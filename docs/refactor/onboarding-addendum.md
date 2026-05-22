@@ -55,16 +55,31 @@ Per **Rule R6 (LocalGCP Verification)**, every Google Cloud Platform (GCP) servi
 
 ### 2.1 Option A — Host binary install
 
-This is the path documented in the user-provided environment instructions and matches the verified setup status log of this repository:
+The user-provided environment instructions reference a single-binary asset URL. As of LocalGCP v0.6.0 the upstream `slokam-ai/localgcp` releases ship a tarball rather than a single static binary at that path — the original URL is deprecated and resolves to a 404 for current releases (see the Setup Status Log "LocalGCP setup adaptation" note). Use the tarball-based install command below as the canonical path; the original command is retained for older releases.
+
+Recommended (LocalGCP v0.6.0 and later, tarball-based):
 
 ```bash
+curl -LO https://github.com/slokam-ai/localgcp/releases/download/v0.6.0/localgcp_0.6.0_linux_amd64.tar.gz
+tar -xzf localgcp_0.6.0_linux_amd64.tar.gz
+sudo install localgcp /usr/local/bin/localgcp
+nohup localgcp up --data-dir=./.localgcp --quiet --no-docker > /tmp/localgcp.log 2>&1 &
+sleep 3
+```
+
+Legacy (for releases that still publish the single-binary asset):
+
+```bash
+# Will return 404 against current releases — kept here only because it matches
+# the user-provided environment instructions verbatim. Prefer the tarball path
+# above for any new contributor setup.
 curl -LO https://github.com/slokam-ai/localgcp/releases/latest/download/localgcp-linux-amd64
 sudo install localgcp-linux-amd64 /usr/local/bin/localgcp
 localgcp up --data-dir=./.localgcp &
 sleep 3
 ```
 
-The `--data-dir=./.localgcp` directory is gitignored at the repository root. The `&` backgrounds the emulator so the shell remains usable. `sleep 3` allows the gRPC and REST listeners to come online before the first SDK call.
+The `--data-dir=./.localgcp` directory is gitignored at the repository root. The `--quiet` flag silences the emulator's stdout banner; `--no-docker` disables the orchestrated services (Spanner, Bigtable, Cloud SQL, Memorystore, BigQuery) that would otherwise require Docker-in-Docker — none of those are needed by the current Backstage refactor. `nohup` plus `&` backgrounds the emulator so the shell remains usable; `sleep 3` allows the gRPC and REST listeners to come online before the first SDK call.
 
 ### 2.2 Option B — Docker Compose
 
@@ -83,7 +98,7 @@ The Backstage backend and any contributor scripts read four environment variable
 
 - `STORAGE_EMULATOR_HOST` — defaults to `http://localhost:4443` in the documented setup. Consumed by `@google-cloud/storage` clients (with the v7 workaround in Section 3).
 - `PUBSUB_EMULATOR_HOST` — defaults to `localhost:8085`. Consumed by `@google-cloud/pubsub` clients directly.
-- `FIRESTORE_EMULATOR_HOST` — defaults to `localhost:8080`. Consumed by `@google-cloud/firestore` clients directly.
+- `FIRESTORE_EMULATOR_HOST` — defaults to `localhost:8088`, matching the Firestore gRPC port exposed by `docker-compose.localgcp.yml` and the host-binary defaults documented in the Setup Status Log. Consumed by `@google-cloud/firestore` clients directly.
 - `LOCALGCP_HOST` — optional. Used by test fixtures to gate integration tests on emulator availability; if unset, tests that exercise GCP services may be skipped rather than fail.
 
 Export these in your shell before running `yarn start` or tests that exercise GCP-bound code paths.
@@ -124,7 +139,7 @@ await file.save(contents, {
 });
 ```
 
-The current refactor does **not** introduce new GCS code paths; the workaround is preserved as a constraint for any future code (for example, a TechDocs publisher reconfigured to use GCS) that exercises the emulator. See entry 6 in [`next-tasks.md`](next-tasks.md) regarding adding a CI step that boots LocalGCP and runs GCS-touching integration tests.
+The current refactor does **not** introduce new GCS code paths; the workaround is preserved as a constraint for any future code (for example, a TechDocs publisher reconfigured to use GCS) that exercises the emulator. See entry 7 in [`next-tasks.md`](next-tasks.md) regarding adding a CI step that boots LocalGCP and runs GCS-touching integration tests.
 
 ---
 
@@ -135,7 +150,7 @@ Unlike `@google-cloud/storage` v7, the `@google-cloud/pubsub` and `@google-cloud
 To start the backend with all three emulator variables set in one line:
 
 ```bash
-STORAGE_EMULATOR_HOST=http://localhost:4443 PUBSUB_EMULATOR_HOST=localhost:8085 FIRESTORE_EMULATOR_HOST=localhost:8080 yarn start
+STORAGE_EMULATOR_HOST=http://localhost:4443 PUBSUB_EMULATOR_HOST=localhost:8085 FIRESTORE_EMULATOR_HOST=localhost:8088 yarn start
 ```
 
 If you launch `yarn start` from a shell that already exports these variables (recommended), the command degenerates to plain `yarn start`.
@@ -197,7 +212,7 @@ To add a new rule (for example, deny all actions for a known compromised usernam
 
 ### 6.4 Adding a new audit event ID
 
-Audit events are emitted via the injected `auditor` service. Construct the event with `auditor.createEvent({ eventId: 'entity-access', severityLevel: 'low', request, meta: { entityRef, principal, action: 'read' } })`, then call `.success({ meta })` on success or `.fail({ error, meta })` on failure paths so the audit log captures the failure mode. To add an `entity-write` event when a future workstream introduces write paths through the policy, see entry 4 in [`next-tasks.md`](next-tasks.md) for the suggested approach.
+Audit events are emitted via the injected `auditor` service. Construct the event with `auditor.createEvent({ eventId: 'entity-access', severityLevel: 'low', request, meta: { entityRef, principal, action: 'read' } })`, then call `.success({ meta })` on success or `.fail({ error, meta })` on failure paths so the audit log captures the failure mode. To add an `entity-write` event when a future workstream introduces write paths through the policy, see entry 5 in [`next-tasks.md`](next-tasks.md) for the suggested approach.
 
 ### 6.5 Registering a different policy module
 
@@ -230,17 +245,21 @@ The same pattern works for `user-login` events.
 
 ### 7.3 Mapping to Prometheus counters
 
-The Prometheus exporter on `http://localhost:9464/metrics` surfaces the audit volume as three counter families:
+The Prometheus exporter on `http://localhost:9464/metrics` surfaces the **auto-instrumented** HTTP, runtime, and process metrics out of the box (for example, `http_server_requests_total`, `http_server_request_duration_seconds_bucket`, `nodejs_eventloop_lag_seconds`, `process_resident_memory_bytes`). The audit channel itself remains the authoritative source of truth for sign-in and entity-access events at this checkpoint.
 
-- `user_login_total{provider, email_domain}` — incremented on every successful sign-in
-- `entity_access_total{kind}` — incremented on every catalog entity read
-- `permission_decisions_total{result, email_domain, action}` — incremented on every policy decision (ALLOW or DENY)
+Three custom counters are planned to surface the audit volume directly as Prometheus time series:
 
-See [`../observability/dashboards.md`](../observability/dashboards.md) for the full metric inventory and the Grafana dashboard import workflow.
+- `blitzy_permission_decisions_total{result, email_domain, action}` — to be incremented inside `BlitzyPermissionPolicy.handle()` on every ALLOW or DENY decision
+- `user_login_total{provider, email_domain}` — to be incremented inside the augmented GitHub `signInResolver` (and any future Guest provider augmentation) on every successful sign-in
+- `entity_access_total{action}` — to be incremented inside the catalog access-audit middleware on every user-credentialed entity read
+
+These counters are **NOT** emitted by the source code at this checkpoint and will return no rows from `curl :9464/metrics`. Their implementation is tracked in [`next-tasks.md`](next-tasks.md) entry 1 ("Wire the custom Prometheus counters documented in `docs/observability/dashboards.md` Section 4.3 into the actual emission sites"). Until they land, the Grafana dashboard panels that depend on them are marked as pending in [`../observability/dashboards.md`](../observability/dashboards.md) §6, and operator runbooks should join audit events to operational metrics via the structured-log channel and OpenTelemetry trace spans (which are emitted).
+
+See [`../observability/dashboards.md`](../observability/dashboards.md) for the full metric inventory, the canonical metric names and label sets, and the Grafana dashboard import workflow.
 
 ### 7.4 Grafana dashboard
 
-The repository ships a Grafana dashboard template at `docs/observability/dashboard-template.json`. Import it via Grafana's "Import Dashboard" UI (Dashboards → New → Import → Upload JSON), select your Prometheus datasource, and the dashboard renders panels for audit events per minute, permission decisions by result, catalog query latency p50/p95/p99, HTTP error rate, and Node.js heap usage. The panel inventory and customization notes are in [`../observability/dashboards.md`](../observability/dashboards.md).
+The repository ships a Grafana dashboard template at `docs/observability/dashboard-template.json`. Import it via Grafana's "Import Dashboard" UI (Dashboards → New → Import → Upload JSON), select your Prometheus datasource, and the dashboard renders panels for catalog query latency p50/p95/p99, HTTP error rate, and Node.js heap usage. Panels that depend on the custom counters listed in §7.3 will not display data until those counters are implemented (see [`next-tasks.md`](next-tasks.md) entry 1). The panel inventory and customization notes are in [`../observability/dashboards.md`](../observability/dashboards.md).
 
 ---
 
@@ -252,7 +271,7 @@ The following issues account for most of the new-contributor support questions. 
 - **Backstage backend must run on Node 22 or 24.** Older Node versions (16, 18, 20) are unsupported by Backstage 1.48.0 and will fail at install or runtime. If `node --version` returns anything other than `v22.x` or `v24.x`, run `nvm use 22` before `yarn install` and `yarn start`.
 - **Yarn 4 workspace commands.** Per-package commands use `yarn workspace <package-name> ...` syntax (for example, `yarn workspace @backstage/plugin-catalog test`). Plain `yarn test` runs across the root and may not isolate the workspace you intended.
 - **Guest principal detection.** `BlitzyPermissionPolicy.handle()` checks `user?.principal?.type === 'guest'` (or by inspecting the entity ref). If a Guest somehow carries an `@blitzy.com` email in their claim (for example, spoofed during local testing), the principal-type check prevents elevation. Do NOT refactor the policy to short-circuit on email alone — the explicit Guest check is the security boundary.
-- **LocalGCP must be running** before integration tests that exercise GCP services. If you see "connection refused" against ports 4443, 8085, or 8080, start LocalGCP via Option A (host binary) or Option B (Docker Compose) above. The `LOCALGCP_HOST` env var gates which suites attempt emulator-bound work.
+- **LocalGCP must be running** before integration tests that exercise GCP services. If you see "connection refused" against ports 4443, 8085, or 8088, start LocalGCP via Option A (host binary) or Option B (Docker Compose) above. The `LOCALGCP_HOST` env var gates which suites attempt emulator-bound work.
 - **Top-bar mount point.** The top-bar mounts into `Header.rightItemsBox`. If you remove or forget to register `appModuleTopBar` in the `features` array of `packages/app/src/App.tsx`, the right side of the header renders empty and the Logo, Settings, and Support items vanish — there is no fallback chrome. Add it back before opening a PR.
 - **TechDocs is per-entity only after this refactor.** The global `/docs` index page was removed; TechDocs content is accessible only from an entity page (via the per-entity Documentation tab). Linking to `/docs` directly returns a 404 — link to the entity Documentation tab instead.
 

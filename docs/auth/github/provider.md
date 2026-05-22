@@ -131,46 +131,56 @@ The event's `meta` payload contains:
 
 - `provider` — Always `github` for events emitted by this provider.
 - `username` — The GitHub login (e.g., `octocat`), sourced from `result.fullProfile.username`.
-- `emailDomain` — The domain portion of the user's verified primary email (e.g., `blitzy.com`, `gmail.com`, `unknown.invalid`). The full email is NEVER included — only the domain bucket. This is a privacy invariant enforced by unit tests in `packages/backend/src/authModuleGithubProvider.test.ts`.
+- `emailDomain` — The domain portion of the user's verified primary email (e.g., `blitzy.com`, `gmail.com`, `unknown.invalid`). The full email is NEVER included — only the domain bucket. This is a privacy invariant verified by unit tests in `packages/backend/src/authModuleGithubProvider.test.ts`.
+- `userEntityRef` — The resolved catalog user entity reference (e.g., `user:default/octocat`).
+- `correlationId` — A synthetic UUID minted via `crypto.randomUUID()` inside the resolver. The Backstage `SignInResolver` callback signature is `(info, ctx) => Promise<BackstageSignInResult>` and does **not** expose the inbound Express `request` object, so the resolver cannot read the canonical HTTP correlation id and must synthesize its own join key. See "Correlation" below.
 
 ### Lifecycle
 
 The resolver creates the event at the start of the sign-in attempt and finalizes it based on outcome:
 
-- On successful resolution: `auditor.createEvent({...}).success({ meta: { entityRef } })` — the entity ref of the resolved catalog user is appended to the meta.
-- On resolver failure: `auditor.createEvent({...}).fail({ error, meta: { provider: 'github', username } })` — the failure cause is recorded and the original error is re-thrown so the upstream auth pipeline can surface it.
+- On successful token issuance: `auditor.createEvent({...}).success({ meta: { entityRef, correlationId } })` — the entity ref of the resolved catalog user and the synthetic correlationId are appended to the meta.
+- On resolver failure: `auditor.createEvent({...}).fail({ error, meta: { provider: 'github', username, correlationId } })` — the failure cause is recorded and the original error is re-thrown so the upstream auth pipeline can surface it.
 
-The audit event carries the same correlation ID as the HTTP request that triggered the sign-in, so administrators can join the audit event to the request and to OpenTelemetry trace spans via the correlation ID.
+### Correlation
+
+The audit event carries a synthetic `correlationId` (a `randomUUID()` minted inside the resolver) rather than the inbound HTTP request's correlation id, because the Backstage `SignInResolver` callback does not expose the Express `request` object. Operators correlating a `user-login` event back to its triggering HTTP request should match surrounding log lines on the same `requestId` field emitted by `coreServices.httpRouter`, or use the audit-event timestamp against the request log timeline. By contrast, the complementary `entity-access` event emitted from the catalog access-audit middleware does run in HTTP request context and carries the canonical request-scoped correlation id directly.
 
 ### Operator references
 
-- See [`../identity-resolver.md`](../identity-resolver.md) for the full resolver lifecycle and illustrative pseudo-code.
+- See [`../identity-resolver.md`](../identity-resolver.md) for the full resolver lifecycle and illustrative pseudo-code, including the synthetic correlationId generation and the email-extraction priority chain.
 - See [`../index.md#audit-event-emission`](../index.md) for the high-level narrative across the auth surface.
 
 ## Email-Domain Authorization (Blitzy Sandbox Customization)
 
-> This section documents how the GitHub provider's verified email is propagated into the identity profile and consumed by the `BlitzyPermissionPolicy` to enforce read-only access for non-`@blitzy.com` principals. For the high-level decision sketch, see [`../index.md#email-domain-authorization`](../index.md).
+> This section documents how the GitHub provider's verified email is propagated through a custom JWT claim and consumed by the `BlitzyPermissionPolicy` to enforce read-only access for non-`@blitzy.com` principals. For the high-level decision sketch, see [`../index.md#email-domain-authorization`](../index.md).
 
 ### Email extraction
 
-The augmented `signInResolver` extracts the user's verified primary email from the GitHub OAuth result with the following priority chain:
+The augmented `signInResolver` selects the user's verified primary email from the GitHub OAuth result with a `selectPrimaryGithubEmail()` helper that walks the email array and prefers entries flagged as primary. The full priority chain:
 
-1. **Primary:** `result.fullProfile.emails?.[0]?.value` — the typical GitHub OAuth scope `user:email` populates this with the user's verified primary email.
-2. **Fallback:** `result.userinfo?.email` — used when the rich GitHub profile does not include an emails array.
-3. **Sentinel:** Synthesized as `<username>@unknown.invalid` — used when neither source is available (rare; only when the GitHub user has set their email to private and the OAuth scope does not request `user:email`). The `unknown.invalid` domain is RFC 2606 reserved and cannot match `@blitzy.com`, so it is safe to use as a non-Blitzy fallback.
+1. **Primary-flagged entry:** `result.fullProfile.emails.find(e => e.primary === true)?.value` — the verified primary email as flagged by GitHub. When the OAuth scope `user:email` is granted and `allRawEmails: true` is enabled, the emails array can return secondary emails before the primary, so the resolver must explicitly search for the entry with `primary === true` rather than blindly reading index 0.
+2. **Index 0 fallback:** `result.fullProfile.emails?.[0]?.value` — used when no entry carries `primary: true` (some older OAuth payload shapes do not include the `primary` flag).
+3. **OAuth userinfo fallback:** `result.userinfo?.email` — used when the rich GitHub profile does not include an emails array.
+4. **Sentinel:** Synthesized as `<userId>@unknown.invalid` — used when neither source is available (rare; only when the GitHub user has set their email to private and the OAuth scope does not request `user:email`). The `unknown.invalid` domain is RFC 2606 reserved and cannot match `@blitzy.com`, so it is safe to use as a non-Blitzy fallback.
 
-### Propagation into the identity profile
+### Propagation as a custom JWT claim
 
-After extraction, the resolver populates the email into `BackstageIdentityResponse.profile.email`. The `BlitzyPermissionPolicy.handle()` method reads this field on every authorization check — no second catalog lookup is required, and no outbound API call to GitHub is required on every request.
+After extraction, the resolver does **not** mutate or return `BackstageIdentityResponse.profile.email`. Instead, it issues the Backstage identity token via `ctx.issueToken({ claims: { sub: userEntityRef, ent: [userEntityRef], email: primaryEmail } })`, embedding the email as a custom JWT claim alongside the standard `sub` and `ent` claims. The `BlitzyPermissionPolicy.extractEmail()` method then decodes the token on every authorization check:
+
+1. First, it checks `user.info?.email` (forward-compat path — Backstage's default `UserInfoService` populates only `sub` and `ent` today, so this path is a no-op until a future `UserInfoService` implementation surfaces the `email` claim).
+2. Otherwise, it calls `jose.decodeJwt(user.credentials.token)` (a non-verifying decode — the token's cryptographic signature has already been verified by `DefaultAuthService.authenticate` before reaching the policy) and reads `payload.email` from the decoded JWT.
+
+No second catalog lookup is required, and no outbound API call to GitHub is required on every request — the email travels with the Backstage-issued JWT itself.
 
 ### Privacy posture
 
-Only the extracted email value is propagated into the identity profile. The OAuth access token, OAuth refresh token, and the raw OAuth result payload are NEVER attached to the identity profile or recorded in audit events. The `emailDomain` field in the audit event records only the domain bucket, not the full email. These invariants are verified by unit tests in `packages/backend/src/authModuleGithubProvider.test.ts`.
+Only the extracted email value is propagated into the JWT `email` claim. The OAuth access token, OAuth refresh token, and the raw OAuth result payload are NEVER attached to the identity token or recorded in audit events. The `emailDomain` field in the audit event records only the domain bucket, not the full email. These invariants are verified by unit tests in `packages/backend/src/authModuleGithubProvider.test.ts`.
 
 ### Operator references
 
-- See [`../identity-resolver.md`](../identity-resolver.md) for the resolver lifecycle and the illustrative pseudo-code that shows email extraction in context.
+- See [`../identity-resolver.md`](../identity-resolver.md) for the resolver lifecycle and the illustrative pseudo-code that shows email extraction in context, including `selectPrimaryGithubEmail()` and `ctx.issueToken({ claims: { email } })`.
 - See [`../index.md#email-domain-authorization`](../index.md) for the policy decision sketch (5 branches: read, Blitzy + write, non-Blitzy + write, Guest + write, missing email).
-- See [`../../refactor/decision-log.md`](../../refactor/decision-log.md) for the rationale behind the email-source priority chain.
-- See [`../../observability/dashboards.md`](../../observability/dashboards.md) for the Prometheus counters that visualize the policy decisions.
+- See [`../../refactor/decision-log.md`](../../refactor/decision-log.md) for the rationale behind the email-source priority chain and the choice to propagate email via a custom JWT claim rather than via `BackstageIdentityResponse.profile.email`.
+- See [`../../observability/dashboards.md`](../../observability/dashboards.md) for the audit-event channel (operator's source of truth at this checkpoint) and the **planned** Prometheus counters (`user_login_total`, `blitzy_permission_decisions_total`) that will visualize sign-ins and policy decisions once wired into their emission sites (implementation tracked in [`../../refactor/next-tasks.md`](../../refactor/next-tasks.md) entry 1).
 - See [`../../permissions/writing-a-policy.md`](../../permissions/writing-a-policy.md) for upstream Backstage patterns on permission policy authoring.

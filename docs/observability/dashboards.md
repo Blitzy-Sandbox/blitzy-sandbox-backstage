@@ -6,17 +6,20 @@ For the WHY behind each metric naming and panel selection, see [`../refactor/dec
 
 ## 1. Overview
 
-The Blitzy Sandbox Backstage portal exposes four observability pillars: structured logging (Winston-backed via `coreServices.logger`), distributed tracing (OpenTelemetry SDK with `getNodeAutoInstrumentations()`), Prometheus metrics (`/metrics` on port `9464` via the `PrometheusExporter`), and health/readiness checks (`/health`, `/readiness` from `coreServices.rootHealthService`). Each pillar is wired in the backend composition root and is invoked by every plugin that accepts the standard `coreServices.*` dependency set.
+The Blitzy Sandbox Backstage portal exposes four observability pillars: structured logging (Winston-backed via `coreServices.logger`), distributed tracing (OpenTelemetry SDK with `getNodeAutoInstrumentations()`), Prometheus metrics (`/metrics` on port `9464` via the `PrometheusExporter`), and health/readiness checks (`/.backstage/health/v1/liveness` and `/.backstage/health/v1/readiness`, mounted by `coreServices.rootHealth` through `createHealthRouter` in `@backstage/backend-defaults`). Each pillar is wired in the backend composition root and is invoked by every plugin that accepts the standard `coreServices.*` dependency set.
 
 - **Reused infrastructure** (already present in the source branch):
   - `coreServices.logger` — Winston-backed `LoggerService` injected via standard `deps` mechanism.
-  - `packages/backend/src/instrumentation.js` — wires `NodeSDK` from `@opentelemetry/sdk-node`, registers `getNodeAutoInstrumentations()` from `@opentelemetry/auto-instrumentations-node`, and binds the `PrometheusExporter` from `@opentelemetry/exporter-prometheus`.
-  - `/health` and `/readiness` endpoints from `coreServices.rootHealthService`.
+  - `packages/backend/src/instrumentation.js` — wires `NodeSDK` from `@opentelemetry/sdk-node`, registers `getNodeAutoInstrumentations()` from `@opentelemetry/auto-instrumentations-node`, and binds the `PrometheusExporter` from `@opentelemetry/exporter-prometheus`. This automatically emits HTTP, Express, fetch, runtime, and process metrics families (see §4.2).
+  - `/.backstage/health/v1/liveness` and `/.backstage/health/v1/readiness` endpoints, mounted by `createHealthRouter` in `packages/backend-defaults/src/entrypoints/rootHttpRouter/createHealthRouter.ts` and exposed by `rootHttpRouterServiceFactory` on the backend's API port (`7007` by default).
   - `packages/backend/prometheus.yml` — example Prometheus scrape configuration.
 - **Added by this refactor**:
-  - Three custom Prometheus counters: `blitzy_permission_decisions_total`, `user_login_total`, `entity_access_total`.
-  - Two new audit event IDs emitted via `coreServices.auditor`: `user-login`, `entity-access`.
-  - A Grafana 10.x dashboard template at [`dashboard-template.json`](dashboard-template.json) covering audit events, permission decisions, catalog query latency, HTTP error rate, Node.js heap usage, and service health.
+  - Two new audit event IDs emitted via `coreServices.auditor`: `user-login` (from the augmented GitHub `signInResolver` in `packages/backend/src/authModuleGithubProvider.ts`) and `entity-access` (from the catalog access-audit middleware in `plugins/catalog-backend-module-access-audit/src/module.ts`). These are the authoritative source of truth for sign-in and entity-read observability at this checkpoint.
+  - A Grafana 10.x dashboard template at [`dashboard-template.json`](dashboard-template.json). Panels backed by auto-instrumented metrics (catalog query latency, HTTP error rate, Node.js heap usage, service health) render immediately on import; panels backed by the planned custom counters (`blitzy_permission_decisions_total`, `user_login_total`, `entity_access_total`) will display "No data" until the counters are wired into their emission sites — implementation is tracked as a follow-up in [`../refactor/next-tasks.md`](../refactor/next-tasks.md) entry 1.
+
+> **Custom Prometheus counters status (PLANNED — NOT YET IMPLEMENTED at this checkpoint)**
+>
+> The three Blitzy-specific counters documented in §4.3 below are intentionally specified here so the implementation, dashboard template, and operator runbooks can converge on a single canonical name and label set. As of this checkpoint, **no source code in this repository registers or increments these counters**. The audit event channel (`coreServices.auditor`) is the only authoritative source for `user-login` and `entity-access` data today; permission decisions are observable only via the structured log channel and the audit trail. Wiring the counters into `BlitzyPermissionPolicy.handle()`, the augmented `signInResolver`, and the catalog access-audit middleware is tracked in [`../refactor/next-tasks.md`](../refactor/next-tasks.md) entry 1; until then, references to these counter names in this document, in [`../refactor/onboarding-addendum.md`](../refactor/onboarding-addendum.md), and in the dashboard JSON are forward-looking design contracts rather than runtime guarantees.
 
 To prove the entire stack works on your machine, follow the verification checklist in [Section 8](#8-local-verification).
 
@@ -71,7 +74,7 @@ The source branch wires only the Prometheus _metric_ exporter and does **not** e
 - `OTEL_SERVICE_NAME` — the service name to attach to spans (e.g. `blitzy-backstage-backend`).
 - `OTEL_TRACES_EXPORTER` — set to `otlp` to enable the OTLP trace exporter.
 
-A future iteration may add an explicit `traceExporter: new OTLPTraceExporter(...)` to `instrumentation.js`; this is captured as a follow-up in [`../refactor/next-tasks.md`](../refactor/next-tasks.md) (entry 3, "Expanding the audit dashboard") by association.
+A future iteration may add an explicit `traceExporter: new OTLPTraceExporter(...)` to `instrumentation.js`; this is captured as a follow-up in [`../refactor/next-tasks.md`](../refactor/next-tasks.md) (entry 4, "Expand the audit dashboard with per-user breakdowns") by association.
 
 ### 3.4 Inspecting traces locally
 
@@ -98,15 +101,15 @@ Out of the box, `@opentelemetry/auto-instrumentations-node` exposes the followin
 - `process_cpu_seconds_total` — counter; cumulative CPU time consumed by the process.
 - `nodejs_eventloop_lag_seconds` — gauge; current Node.js event loop lag.
 
-### 4.3 Custom counters added by this refactor
+### 4.3 Planned custom counters (NOT YET IMPLEMENTED at this checkpoint)
 
-The refactor introduces three custom counters. Each is documented below with its emission site, label set, and label-value vocabulary.
+The refactor specifies three custom counters. The canonical metric names, label sets, and label-value vocabularies are documented here so the policy / auth / access-audit modules, the Grafana dashboard, and operator runbooks converge on a single contract. **None of these counters are emitted by the source code at this checkpoint** — wiring them into their respective emission sites is tracked as [`../refactor/next-tasks.md`](../refactor/next-tasks.md) entry 1. Until they land, the audit-event channel (see §6) is the operator's source of truth for the corresponding signals.
 
-| Metric name                         | Type    | Labels                           | Source                                                          | Description                                                                                                                                                                                                                                                                                                                    |
-| ----------------------------------- | ------- | -------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `blitzy_permission_decisions_total` | Counter | `{result, email_domain, action}` | `plugins/permission-backend-module-blitzy-policy/src/policy.ts` | Incremented on every `PermissionPolicy.handle()` call. `result` is `ALLOW` or `DENY`. `email_domain` is the bucketed domain of the identity's email (e.g. `blitzy.com`, `gmail.com`, `unknown.invalid` for guests or unknown emails). `action` is the permission attribute action (e.g. `read`, `create`, `update`, `delete`). |
-| `user_login_total`                  | Counter | `{provider, email_domain}`       | `packages/backend/src/authModuleGithubProvider.ts`              | Incremented on every successful sign-in. `provider` is `github` or `guest`. `email_domain` mirrors the vocabulary above.                                                                                                                                                                                                       |
-| `entity_access_total`               | Counter | `{action}`                       | `plugins/catalog-backend-module-access-audit/src/module.ts`     | Incremented on every user-credentialed entity read. `action` is `read` today; write events would emit a separate `entity-write` counter per [`../refactor/next-tasks.md`](../refactor/next-tasks.md) entry 4.                                                                                                                  |
+| Metric name                         | Type    | Labels                           | Planned emission site                                                                                                               | Description                                                                                                                                                                                                                                                                                                                            |
+| ----------------------------------- | ------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `blitzy_permission_decisions_total` | Counter | `{result, email_domain, action}` | Inside `BlitzyPermissionPolicy.handle()` at `plugins/permission-backend-module-blitzy-policy/src/policy.ts` (not yet instrumented). | Will be incremented on every `PermissionPolicy.handle()` call. `result` is `ALLOW` or `DENY`. `email_domain` is the bucketed domain of the identity's email (e.g. `blitzy.com`, `gmail.com`, `unknown.invalid` for guests or unknown emails). `action` is the permission attribute action (e.g. `read`, `create`, `update`, `delete`). |
+| `user_login_total`                  | Counter | `{provider, email_domain}`       | Inside the augmented `signInResolver` at `packages/backend/src/authModuleGithubProvider.ts` (not yet instrumented).                 | Will be incremented on every successful sign-in. `provider` is `github` or `guest`. `email_domain` mirrors the vocabulary above.                                                                                                                                                                                                       |
+| `entity_access_total`               | Counter | `{action}`                       | Inside the access-audit middleware at `plugins/catalog-backend-module-access-audit/src/module.ts` (not yet instrumented).           | Will be incremented on every user-credentialed entity read. `action` is `read` today; write events would emit a separate `entity-write` counter per [`../refactor/next-tasks.md`](../refactor/next-tasks.md) entry 5.                                                                                                                  |
 
 The `blitzy_` prefix on the permission counter distinguishes Blitzy-specific business metrics from generic Backstage / Node.js telemetry. The other two counters follow the OpenMetrics convention for cross-cutting business counters and are intentionally unprefixed.
 
@@ -114,30 +117,32 @@ The `blitzy_` prefix on the permission counter distinguishes Blitzy-specific bus
 
 Three reference PromQL queries:
 
-- `rate(blitzy_permission_decisions_total{result="DENY"}[5m])` — DENY decisions per second over a 5-minute window.
-- `sum by (email_domain) (rate(user_login_total[5m]))` — sign-ins per second grouped by email domain.
-- `histogram_quantile(0.95, rate(http_server_request_duration_seconds_bucket[5m]))` — p95 HTTP request latency.
+- `rate(blitzy_permission_decisions_total{result="DENY"}[5m])` — DENY decisions per second over a 5-minute window. **Will return no rows until §4.3 entry 1 is implemented.**
+- `sum by (email_domain) (rate(user_login_total[5m]))` — sign-ins per second grouped by email domain. **Will return no rows until §4.3 entry 2 is implemented.**
+- `histogram_quantile(0.95, rate(http_server_request_duration_seconds_bucket[5m]))` — p95 HTTP request latency. **Available today** (auto-instrumented by `@opentelemetry/auto-instrumentations-node`).
+- `rate(http_server_requests_total{status_code=~"5.."}[5m])` — server-error rate per second (auto-instrumented). **Available today.**
+- `process_resident_memory_bytes` — Node.js process RSS in bytes (auto-instrumented). **Available today.**
 
 ### 4.5 Cardinality discipline
 
-Prometheus label cardinality is deliberately constrained. `email_domain` is a coarse bucket (the domain portion after `@`), never the full email address. `entityRef` is **never** a Prometheus label — it appears only in the `meta` field of the corresponding audit log line, where unbounded distinct values do not poison the metrics database. Per-user dashboards (which would require user-cardinality labels) are out of scope for this refactor and tracked in [`../refactor/next-tasks.md`](../refactor/next-tasks.md) entry 3.
+Prometheus label cardinality is deliberately constrained. `email_domain` is a coarse bucket (the domain portion after `@`), never the full email address. `entityRef` is **never** a Prometheus label — it appears only in the `meta` field of the corresponding audit log line, where unbounded distinct values do not poison the metrics database. Per-user dashboards (which would require user-cardinality labels) are out of scope for this refactor and tracked in [`../refactor/next-tasks.md`](../refactor/next-tasks.md) entry 4.
 
 ## 5. Health Checks
 
-The Backstage backend ships with `/health` and `/readiness` endpoints from `coreServices.rootHealthService`. Both bind to the backend API port (`7007` by default in this repo) rather than the metrics port.
+The Backstage backend ships with liveness and readiness endpoints from `coreServices.rootHealth`, mounted by `createHealthRouter` inside `@backstage/backend-defaults`. Both bind to the backend API port (`7007` by default in this repo) rather than the metrics port. The endpoint paths are namespaced under `/.backstage/health/v1/` and are the only authoritative paths exposed by Backstage 1.48.0 — there is no top-level `/health` or `/readiness` route.
 
 ### 5.1 Endpoints
 
-- `GET /health` — returns `200 OK` with body `{ "status": "ok" }` when the process is alive. Use this for liveness probes.
-- `GET /readiness` — returns `200 OK` only when all registered backend services have initialized; returns `503 Service Unavailable` during startup. Use this for readiness probes.
+- `GET /.backstage/health/v1/liveness` — returns `200 OK` with body `{ "status": "ok" }` when the process is alive. Use this for liveness probes. Source: `createHealthRouter` in `packages/backend-defaults/src/entrypoints/rootHttpRouter/createHealthRouter.ts`.
+- `GET /.backstage/health/v1/readiness` — returns `200 OK` with body `{ "status": "ok" }` once all registered root-scope services have initialized; returns `503 Service Unavailable` during startup. Use this for readiness probes. Source: same `createHealthRouter`.
 
 ### 5.2 Platform integrations
 
 Fly.io, Railway, and Kubernetes all consume these via their respective `liveness_probe` / `readiness_probe` configuration blocks. The backend's port for these endpoints is the same as the API port (`7007` by default). When deploying behind an ingress controller, ensure the probe paths are not rewritten or gated by authentication.
 
-### 5.3 .well-known support
+### 5.3 Alias support
 
-Some upstream Backstage deployments expose `/.well-known/healthcheck` as an alias for `/health`. In the Blitzy Sandbox configuration the primary endpoint is `/health`; `.well-known` is supported by the Backstage HTTP service but not relied upon by tooling or runbooks in this repo.
+Backstage 1.48.0 does **not** expose a `/.well-known/healthcheck` alias or top-level `/health` / `/readiness` aliases by default. Operators who need shorter probe paths can mount a thin alias layer in `packages/backend/src/index.ts` via `coreServices.rootHttpRouter.use(...)`, but no alias is wired in this repo and runbooks must use the canonical `/.backstage/health/v1/*` paths.
 
 ## 6. Audit Events
 
@@ -147,8 +152,8 @@ Audit events are emitted through Backstage's `AuditorService` (`coreServices.aud
 
 The refactor introduces two event types:
 
-- **`user-login`** (severity `medium`) — emitted on every sign-in (successful or failed). Meta fields: `provider` (`github` or `guest`), `username`, `emailDomain`, `userEntityRef`. Source: `packages/backend/src/authModuleGithubProvider.ts`'s augmented `signInResolver`.
-- **`entity-access`** (severity `low`) — emitted on every user-credentialed entity read. Meta fields: `entityRef`, `principal`, `action` (`read`). Source: `plugins/catalog-backend-module-access-audit/src/module.ts`.
+- **`user-login`** (severity `medium`) — emitted on every sign-in (successful or failed). Meta fields: `provider` (`github` or `guest`), `username`, `emailDomain`, `userEntityRef`, `correlationId`. Source: `packages/backend/src/authModuleGithubProvider.ts`'s augmented `signInResolver`. The `correlationId` is a synthetic UUID generated inside the resolver because Backstage's `SignInResolver` callback signature does not expose the inbound Express `request` object — see §6.3.
+- **`entity-access`** (severity `low`) — emitted on every user-credentialed entity read. Meta fields: `entityRef`, `principal`, `action` (`read`). Source: `plugins/catalog-backend-module-access-audit/src/module.ts`. Because this code runs as an Express middleware, it passes the inbound `request` object directly to `AuditorService.createEvent({ request, ... })`, so the correlation id is the canonical request-scoped correlation id rather than a synthetic UUID.
 
 ### 6.2 Lifecycle and severity
 
@@ -156,7 +161,10 @@ Audit events follow the `AuditorService.createEvent({ eventId, severityLevel, re
 
 ### 6.3 Correlation
 
-Audit events automatically carry the inbound request's `correlationId`. Joining audit events to ordinary log lines and to OpenTelemetry trace spans is therefore a single-key filter operation. The `correlationId` is also propagated into the OTel trace context so distributed-tracing UIs (Jaeger, Tempo, Honeycomb) can surface the audit event alongside the span tree.
+Correlation behavior differs by event type:
+
+- **`entity-access`** events carry the inbound HTTP request's correlation id because the middleware has access to the Express `request` and passes it to `AuditorService.createEvent({ request, ... })`. Joining these audit events to ordinary HTTP log lines and to OpenTelemetry trace spans is a single-key filter operation on the canonical correlation id.
+- **`user-login`** events carry a synthetic correlation id minted by the resolver (via `randomUUID()`) and stored in the audit `meta.correlationId` field. The Backstage `SignInResolver` callback signature is `(info, ctx) => Promise<BackstageSignInResult>` and does not expose the Express `request`, so the resolver cannot read the canonical HTTP correlation id. Operators correlating sign-in audit events back to HTTP requests should match on the surrounding request log lines (same `requestId` field) emitted by `coreServices.httpRouter` rather than expecting the synthetic id to match the HTTP correlation id.
 
 ### 6.4 Privacy posture
 
@@ -177,14 +185,14 @@ The companion file [`dashboard-template.json`](dashboard-template.json) is a Gra
 
 ### 7.2 Panel inventory
 
-The template ships six panels:
+The template ships six panels. Three of them depend on custom counters that are **not yet emitted** at this checkpoint (see §4.3) — those panels render as "No data" until the counters are wired into their planned emission sites:
 
-- **Audit Events Per Minute** — `rate(user_login_total[1m])` and `rate(entity_access_total[1m])` stacked.
-- **Permission Decisions (ALLOW / DENY)** — `sum by (result, email_domain) (rate(blitzy_permission_decisions_total[5m]))`.
-- **Catalog Query Latency (p50 / p95 / p99)** — three series with `histogram_quantile(0.5|0.95|0.99, rate(http_server_request_duration_seconds_bucket{route=~".*catalog.*"}[5m]))`.
-- **HTTP Error Rate** — `sum(rate(http_server_requests_total{status_code=~"5.."}[5m])) / sum(rate(http_server_requests_total[5m]))`.
-- **Node.js Heap Usage** — `process_resident_memory_bytes`.
-- **Service Health** — single-stat panel showing `up{job="blitzy-backstage"}`.
+- **Audit Events Per Minute** — `rate(user_login_total[1m])` and `rate(entity_access_total[1m])` stacked. **Pending custom counter implementation (§4.3 entries 2 and 3).** Until the counters land, operators should track sign-in / entity-access volume via the audit-log channel described in §6.
+- **Permission Decisions (ALLOW / DENY)** — `sum by (result, email_domain) (rate(blitzy_permission_decisions_total[5m]))`. **Pending custom counter implementation (§4.3 entry 1).** Until the counter lands, ALLOW/DENY decisions are visible in the `BlitzyPermissionPolicy` debug logs and via E2E test fixtures.
+- **Catalog Query Latency (p50 / p95 / p99)** — three series with `histogram_quantile(0.5|0.95|0.99, rate(http_server_request_duration_seconds_bucket{route=~".*catalog.*"}[5m]))`. **Available today** (auto-instrumented).
+- **HTTP Error Rate** — `sum(rate(http_server_requests_total{status_code=~"5.."}[5m])) / sum(rate(http_server_requests_total[5m]))`. **Available today** (auto-instrumented).
+- **Node.js Heap Usage** — `process_resident_memory_bytes`. **Available today** (auto-instrumented).
+- **Service Health** — single-stat panel showing `up{job="blitzy-backstage"}`. **Available today** (Prometheus scrape liveness).
 
 ### 7.3 Customizing the template
 
@@ -198,19 +206,23 @@ The R1 rule states: "If you cannot exercise it locally, it is not delivered." Th
 
 1. **Start the backend**: `yarn start` (frontend + backend together) or `yarn start-backend` (backend only). Wait until the console prints `Listening on :7007`.
 2. **Confirm the metrics endpoint**: `curl -s http://localhost:9464/metrics | head -30` — should print Prometheus text format including `# HELP` and `# TYPE` lines for the auto-instrumented metrics.
-3. **Confirm the three custom counters are exposed** (initial counts may be zero):
-   - `curl -s http://localhost:9464/metrics | grep blitzy_permission_decisions_total`
-   - `curl -s http://localhost:9464/metrics | grep user_login_total`
-   - `curl -s http://localhost:9464/metrics | grep entity_access_total`
-4. **Confirm the health endpoint**: `curl -i http://localhost:7007/health` — should return `200 OK` with body `{ "status": "ok" }`.
-5. **Exercise sign-in and an entity view to increment counters**: open `http://localhost:3000/` in a browser, sign in via GitHub (or Guest), and click any catalog entity. Re-run step 3 — all three counters should now show non-zero values.
-6. **Tail the structured audit log**: `yarn start 2>&1 | grep '"eventId"'` — should print at least one `user-login` event and at least one `entity-access` event from step 5.
+3. **Confirm auto-instrumented metrics are emitting** (these are available at this checkpoint):
+   - `curl -s http://localhost:9464/metrics | grep '^http_server_request_duration_seconds'` — HTTP request latency histogram (emitted by `@opentelemetry/auto-instrumentations-node`).
+   - `curl -s http://localhost:9464/metrics | grep '^process_resident_memory_bytes'` — Node.js process RSS (emitted by the Node runtime instrumentation).
+   - `curl -s http://localhost:9464/metrics | grep '^nodejs_heap_size_used_bytes'` — Node.js V8 heap usage (emitted by the Node runtime instrumentation).
+4. **Confirm the canonical health endpoints**:
+   - `curl -i http://localhost:7007/.backstage/health/v1/liveness` — should return `200 OK` with body `{"status":"ok"}`.
+   - `curl -i http://localhost:7007/.backstage/health/v1/readiness` — should return `200 OK` with body `{"status":"ok"}` once initialization completes (it returns `503 Service Unavailable` during startup).
+5. **Exercise sign-in and entity view to produce audit events**: open `http://localhost:3000/` in a browser, sign in via GitHub (or Guest), and click any catalog entity.
+6. **Tail the structured audit log**: `yarn start 2>&1 | grep '"eventId"'` — should print at least one `user-login` event and at least one `entity-access` event from step 5. The audit-event channel is the source of truth for sign-in / access signals **until the planned custom counters land** (see §4.3 and [`../refactor/next-tasks.md`](../refactor/next-tasks.md) entry 1).
+
+> **Custom counter step (deferred)**: once the planned counters from §4.3 are implemented, an additional verification step will check `curl -s http://localhost:9464/metrics | grep -E '^(blitzy_permission_decisions_total|user_login_total|entity_access_total)'`. Do not run this verification at this checkpoint — it will return no lines because the counters are not yet emitted.
 
 ### 8.2 Troubleshooting
 
 - **`/metrics` returns 404 or connection refused** — confirm `packages/backend/src/instrumentation.js` is loaded via `--require` on backend startup; check `node --version` is `22` or `24` (the `engines.node` field permits `22 || 24`).
-- **Counter not incrementing** — confirm `permission.enabled: true` is set in `app-config.yaml` so the policy is actually invoked; confirm the new plugin modules are registered in `packages/backend/src/index.ts`.
-- **`/health` returns 503** — wait for backend initialization to complete (typically ten to thirty seconds on first start); inspect stdout for unresolved service initialization errors.
+- **Permission decisions appear absent** — confirm `permission.enabled: true` is set in `app-config.yaml` so the policy is actually invoked; confirm the new plugin modules are registered in `packages/backend/src/index.ts`. Until the planned `blitzy_permission_decisions_total` counter lands, inspect the structured logs / audit events instead of grepping a metric value.
+- **`/.backstage/health/v1/readiness` returns 503** — wait for backend initialization to complete (typically ten to thirty seconds on first start); inspect stdout for unresolved service initialization errors.
 - **No audit lines in stdout** — confirm `coreServices.auditor` is in the plugin's `deps` block; the default `WinstonRootAuditorService` writes events through the same Winston logger used for normal log lines.
 
 ## 9. See also
@@ -219,7 +231,7 @@ The R1 rule states: "If you cannot exercise it locally, it is not delivered." Th
 - [`../refactor/decision-log.md`](../refactor/decision-log.md) — rationale for selecting custom counters over generic gauges, and for naming `blitzy_permission_decisions_total` with the `blitzy_` prefix.
 - [`../refactor/architecture-before-after.md`](../refactor/architecture-before-after.md) — Mermaid diagrams placing the metrics and audit events in the overall architecture (notably the _Authorization and Audit — After_ sequence diagram).
 - [`../refactor/onboarding-addendum.md`](../refactor/onboarding-addendum.md) — Section 7 (Audit Log Location) cross-references this file.
-- [`../refactor/next-tasks.md`](../refactor/next-tasks.md) — entry 3 (per-user dashboard breakdowns) and entry 4 (`entity-write` event) reference this file.
+- [`../refactor/next-tasks.md`](../refactor/next-tasks.md) — entry 4 (per-user dashboard breakdowns) and entry 5 (`entity-write` event) reference this file.
 - [`../auth/identity-resolver.md`](../auth/identity-resolver.md) — documents the augmented `signInResolver` that emits `user-login`.
 - `packages/backend/src/instrumentation.js` — OpenTelemetry SDK and Prometheus exporter wiring.
 - `packages/backend/prometheus.yml` — Prometheus scrape configuration template.
