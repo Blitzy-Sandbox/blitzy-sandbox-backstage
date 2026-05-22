@@ -18,7 +18,6 @@ import {
   EntitySearchBar,
   EntityTagPicker,
   EntityTypePicker,
-  StarredToggle,
 } from '@backstage/plugin-catalog-react';
 
 /** @public */
@@ -64,15 +63,35 @@ export function CatalogTableToolbar(props: {
 }) {
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 pt-2.5 pl-3 sm:pl-5 pb-1.5 pr-3 sm:pr-4 flex-wrap">
-      <h5 className="truncate text-lg font-medium shrink-0 max-w-full">
+      {/*
+       * CP9 QA fix — Issue #11 (MAJOR, WCAG 1.3.1 Info & Relationships):
+       *
+       * The Catalog page renders an h1 (`Blitzy Sandbox Catalog`) at
+       * the top via `PageWithHeader`, so a nested level-2 heading is
+       * the correct successor. Previously this element was an `<h5>`,
+       * which created a 4-level skip (h1 → h5) that Lighthouse axe-core
+       * flagged via the `heading-order` audit. Changing to `<h2>` while
+       * preserving the `text-lg font-medium` visual treatment keeps
+       * pixel-identical rendering with a semantically-correct heading.
+       */}
+      <h2 className="truncate text-lg font-medium shrink-0 max-w-full">
         {props.title}
-      </h5>
+      </h2>
       <div className="flex w-full sm:w-auto sm:flex-1 items-center gap-2 sm:justify-end min-w-0 flex-wrap">
         <div className="w-full sm:flex-1 sm:max-w-xs sm:min-w-[180px]">
           <EntitySearchBar />
         </div>
         <EntityTypePicker inline />
-        <StarredToggle />
+        {/*
+         * CP9 QA fix — Issue #5 (MINOR, UX consistency):
+         *
+         * The `<StarredToggle />` filter button is removed because the
+         * companion `FavoriteEntity` star icon on entity pages was
+         * removed per AAP §0.5.1.2. With no way to populate the starred
+         * set, the filter would always render zero rows and confuse
+         * users. Removing the toggle keeps the filter UI honest with
+         * the available functionality.
+         */}
         <div className="w-32 sm:w-44 shrink-0">
           <EntityTagPicker inline />
         </div>

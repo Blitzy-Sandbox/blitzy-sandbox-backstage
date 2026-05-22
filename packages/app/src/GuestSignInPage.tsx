@@ -324,11 +324,27 @@ function SignInPage({
           </p>
         )}
 
+        {/*
+         * CP9 QA fix — Issue #14 (MAJOR, WCAG 2.1 AA SC 1.4.3 Contrast):
+         *
+         * The helper text explains the critical read-only restriction
+         * for Guest users. Previously the combination of
+         * `color: var(--muted-foreground)` and `opacity: 0.5` produced
+         * an effective contrast ratio well below 4.5:1 (Lighthouse
+         * `color-contrast` audit scored 0). The fix:
+         *  - Remove the 0.5 opacity (text rendered at full alpha)
+         *  - Use a fixed high-contrast neutral (`#D4D4D8` is Tailwind
+         *    `zinc-300`, contrast ~10:1 against the dark background)
+         *    rather than the muted token which is tuned for low-stakes
+         *    decoration. The `var()` fallback uses the muted token if
+         *    a custom palette wants to override, but the inline
+         *    default guarantees AA compliance on the dark sign-in
+         *    background.
+         */}
         <p
           style={{
-            fontSize: '12px',
-            color: 'var(--muted-foreground, #a1a1aa)',
-            opacity: 0.5,
+            fontSize: '13px',
+            color: 'var(--foreground, #D4D4D8)',
             textAlign: 'center',
             lineHeight: 1.6,
             marginTop: '24px',

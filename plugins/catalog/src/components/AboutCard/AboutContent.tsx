@@ -176,10 +176,41 @@ export function AboutContent(props: AboutContentProps) {
         isGroup ||
         isLocation ||
         typeof entity?.spec?.type === 'string') && (
-        <AboutField
-          label={t('aboutCard.typeField.label')}
-          value={entity?.spec?.type as string}
-        />
+        /*
+         * CP9 QA fix — Issue #17 (MINOR, design system consistency):
+         *
+         * The AboutCard's "TYPE" field is now rendered through the same
+         * <Badge>-with-border treatment used by the catalog table's
+         * type column (see plugins/catalog/src/components/CatalogTable/
+         * columns.tsx — createSpecTypeColumn). When the entity's
+         * `spec.type` is `library`, the badge receives `border-2
+         * border-current rounded` so the visual styling matches the
+         * catalog table cell exactly. Other types render with the
+         * normal "secondary" variant (no extra border).
+         *
+         * Implements AAP §0.5.6 — "Apply a border around the word
+         * 'library' in the type column" — consistently across all
+         * surfaces that present the entity type.
+         */
+        <AboutField label={t('aboutCard.typeField.label')}>
+          {(() => {
+            const specType = entity?.spec?.type as string | undefined;
+            if (!specType) return null;
+            const isLibraryType = specType.toLowerCase() === 'library';
+            return (
+              <Badge
+                variant="secondary"
+                className={
+                  isLibraryType
+                    ? 'border-2 border-current rounded text-xs'
+                    : 'text-xs'
+                }
+              >
+                {specType}
+              </Badge>
+            );
+          })()}
+        </AboutField>
       )}
 
       {(isAPI ||

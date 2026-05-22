@@ -287,11 +287,36 @@ export const EntityListProvider = <EntityFilters extends DefaultEntityFilters>(
       // AAP that the catalog header count equals the AND-narrowed
       // rendered row count across all pages for any tag combination.
       //
-      // Other frontend-only narrowing (e.g. `EntityErrorFilter`, the
-      // `'starred'` variant of `EntityUserFilter`) is intentionally not
-      // recounted here — it is pre-existing behavior, and the AAP
-      // Critical Test Scenario scopes the count fix specifically to
-      // multi-tag selection.
+      // CP9 QA fix — Issue #4 (MAJOR):
+      //
+      // The same backend/frontend filter divergence that caused the
+      // multi-tag count mismatch also affects the `'starred'` variant of
+      // `EntityUserFilter`. The backend filter shape
+      // `{ 'metadata.name': starredNames }` returns every entity whose
+      // metadata.name appears in the list, but the frontend
+      // `EntityUserFilter.filterEntity` narrows to only those whose
+      // full entity-ref appears in `this.refs` (namespace + kind + name
+      // tuple). The two predicates disagree whenever the user has
+      // starred no entities (empty refs filters everything out at the
+      // frontend but matches everything at the backend), or whenever a
+      // name collision exists across kinds/namespaces. The visible
+      // result is the same UI bug the QA report flagged: heading reads
+      // "Starred Components (N)" while the table renders zero or fewer
+      // rows.
+      //
+      // The fix generalizes the secondary unpaginated `getEntities`
+      // recount to apply to any time a frontend-only filter is known
+      // to narrow further than the corresponding backend filter. The
+      // recount is `O(N)` on the size of the unpaginated catalog
+      // response (acceptable for catalog UIs of any realistic size)
+      // and is short-circuited when no recount-triggering filter is
+      // active.
+      //
+      // `EntityErrorFilter` is intentionally still not recounted here
+      // — it is a purely-frontend filter that has no backend
+      // equivalent, so `response.totalItems` is the correct count for
+      // its un-narrowed superset and changing this would alter
+      // pre-existing behavior outside the QA scope.
       const computePaginatedTotalItems = async (
         response: QueryEntitiesResponse,
         backendFilter: ReturnType<typeof reduceCatalogFilters>,
@@ -299,7 +324,12 @@ export const EntityListProvider = <EntityFilters extends DefaultEntityFilters>(
         const tagsFilter = requestedFilters.tags;
         const multiTagActive =
           tagsFilter instanceof EntityTagFilter && tagsFilter.values.length > 1;
-        if (!multiTagActive) {
+        const userFilter = requestedFilters.user;
+        const starredActive =
+          userFilter instanceof EntityUserFilter &&
+          userFilter.value === 'starred';
+        const needsRecount = multiTagActive || starredActive;
+        if (!needsRecount) {
           return response.totalItems;
         }
         try {

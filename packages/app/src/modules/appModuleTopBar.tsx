@@ -219,6 +219,38 @@ const TopBarSupport = () => (
  *   dark background even if Tailwind tokens are unavailable in a test
  *   env.
  */
+/**
+ * `SkipNavLink` is the visually-hidden "Skip to main content" link rendered
+ * as the first focusable element of the application chrome.
+ *
+ * CP9 QA fix — Issue #12 (MAJOR, WCAG 2.1 AA SC 2.4.1 Bypass Blocks):
+ *
+ * Keyboard-only users can press Tab once on any page to reveal this link,
+ * activate it with Enter, and jump past the entire top-bar cluster
+ * (Logo/Avatar/Settings/Support) directly to the page's `<main>`
+ * landmark. Without a skip link, keyboard users must Tab through every
+ * top-bar control on every page navigation.
+ *
+ * Styling:
+ *  - `className="sr-only"` keeps the link visually hidden but accessible
+ *    to assistive technology while it does not have focus.
+ *  - The companion CSS rule in `packages/app/src/globals.css` (selector
+ *    `[data-testid="app-skip-nav"]:focus`) surfaces the link as a
+ *    high-contrast pill in the top-left of the viewport when it receives
+ *    keyboard focus. Inline `:focus` styling is required because this
+ *    repo's Tailwind CSS is pre-built and `focus:not-sr-only` /
+ *    `focus:absolute` utility classes are NOT compiled into the shipped
+ *    stylesheet.
+ *
+ * Target: anchors at `href="#main-content"` which matches the `id` on the
+ * `<main>` element rendered by the `app/layout` extension override below.
+ */
+const SkipNavLink = () => (
+  <a href="#main-content" className="sr-only" data-testid="app-skip-nav">
+    Skip to main content
+  </a>
+);
+
 const TopBar = () => (
   <header
     className="relative flex w-full items-center justify-end gap-3 px-4 py-2 bg-primary text-primary-foreground shadow-sm z-[1100]"
@@ -237,12 +269,29 @@ const TopBar = () => (
     data-testid="app-top-bar"
     role="banner"
   >
+    <SkipNavLink />
     <BlitzyLogo />
-    <div className="inline-flex items-center gap-2">
+    {/*
+     * CP9 QA fix — Issue #10 (MAJOR, WCAG 2.4.1 Bypass Blocks):
+     *
+     * Wrap the interactive icon cluster in a `<nav>` landmark so that
+     * assistive technology can identify it as a navigation region.
+     * Previously the top-bar only carried `role="banner"` with no
+     * navigation landmark, leaving the Settings link (the only
+     * navigational anchor in the top-bar) ungrouped for screen
+     * readers. `aria-label="Main"` distinguishes this navigation
+     * region from any per-page `<nav>` (e.g. tabs) that the rendered
+     * page content might also surface.
+     */}
+    <nav
+      aria-label="Main"
+      className="inline-flex items-center gap-2"
+      data-testid="app-top-bar-nav"
+    >
       <TopBarSignInAvatar />
       <TopBarSettings />
       <TopBarSupport />
-    </div>
+    </nav>
   </header>
 );
 
@@ -313,7 +362,28 @@ export const appModuleTopBar = createFrontendModule({
             }
           >
             {inputs.nav.get(coreExtensionData.reactElement)}
-            <main
+            {/*
+             * CP9 QA fix — Issue #9 (MAJOR, WCAG 1.3.1 Info & Relationships):
+             *
+             * This wrapper was previously a `<main>` element, which
+             * resulted in two NESTED `<main>` landmarks (the outer
+             * layout wrapper plus the inner page's own `<main>` from
+             * `Backstage`'s `Page` component). ARIA best practices and
+             * WCAG specify exactly one `<main>` landmark per document.
+             * Switching the outer wrapper to a `<div>` preserves the
+             * flex column layout while ensuring the inner page's
+             * `<main>` becomes the document's sole main landmark.
+             *
+             * CP9 QA fix — Issue #12 target:
+             *
+             * The `id="main-content"` anchor matches the
+             * `href="#main-content"` skip-navigation link rendered by
+             * `SkipNavLink` above. When the user activates the skip
+             * link, focus and scroll move past the top-bar to this
+             * element.
+             */}
+            <div
+              id="main-content"
               data-testid="app-layout-content"
               className="flex flex-1 min-h-0"
               style={
@@ -326,7 +396,7 @@ export const appModuleTopBar = createFrontendModule({
               }
             >
               {inputs.content.get(coreExtensionData.reactElement)}
-            </main>
+            </div>
           </div>,
         ),
       ],

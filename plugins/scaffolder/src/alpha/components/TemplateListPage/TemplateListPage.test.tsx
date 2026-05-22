@@ -252,8 +252,18 @@ describe('TemplateListPage', () => {
     expect(getByText('Categories')).toBeInTheDocument();
   });
 
-  it('should render the EntityOwnerPicker', async () => {
-    const { getByText } = await renderInTestApp(
+  /*
+   * CP9 QA fix — Issue #7 (MINOR, Owner removal scope gap):
+   *
+   * The Owner picker has been removed from the Scaffolder template
+   * browser per AAP §0.5.1.2 ("Perform a full removal of Owner
+   * functionality across the application"). This test now asserts the
+   * absence of the Owner filter label rather than its presence —
+   * locking in the intentional removal so a future contributor cannot
+   * silently reintroduce the picker without also updating this test.
+   */
+  it('should NOT render the EntityOwnerPicker (removed per AAP §0.5.1.2)', async () => {
+    const { queryByText } = await renderInTestApp(
       <TestApiProvider
         apis={[
           [catalogApiRef, mockCatalogApi],
@@ -271,7 +281,7 @@ describe('TemplateListPage', () => {
       mountedRoutes,
     );
 
-    expect(getByText('Owner')).toBeInTheDocument();
+    expect(queryByText('Owner')).not.toBeInTheDocument();
   });
 
   // eslint-disable-next-line jest/no-disabled-tests

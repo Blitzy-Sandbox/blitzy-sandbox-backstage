@@ -232,6 +232,110 @@
   }
 
   /* ----------------------------------------------------------
+   * Top-bar Support button — focus ring visibility (WCAG 2.4.7)
+   *
+   * CP9 QA fix — Issue #2 (MAJOR, WCAG 2.1 AA SC 2.4.7 Focus Visible):
+   *
+   * The shadcn `Button variant="ghost"` baseline sets
+   * `focus-visible:ring-2 focus-visible:ring-ring`, which resolves to
+   * `var(--ring)` — the same `#5B39F3` (Blitzy primary purple) as
+   * `var(--primary)`, the background color of the top-bar in light
+   * mode. That makes the focus ring effectively invisible when the
+   * SupportButton receives keyboard focus.
+   *
+   * Backstage's Settings icon button uses `focus-visible:ring-current`
+   * which inherits the text color (white in this context), making the
+   * ring clearly visible. We replicate that contract for the
+   * SupportButton scope by overriding `--tw-ring-color` to white when
+   * the button has visible focus (i.e., focus arrived via keyboard).
+   * Mouse-driven focus does not trigger `:focus-visible` so the rule
+   * does not affect click users.
+   * ---------------------------------------------------------- */
+
+  [data-testid='app-top-bar-support'] button:focus-visible {
+    --tw-ring-color: #FFFFFF !important;
+    outline: none !important;
+  }
+
+  /* ----------------------------------------------------------
+   * Skip-navigation link — focus-only visibility
+   *
+   * CP9 QA fix — Issue #12 (MAJOR, WCAG 2.1 AA SC 2.4.1 Bypass Blocks):
+   *
+   * The `SkipNavLink` component in `appModuleTopBar.tsx` renders an
+   * anchor element with `className="sr-only"` so it remains hidden
+   * from sighted users and screen readers reading static page
+   * content. When the link receives keyboard focus (Tab from page
+   * load), this rule overrides the `sr-only` clipping so the link
+   * surfaces as a high-contrast pill anchored to the top-left of the
+   * viewport. Activating the link (Enter) navigates to the
+   * `#main-content` anchor on the page's `<main>` element so
+   * keyboard users can bypass the entire top-bar cluster.
+   *
+   * `position: absolute` plus `top: 8px / left: 8px` place the pill
+   * just inside the viewport edge so it is fully visible without
+   * disrupting the layout. `z-index: 1400` keeps it above the
+   * top-bar (z-index: 1100) and ordinary page chrome.
+   *
+   * Tailwind's `focus:not-sr-only` utility is NOT compiled into the
+   * pre-built `tailwind.css` shipped in this repository, so the
+   * focus visibility is implemented directly here.
+   * ---------------------------------------------------------- */
+
+  /*
+   * NOTE: `.sr-only` from `tailwind.css` is defined OUTSIDE any
+   * named CSS layer (in the implicit anonymous layer), while this
+   * rule sits inside `@layer base`. Per the CSS cascade order,
+   * declarations in the implicit layer take precedence over any
+   * named layer at the same specificity. We therefore use
+   * `!important` for the properties that the `sr-only` class
+   * sets (width / height / padding / overflow / clip-path) so the
+   * focus rule is guaranteed to surface the link visually.
+   */
+  [data-testid='app-skip-nav']:focus,
+  [data-testid='app-skip-nav']:focus-visible {
+    position: absolute !important;
+    top: 8px;
+    left: 8px;
+    z-index: 1400;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 8px 16px !important;
+    overflow: visible !important;
+    clip: auto !important;
+    clip-path: none !important;
+    white-space: nowrap;
+    background-color: var(--primary, #5B39F3);
+    color: var(--primary-foreground, #FFFFFF);
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+    text-decoration: none;
+  }
+
+  /* ----------------------------------------------------------
+   * CP9 QA fix — Issue #18 (MINOR, design system consistency):
+   *
+   * Override the shadcn `Button` component's
+   * `[&_svg]:size-4` rule (16px = 1rem) which sat 4px smaller than
+   * the adjacent top-bar Settings icon (which is wrapped in a
+   * react-router `Link`, not the shadcn `Button`, so its `size={20}`
+   * prop renders unchanged at 20px). Forcing the Support button's
+   * inner SVG to 20×20 standardizes both top-right icons on a single
+   * visual rhythm. The selector is intentionally scoped to the
+   * Support button's test-id so other buttons retain their default
+   * icon sizing.
+   * ---------------------------------------------------------- */
+  [data-testid='support-button'] svg.lucide {
+    width: 20px !important;
+    height: 20px !important;
+  }
+
+  /* ----------------------------------------------------------
    * Keyframe Animations
    *
    * Centralized keyframe definitions for components that need

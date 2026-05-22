@@ -1134,12 +1134,42 @@ export function Table<T extends object = {}>(props: TableProps<T>) {
                                     action.active
                                       ? 'opacity-100'
                                       : 'text-muted-foreground hover:text-foreground opacity-40 group-hover/row:opacity-100',
+                                    // CP9 QA fix — Issue #3 (MINOR,
+                                    // WCAG 2.1 SC 4.1.2 Name, Role,
+                                    // Value): disabled buttons should
+                                    // present a not-allowed cursor so
+                                    // sighted mouse users perceive the
+                                    // disabled state before hovering.
+                                    action.disabled && 'cursor-not-allowed',
                                   )}
-                                  title={action.tooltip}
+                                  // The native `title` attribute provides
+                                  // a hover tooltip. When the action is
+                                  // disabled we surface the original
+                                  // tooltip plus a "(unavailable)" hint
+                                  // so users understand WHY the button
+                                  // is disabled rather than just THAT
+                                  // it is.
+                                  title={
+                                    action.disabled
+                                      ? `${
+                                          action.tooltip ?? ''
+                                        } (unavailable for read-only users)`.trim()
+                                      : action.tooltip
+                                  }
                                   disabled={action.disabled}
+                                  // Mirror the native `disabled` state
+                                  // onto `aria-disabled` so assistive
+                                  // technology and Lighthouse
+                                  // `aria-disabled` audits see the
+                                  // disabled semantics. shadcn `Button`
+                                  // forwards `disabled` to the underlying
+                                  // `<button>`, but `aria-disabled` is
+                                  // not auto-derived.
+                                  aria-disabled={action.disabled || undefined}
                                   style={action.cellStyle}
                                   onClick={e => {
                                     e.stopPropagation();
+                                    if (action.disabled) return;
                                     action.onClick(e, row.original);
                                   }}
                                 >

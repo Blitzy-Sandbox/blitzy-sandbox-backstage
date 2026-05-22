@@ -74,7 +74,25 @@ const PopoverContent = React.forwardRef<
       sideOffset={sideOffset}
       data-slot="popover-content"
       className={cn(
-        'z-50 w-72 rounded-md border border-border bg-popover p-4 text-popover-foreground shadow-md outline-none',
+        // CP9 QA fix — Issue #1 (MAJOR):
+        //
+        // The popover content portal MUST render above the Backstage
+        // `Header` component which uses `position: relative; z-index: 100`
+        // for its right-items cluster. The default radix-ui Popover
+        // `z-50` (z-index: 50) was being clipped by the page Header's
+        // higher stacking context, leaving only the bottom edge of the
+        // SupportButton popover visible. Raising the z-index to
+        // `z-[1300]` ensures the popover is layered above:
+        //  - PageHeader (z-index: 100)
+        //  - The custom top-bar (`z-[1100]` in appModuleTopBar.tsx)
+        //  - Any sticky/floating Backstage chrome (drawer is 1100)
+        //
+        // `z-[1300]` is a pre-compiled Tailwind utility class available
+        // in `packages/app/src/tailwind.css` (z-index: 1300). The
+        // compiled stylesheet ships only specific arbitrary z-index
+        // values; using one of those guarantees the rule reaches the
+        // browser without requiring a Tailwind rebuild.
+        'z-[1300] w-72 rounded-md border border-border bg-popover p-4 text-popover-foreground shadow-md outline-none',
         'data-[state=open]:animate-in data-[state=closed]:animate-out',
         'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
         'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
