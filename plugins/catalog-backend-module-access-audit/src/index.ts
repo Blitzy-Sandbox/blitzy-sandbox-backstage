@@ -15,29 +15,12 @@
  */
 
 /**
- * The `catalog-backend-module-access-audit` backend module emits an
- * `entity-access` audit event each time a principal reads a single
- * catalog entity via the catalog plugin's HTTP routes.
- *
- * @remarks
- *
- * The module attaches an HTTP middleware to the catalog plugin's Express
- * router that intercepts `GET /entities/by-name/:kind/:namespace/:name`
- * and `GET /entities/by-uid/:uid` requests. After the response is sent,
- * it emits an `entity-access` audit event via
- * `coreServices.auditor` that records the entity ref, the principal, and
- * the action so downstream consumers (SIEMs, log aggregators) can audit
- * project-level access without modifying the catalog backend itself.
- *
- * Register the module by adding the following line to
- * `packages/backend/src/index.ts`:
- *
- * ```ts
- * backend.add(import('@internal/plugin-catalog-backend-module-access-audit'));
- * ```
- *
- * Implements the project access tracking requirement from the Blitzy
- * Sandbox Backstage refactor (AAP §0.5.1.3, §0.6.1.4).
+ * The catalog-backend-module-access-audit module emits an `entity-access`
+ * audit event whenever a single catalog entity is read through the catalog
+ * backend (GET `/entities/by-name/:kind/:namespace/:name` or GET
+ * `/entities/by-uid/:uid`). The event records the resolved principal, the
+ * stringified entity ref, the action (`read`), and the HTTP status code
+ * via Backstage's AuditorService.
  *
  * @packageDocumentation
  */
