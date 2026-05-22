@@ -1136,6 +1136,101 @@ describe(`<EntityListProvider pagination={{ mode: 'offset' }} />`, () => {
     });
   });
 
+  it('recounts totalItems via unpaginated getEntities when multi-tag EntityTagFilter is active', async () => {
+    // Offset-mode counterpart of the cursor-mode multi-tag recount test
+    // in the `<EntityListProvider pagination />` describe block. The two
+    // pagination modes share the same `computePaginatedTotalItems`
+    // helper in `useEntityListProvider.tsx` but reach it through
+    // distinct branches (offset fresh-fetch vs cursor fresh-fetch), so
+    // both branches MUST be exercised to prevent a regression in either
+    // path. See AAP §0.1.3 Critical Test Scenario:
+    //   "Verify that when two or more tags are selected in the Catalog
+    //   view, the displayed count of catalog items at the top correctly
+    //   reflects the number of items matching *all* selected tags (AND
+    //   logic). The actual displayed list should remain correct."
+    const taggedEntities: Entity[] = [
+      {
+        apiVersion: '1',
+        kind: 'Component',
+        metadata: { name: 'a', tags: ['java', 'spring'] },
+      },
+      {
+        apiVersion: '1',
+        kind: 'Component',
+        metadata: { name: 'b', tags: ['java', 'spring'] },
+      },
+      {
+        apiVersion: '1',
+        kind: 'Component',
+        metadata: { name: 'c', tags: ['java'] },
+      },
+      {
+        apiVersion: '1',
+        kind: 'Component',
+        metadata: { name: 'd', tags: ['spring'] },
+      },
+    ];
+
+    const { result } = renderHook(() => useEntityList(), {
+      wrapper: createWrapper({ pagination }),
+    });
+
+    // Settle the initial render driven by `InitialFiltersWrapper`. The
+    // default `queryEntities` mock returns `totalItems: 10` with the
+    // original two-component fixture (`entities`). At this point no
+    // multi-tag narrowing applies, so the count fix must NOT recount —
+    // `response.totalItems` is propagated verbatim.
+    await waitFor(() => {
+      expect(result.current.entities.length).toBe(2);
+      expect(result.current.totalItems).toBe(10);
+    });
+    expect(mockCatalogApi.getEntities).not.toHaveBeenCalled();
+
+    // Arrange the multi-tag scenario. The next `queryEntities` call
+    // (triggered by the upcoming `updateFilters({ tags })`) returns the
+    // OR-superset offset page with a distinctive `totalItems` (50) so
+    // the assertion below cannot be accidentally satisfied by the
+    // OR-superset value. The secondary unpaginated `getEntities` call
+    // returns the same OR-superset, and the hook AND-narrows it to 2
+    // entities via the same `entityFilter` predicate.
+    mockCatalogApi.queryEntities!.mockResolvedValueOnce({
+      items: taggedEntities,
+      pageInfo: {},
+      totalItems: 50,
+    });
+    mockCatalogApi.getEntities!.mockResolvedValueOnce({
+      items: taggedEntities,
+    });
+
+    act(() =>
+      result.current.updateFilters({
+        tags: new EntityTagFilter(['java', 'spring']),
+      }),
+    );
+
+    // AND-narrowed total via the secondary recount: 2 of the 4
+    // OR-superset entities carry both tags. The OR-superset
+    // `response.totalItems` of 50 must NOT leak through.
+    await waitFor(() => {
+      expect(result.current.entities.length).toBe(2);
+      expect(result.current.totalItems).toBe(2);
+    });
+
+    // Confirm the secondary recount was issued against the OR-emitted
+    // backend filter shape (kind + tags as a single multi-value
+    // `metadata.tags` array). The wire format is the only shape
+    // carried by `EntityFilterQuery` and remains OR-compatible after
+    // the fix; the AND-narrowing happens client-side via
+    // `EntityTagFilter.filterEntity.every`.
+    expect(mockCatalogApi.getEntities).toHaveBeenCalledWith({
+      filter: {
+        kind: 'component',
+        'metadata.tags': ['java', 'spring'],
+      },
+      order: orderFields,
+    });
+  });
+
   it('debounces multiple offset changes', async () => {
     const { result } = renderHook(() => useEntityList(), {
       wrapper: createWrapper({ pagination }),
