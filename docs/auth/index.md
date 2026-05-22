@@ -543,3 +543,78 @@ Extract the public key
 ```sh
 openssl ec -inform PEM -outform PEM -pubout -in private.key -out public.key
 ```
+
+## Audit Event Emission
+
+> This section documents Blitzy Sandbox–specific customizations: how authentication events are captured as immutable audit records for security review, compliance, and operational visibility.
+
+The Blitzy Sandbox fork of Backstage augments the GitHub authentication provider's sign-in resolver to emit a `user-login` audit event through `coreServices.auditor` on every sign-in attempt. The event records the outcome (success or failure), the principal that signed in, and the email domain bucket — never the full email address, never any OAuth access or refresh token.
+
+### Event shape
+
+The audit event is created via the standard Backstage `AuditorService` contract:
+
+```typescript
+// Emitted at the start of every sign-in attempt
+const event = auditor.createEvent({
+  eventId: 'user-login',
+  severityLevel: 'medium',
+  request: ctx.request,
+  meta: { provider: 'github', username, emailDomain },
+});
+
+// On a successful resolution, the resolver finalizes the event with the entity ref:
+await event.success({ meta: { entityRef } });
+
+// On a resolver failure, the resolver finalizes the event with the error:
+await event.fail({ error, meta: { provider: 'github', username } });
+```
+
+Severity is `medium`. The event lands in the structured JSON log alongside ordinary log lines, distinguishable by the presence of the `eventId` field. The same correlation ID that tags the HTTP request that triggered the sign-in also tags the audit event, so administrators can join an audit event to the request and to OpenTelemetry trace spans via the correlation ID.
+
+### Surface coverage
+
+The current refactor emits the `user-login` event from the GitHub provider only. Other authentication providers (Google, GitLab, SAML, Okta, OAuth2, OIDC, Auth0, Microsoft, OneLogin, Bitbucket, Atlassian, OpenShift, VMware Cloud, AWS ALB, Cloudflare Access, Azure Easy Auth, Google IAP, OAuth2 Proxy) are not augmented in this iteration; their resolvers continue to emit no audit events.
+
+A complementary `entity-access` audit event is emitted from the catalog backend whenever a user-credentialed entity read is served. That event is documented in [`../observability/dashboards.md`](../observability/dashboards.md) Section 6 (Audit Events).
+
+### Operator references
+
+- See [`./identity-resolver.md`](./identity-resolver.md) (section: "Augmented GitHub Sign-In Resolver (Blitzy Sandbox)") for the resolver implementation walkthrough and illustrative pseudo-code.
+- See [`./github/provider.md`](./github/provider.md) (section: "Audit Event Emission (Blitzy Sandbox Customization)") for GitHub-specific configuration details.
+- See [`../observability/dashboards.md`](../observability/dashboards.md) for the Prometheus counter `user_login_total{provider, email_domain}` and the Grafana panel that visualizes the event rate.
+- See [`../refactor/decision-log.md`](../refactor/decision-log.md) for the rationale behind the email-source priority chain and the privacy posture (only the domain bucket is recorded, never the full email).
+
+## Email-Domain Authorization
+
+> This section documents Blitzy Sandbox–specific customizations: how the email domain captured during sign-in flows through into a deny-by-default authorization policy for non-Blitzy users and Guests.
+
+The Blitzy Sandbox fork enforces a deny-by-default authorization posture for all non-read permissions when the signing-in principal's verified email domain is not `@blitzy.com` or when the principal is a Guest. Read permissions remain allowed for every principal so users can browse the catalog without write access.
+
+### How the email reaches the policy
+
+The augmented GitHub `signInResolver` extracts the verified primary email from `result.fullProfile.emails?.[0]?.value` (with a fallback to `result.userinfo?.email`) and populates the resulting `BackstageIdentityResponse.profile.email` field. The policy reads this field on every `handle()` call — no second catalog lookup is required, and no outbound API call to GitHub is required on every request. See [`./identity-resolver.md`](./identity-resolver.md) for the full resolver lifecycle.
+
+### Decision sketch
+
+The `BlitzyPermissionPolicy.handle(request, user)` method evaluates each permission check by the following branches:
+
+- **Read action (any permission whose `attributes.action === 'read'`)** — `ALLOW` for every principal, including Guest. Read access to the catalog is universal in the Blitzy Sandbox so all users can browse projects.
+- **Write action (create / update / delete / refresh) with `@blitzy.com` email** — `ALLOW`. Verified Blitzy team members can perform mutations against the catalog.
+- **Write action with email domain ≠ `@blitzy.com`** — `DENY`. Users who signed in via GitHub with a personal or third-party email are strictly constrained to read-only access.
+- **Write action with Guest principal** — `DENY`. Guest sessions are strictly read-only regardless of any spoofed email claim. The check is performed against the principal type (`user?.principal?.type === 'guest'` or by inspecting the user entity ref), not solely against the email field.
+- **Missing email** — Treated as a non-Blitzy principal. The fallback chain in the resolver synthesizes `<username>@unknown.invalid` (an RFC 2606 reserved domain) so the policy has a deterministic non-Blitzy value to evaluate. The result is `DENY` for write actions.
+
+### Where the policy lives
+
+The policy is implemented in `plugins/permission-backend-module-blitzy-policy/` as a stand-alone backend module. The module replaces the previously-registered `plugin-permission-backend-module-allow-all-policy` in `packages/backend/src/index.ts`. The class is `BlitzyPermissionPolicy` and the entry point is the `handle()` method.
+
+For upstream Backstage patterns on which the policy is built, see [`../permissions/writing-a-policy.md`](../permissions/writing-a-policy.md) and [`../permissions/getting-started.md`](../permissions/getting-started.md).
+
+### Operator references
+
+- See [`./identity-resolver.md`](./identity-resolver.md) (section: "Augmented GitHub Sign-In Resolver (Blitzy Sandbox)") for the email-extraction chain that feeds the policy.
+- See [`./github/provider.md`](./github/provider.md) (section: "Email-Domain Authorization (Blitzy Sandbox Customization)") for GitHub-specific email handling.
+- See [`../observability/dashboards.md`](../observability/dashboards.md) for the Prometheus counter `blitzy_permission_decisions_total{result, email_domain, action}` and the Grafana panel that visualizes ALLOW / DENY decisions over time.
+- See [`../refactor/decision-log.md`](../refactor/decision-log.md) for the rationale behind the deny-by-default posture and the email-source priority chain.
+- See [`../permissions/writing-a-policy.md`](../permissions/writing-a-policy.md) for upstream Backstage patterns on permission policy authoring.
