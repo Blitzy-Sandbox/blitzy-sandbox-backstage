@@ -353,6 +353,21 @@ export interface TableProps<T extends object = {}> {
   rowSelection?: RowSelectionState;
   /** Content rendered inside the card border, below the table rows. */
   footer?: ReactNode;
+  /**
+   * Legacy compatibility: callback fired when the user changes the search
+   * input. Preserved from @material-table/core to support callsites that
+   * implement server-side or upstream filtering. The new tanstack-react-table
+   * based Table does internal client-side search, but this callback is still
+   * invoked so legacy filtering hooks continue to work.
+   */
+  onSearchChange?: (searchTerm: string) => void;
+  /**
+   * Legacy compatibility: render function for an expandable row detail panel.
+   * Preserved from @material-table/core. When provided, an expand chevron is
+   * rendered on each row that toggles the panel containing this rendered
+   * element below the row.
+   */
+  detailPanel?: (props: { rowData: T }) => ReactNode;
 }
 
 /* ---------------------------------------------------------------------------

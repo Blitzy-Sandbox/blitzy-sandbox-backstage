@@ -62,7 +62,7 @@ describe('CatalogAutocomplete', () => {
     }
   });
 
-  it('supports required input', () => {
+  it('supports required input', async () => {
     render(
       <CatalogAutocomplete
         name="test-autocomplete"
@@ -72,8 +72,22 @@ describe('CatalogAutocomplete', () => {
       />,
     );
 
-    const input = screen.getByRole('combobox');
-    expect(input).toBeRequired();
+    // After the Radix-style refactor (see CatalogAutocomplete.tsx) the
+    // closed trigger is a non-input `<div role="combobox">`; the real
+    // `<input role="combobox" required />` is only rendered while the
+    // picker is open. Open the picker first so the input element exists
+    // in the DOM, then assert the `required` attribute is present.
+    const trigger = screen.getByRole('combobox');
+    await user.click(trigger);
+
+    await waitFor(() => {
+      const comboboxes = screen.getAllByRole('combobox');
+      const input = comboboxes.find(
+        el => (el as HTMLElement).tagName.toLowerCase() === 'input',
+      ) as HTMLInputElement | undefined;
+      expect(input).toBeDefined();
+      expect(input).toBeRequired();
+    });
   });
 
   it('displays helper text when provided', () => {
@@ -99,22 +113,31 @@ describe('CatalogAutocomplete', () => {
   });
 
   it('displays correct option on selection', async () => {
+    // After the Radix-style refactor the picker closes on single-select
+    // option click and the `<input role="combobox">` is unmounted. The
+    // observable contract is now that `onChange` is fired with the
+    // selected option value, which the parent uses to update its own
+    // controlled state and re-render. Asserting via an `onChange` spy
+    // is the most reliable equivalent to the legacy
+    // `expect(input).toHaveValue('Option 1')` check.
+    const handleChange = jest.fn();
     render(
       <CatalogAutocomplete
         name="test-autocomplete"
         options={mockOptions}
         label="Test Label"
+        onChange={handleChange}
       />,
     );
 
-    const input = screen.getByRole('combobox');
-    await user.click(input);
+    const trigger = screen.getByRole('combobox');
+    await user.click(trigger);
 
     const optionToSelect = await screen.findByText('Option 1');
     await user.click(optionToSelect);
 
     await waitFor(() => {
-      expect(input).toHaveValue('Option 1');
+      expect(handleChange).toHaveBeenCalledWith(expect.anything(), 'Option 1');
     });
   });
 });

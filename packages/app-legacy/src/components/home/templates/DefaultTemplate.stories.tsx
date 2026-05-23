@@ -119,19 +119,6 @@ export default {
   ],
 };
 
-const useStyles = makeStyles(theme => ({
-  searchBarInput: {
-    maxWidth: '60vw',
-    margin: 'auto',
-    backgroundColor: theme.palette.background.paper,
-    borderRadius: '50px',
-    boxShadow: theme.shadows[1],
-  },
-  searchBarOutline: {
-    borderStyle: 'none',
-  },
-}));
-
 const useLogoStyles = makeStyles(theme => ({
   container: {
     margin: theme.spacing(5, 0),
@@ -146,7 +133,6 @@ const useLogoStyles = makeStyles(theme => ({
 }));
 
 export const DefaultTemplate = () => {
-  const classes = useStyles();
   const { svg, path, container } = useLogoStyles();
 
   return (
@@ -160,12 +146,6 @@ export const DefaultTemplate = () => {
             />
             <Grid container item xs={12} justifyContent="center">
               <HomePageSearchBar
-                InputProps={{
-                  classes: {
-                    root: classes.searchBarInput,
-                    notchedOutline: classes.searchBarOutline,
-                  },
-                }}
                 placeholder="Search"
               />
             </Grid>

@@ -109,11 +109,7 @@ const EntityCountTile = ({
   );
 
   if (url) {
-    return (
-      <Link to={url} variant="body2">
-        {tile}
-      </Link>
-    );
+    return <Link to={url}>{tile}</Link>;
   }
   return tile;
 };

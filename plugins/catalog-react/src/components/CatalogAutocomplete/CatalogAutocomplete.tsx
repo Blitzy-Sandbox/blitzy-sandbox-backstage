@@ -162,7 +162,16 @@ export function CatalogAutocomplete<
     open: controlledOpen,
     onOpen,
     onClose,
-    size = 'small',
+    // `size` is preserved as a public prop on the component's TypeScript
+    // surface for compatibility with callers that pre-date the
+    // shadcn-style refactor (the MUI v4 Autocomplete accepted
+    // `'small' | 'medium'`). The Radix-style trigger renders with a
+    // fixed `h-9` height regardless, so the prop is intentionally
+    // unused inside the component body — a future iteration may bind it
+    // to a Tailwind size variant. Underscore-prefixed alias keeps the
+    // value reachable without triggering the TS6133 unused-binding
+    // error.
+    size: _size = 'small',
     className,
     id,
     ListboxProps: listboxProps,
@@ -543,21 +552,15 @@ export function CatalogAutocomplete<
   /* Default input renderer                                                 */
   /* --------------------------------------------------------------------- */
   /* --------------------------------------------------------------------- */
-  /* Tag removal handler (multi-select chip delete)                         */
+  /* Multi-select chip removal handler:                                    */
+  /*                                                                       */
+  /* The collapsed multi-select trigger currently renders a                */
+  /* "${selectedCount} selected" summary instead of per-chip remove        */
+  /* buttons, so a per-tag removal handler is not wired up at this layer.  */
+  /* If chip-style rendering is reintroduced, restore a useCallback that   */
+  /* filters `value` and calls `onChange` with the narrowed list — see the */
+  /* git history for the previous implementation.                          */
   /* --------------------------------------------------------------------- */
-  const handleTagRemove = useCallback(
-    (e: React.SyntheticEvent, tagValue: T) => {
-      e.stopPropagation();
-      const currentValues = ((value as T[] | null) ?? []) as T[];
-      const newValues = currentValues.filter(v =>
-        getOptionSelected ? !getOptionSelected(tagValue, v) : v !== tagValue,
-      );
-      setInternalValue(newValues);
-      onChange?.(e, newValues as Multiple extends true ? T[] : T | null);
-      inputRef.current?.focus();
-    },
-    [value, getOptionSelected, onChange],
-  );
 
   /* --------------------------------------------------------------------- */
   /* Default input renderer                                                 */

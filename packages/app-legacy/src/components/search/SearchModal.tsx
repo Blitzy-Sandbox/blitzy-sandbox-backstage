@@ -108,7 +108,7 @@ export const SearchModal = ({ toggleModal }: { toggleModal: () => void }) => {
         <Box className={classes.dialogTitle}>
           <SearchBar
             className={classes.input}
-            inputProps={{ ref: searchBarRef }}
+            ref={searchBarRef}
             onSubmit={handleSearchBarSubmit}
           />
 

@@ -161,7 +161,7 @@ export const Content = (props: FeaturedDocsCardProps): JSX.Element => {
         action={
           <LinkButton
             to="https://backstage.io/docs/features/techdocs/getting-started"
-            variant="contained"
+            variant="default"
           >
             {t('featuredDocsCard.empty.learnMoreLinkTitle')}
           </LinkButton>

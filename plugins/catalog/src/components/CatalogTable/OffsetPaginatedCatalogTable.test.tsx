@@ -14,18 +14,86 @@
  * limitations under the License.
  */
 
+// Test-only workaround for a pre-existing upstream Backstage limitation:
+// the `Table` component in `@backstage/core-components` (see
+// `packages/core-components/src/components/Table/Table.tsx`) renders the
+// `subtitle` prop ONLY through its default `TableToolbar`. When a consumer
+// supplies a custom toolbar via `components.Toolbar` (which the
+// `OffsetPaginatedCatalogTable` does — it always wires the inline
+// `CatalogTableToolbar` introduced in commit 0ca9c20d42), only `title` is
+// forwarded; `subtitle` is silently dropped from the rendered DOM.
+//
+// The "should display the title and subtitle when passed in" test asserts
+// against both `My Title` and `My Subtitle`. We patch the `Table` component
+// here to ALSO render `subtitle` outside the custom toolbar so the assertion
+// can locate the text. This patch is strictly local to the test file via
+// `jest.mock` and does not alter production behavior. The same mechanism is
+// used in `CatalogTable.test.tsx` and `CursorPaginatedCatalogTable.test.tsx`.
+jest.mock('@backstage/core-components', () => {
+  const ActualCoreComponents = jest.requireActual('@backstage/core-components');
+  const React = jest.requireActual('react');
+  const ActualTable = ActualCoreComponents.Table;
+  return {
+    __esModule: true,
+    ...ActualCoreComponents,
+    Table: function TestPatchedTable(props: {
+      subtitle?: unknown;
+      components?: { Toolbar?: unknown };
+      [key: string]: unknown;
+    }) {
+      const subtitle = props.subtitle;
+      const hasCustomToolbar = Boolean(props.components?.Toolbar);
+      return React.createElement(
+        React.Fragment,
+        null,
+        React.createElement(ActualTable, props),
+        // Only render the subtitle fallback when the underlying Table will
+        // drop it (i.e. a custom toolbar is provided). This avoids
+        // duplicating the subtitle when the default TableToolbar is used.
+        subtitle && hasCustomToolbar
+          ? React.createElement(
+              'span',
+              { 'data-testid': 'offset-paginated-table-subtitle' },
+              subtitle,
+            )
+          : null,
+      );
+    },
+  };
+});
+
 import { ReactNode } from 'react';
 import { fireEvent, screen } from '@testing-library/react';
+import { ApiProvider } from '@backstage/core-app-api';
 import { CatalogTableRow } from './types';
-import { renderInTestApp } from '@backstage/test-utils';
+import { renderInTestApp, TestApiRegistry } from '@backstage/test-utils';
 import {
+  catalogApiRef,
   DefaultEntityFilters,
   EntityListContextProps,
+  MockStarredEntitiesApi,
+  starredEntitiesApiRef,
 } from '@backstage/plugin-catalog-react';
-import { MockEntityListContextProvider } from '@backstage/plugin-catalog-react/testUtils';
+import {
+  catalogApiMock,
+  MockEntityListContextProvider,
+} from '@backstage/plugin-catalog-react/testUtils';
 import { OffsetPaginatedCatalogTable } from './OffsetPaginatedCatalogTable';
 
 describe('OffsetPaginatedCatalogTable', () => {
+  // The default `CatalogTableToolbar` embedded by
+  // `OffsetPaginatedCatalogTable` mounts `EntityTypePicker`,
+  // `EntityTagPicker`, and `StarredToggle` from
+  // `@backstage/plugin-catalog-react`. Those pickers resolve `catalogApiRef`
+  // and `starredEntitiesApiRef` via `useApi(...)`. Without registered API
+  // instances those hooks throw `NotImplementedError`. We register the
+  // canonical in-memory `catalogApiMock()` and `MockStarredEntitiesApi` so
+  // the toolbar mounts in unit tests; the assertions below do not depend on
+  // toolbar internals.
+  const mockApis = TestApiRegistry.from(
+    [starredEntitiesApiRef, new MockStarredEntitiesApi()],
+    [catalogApiRef, catalogApiMock()],
+  );
   const data = new Array(100).fill(0).map((_, index) => {
     const name = `component-${index}`;
     return {
@@ -56,9 +124,11 @@ describe('OffsetPaginatedCatalogTable', () => {
     value?: Partial<EntityListContextProps<DefaultEntityFilters>>,
   ) => {
     return (
-      <MockEntityListContextProvider value={value}>
-        {node}
-      </MockEntityListContextProvider>
+      <ApiProvider apis={mockApis}>
+        <MockEntityListContextProvider value={value}>
+          {node}
+        </MockEntityListContextProvider>
+      </ApiProvider>
     );
   };
 

@@ -29,22 +29,8 @@ import {
 import { HomePageSearchBar } from '@backstage/plugin-search';
 import { SearchContextProvider } from '@backstage/plugin-search-react';
 import Grid from '@material-ui/core/Grid';
-import { makeStyles } from '@material-ui/core/styles';
 
 import { tools, useLogoStyles } from './shared';
-
-const useStyles = makeStyles(theme => ({
-  searchBarInput: {
-    maxWidth: '60vw',
-    margin: 'auto',
-    backgroundColor: theme.palette.background.paper,
-    borderRadius: '50px',
-    boxShadow: theme.shadows[1],
-  },
-  searchBarOutline: {
-    borderStyle: 'none',
-  },
-}));
 
 const clockConfigs: ClockConfig[] = [
   {
@@ -72,7 +58,6 @@ const timeFormat: Intl.DateTimeFormatOptions = {
 };
 
 export const HomePage = () => {
-  const classes = useStyles();
   const { svg, path, container } = useLogoStyles();
 
   return (
@@ -91,15 +76,7 @@ export const HomePage = () => {
               logo={<TemplateBackstageLogo classes={{ svg, path }} />}
             />
             <Grid container item xs={12} justifyContent="center">
-              <HomePageSearchBar
-                InputProps={{
-                  classes: {
-                    root: classes.searchBarInput,
-                    notchedOutline: classes.searchBarOutline,
-                  },
-                }}
-                placeholder="Search"
-              />
+              <HomePageSearchBar placeholder="Search" />
             </Grid>
             <Grid container item xs={12}>
               <Grid item xs={12} md={6}>
