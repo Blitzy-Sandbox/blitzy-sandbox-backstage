@@ -1,0 +1,1054 @@
+{
+  "events": [
+    {
+      "plugin": "auth",
+      "eventId": "user-login",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "plugin:auth"
+      },
+      "meta": {
+        "provider": "blitzy-e2e",
+        "username": "alice",
+        "emailDomain": "blitzy.com",
+        "userEntityRef": "user:default/alice",
+        "correlationId": "a4d3f249-f58b-446f-a80b-e906f33c4cc9"
+      },
+      "status": "initiated",
+      "_capturedAt": "2026-05-23T09:07:19.110Z",
+      "trace_id": "93c9173e082a82998890982608fc3910",
+      "span_id": "fe7f5f65cf1e0ae2",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "auth",
+      "eventId": "user-login",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "plugin:auth"
+      },
+      "meta": {
+        "provider": "blitzy-e2e",
+        "username": "alice",
+        "emailDomain": "blitzy.com",
+        "userEntityRef": "user:default/alice",
+        "correlationId": "a4d3f249-f58b-446f-a80b-e906f33c4cc9",
+        "entityRef": "user:default/alice"
+      },
+      "status": "succeeded",
+      "_capturedAt": "2026-05-23T09:07:19.112Z",
+      "trace_id": "93c9173e082a82998890982608fc3910",
+      "span_id": "fe7f5f65cf1e0ae2",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "auth",
+      "eventId": "user-login",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "plugin:auth"
+      },
+      "meta": {
+        "provider": "blitzy-e2e",
+        "username": "bob",
+        "emailDomain": "external.org",
+        "userEntityRef": "user:default/bob",
+        "correlationId": "5fca5c70-799f-48da-8cc9-b830e4649fda"
+      },
+      "status": "initiated",
+      "_capturedAt": "2026-05-23T09:07:19.131Z",
+      "trace_id": "a5da2edcbf86b6b1ccd7a7ada0cbdda7",
+      "span_id": "62c5a527560532c6",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "auth",
+      "eventId": "user-login",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "plugin:auth"
+      },
+      "meta": {
+        "provider": "blitzy-e2e",
+        "username": "bob",
+        "emailDomain": "external.org",
+        "userEntityRef": "user:default/bob",
+        "correlationId": "5fca5c70-799f-48da-8cc9-b830e4649fda",
+        "entityRef": "user:default/bob"
+      },
+      "status": "succeeded",
+      "_capturedAt": "2026-05-23T09:07:19.133Z",
+      "trace_id": "a5da2edcbf86b6b1ccd7a7ada0cbdda7",
+      "span_id": "62c5a527560532c6",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "auth",
+      "eventId": "user-login",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "plugin:auth"
+      },
+      "meta": {
+        "provider": "guest",
+        "emailDomain": "guest",
+        "userEntityRef": "user:development/guest",
+        "correlationId": "d63ccb3e-bae0-44b7-80fe-19023ada7a97"
+      },
+      "status": "initiated",
+      "_capturedAt": "2026-05-23T09:07:19.150Z",
+      "trace_id": "14300dacb0afd59ff55802a37c12ac73",
+      "span_id": "60e3d5ccf708dff2",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-fetch",
+      "severityLevel": "low",
+      "actor": {
+        "actorId": "plugin:auth",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "node-fetch/1.0 (+https://github.com/bitinn/node-fetch)"
+      },
+      "request": {
+        "url": "/api/catalog/entities/by-name/user/development/guest",
+        "method": "GET"
+      },
+      "meta": {
+        "queryType": "by-name",
+        "entityRef": "user:development/guest"
+      },
+      "status": "initiated",
+      "_capturedAt": "2026-05-23T09:07:19.156Z",
+      "trace_id": "14300dacb0afd59ff55802a37c12ac73",
+      "span_id": "30ac886a5a7776b6",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-fetch",
+      "severityLevel": "low",
+      "actor": {
+        "actorId": "plugin:auth",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "node-fetch/1.0 (+https://github.com/bitinn/node-fetch)"
+      },
+      "request": {
+        "url": "/api/catalog/entities/by-name/user/development/guest",
+        "method": "GET"
+      },
+      "meta": {
+        "queryType": "by-name",
+        "entityRef": "user:development/guest"
+      },
+      "status": "succeeded",
+      "_capturedAt": "2026-05-23T09:07:19.157Z",
+      "trace_id": "14300dacb0afd59ff55802a37c12ac73",
+      "span_id": "30ac886a5a7776b6",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-fetch",
+      "severityLevel": "low",
+      "actor": {
+        "actorId": "plugin:auth",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "node-fetch/1.0 (+https://github.com/bitinn/node-fetch)"
+      },
+      "request": {
+        "url": "/api/catalog/entities/by-name/user/development/guest",
+        "method": "GET"
+      },
+      "meta": {
+        "queryType": "by-name",
+        "entityRef": "user:development/guest"
+      },
+      "error": {
+        "name": "NotFoundError",
+        "message": "No entity named 'guest' found, with kind 'user' in namespace 'development'",
+        "stack": "NotFoundError: No entity named 'guest' found, with kind 'user' in namespace 'development'\n    at writeSingleEntityResponse (/tmp/blitzy/blitzy-sandbox-backstage/blitzy-dee9c50d-b5a7-4294-9af0-a43c5d8d40df_a697cf/plugins/catalog-backend/src/service/response/write.ts:38:13)\n    at <anonymous> (/tmp/blitzy/blitzy-sandbox-backstage/blitzy-dee9c50d-b5a7-4294-9af0-a43c5d8d40df_a697cf/plugins/catalog-backend/src/service/createRouter.ts:406:36)"
+      },
+      "status": "failed",
+      "_capturedAt": "2026-05-23T09:07:19.157Z",
+      "trace_id": "14300dacb0afd59ff55802a37c12ac73",
+      "span_id": "30ac886a5a7776b6",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-access",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "plugin:auth",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "node-fetch/1.0 (+https://github.com/bitinn/node-fetch)"
+      },
+      "request": {
+        "url": "/api/catalog/entities/by-name/user/development/guest",
+        "method": "GET"
+      },
+      "meta": {
+        "principal": {
+          "type": "service",
+          "subject": "plugin:auth"
+        },
+        "action": "read",
+        "entityRef": "user:development/guest"
+      },
+      "status": "initiated",
+      "_capturedAt": "2026-05-23T09:07:19.158Z",
+      "trace_id": "14300dacb0afd59ff55802a37c12ac73",
+      "span_id": "1aefa8854af45846",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-access",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "plugin:auth",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "node-fetch/1.0 (+https://github.com/bitinn/node-fetch)"
+      },
+      "request": {
+        "url": "/api/catalog/entities/by-name/user/development/guest",
+        "method": "GET"
+      },
+      "meta": {
+        "principal": {
+          "type": "service",
+          "subject": "plugin:auth"
+        },
+        "action": "read",
+        "entityRef": "user:development/guest",
+        "statusCode": 404
+      },
+      "error": {
+        "name": "Error",
+        "message": "HTTP 404",
+        "stack": "Error: HTTP 404\n    at <anonymous> (/tmp/blitzy/blitzy-sandbox-backstage/blitzy-dee9c50d-b5a7-4294-9af0-a43c5d8d40df_a697cf/plugins/catalog-backend-module-access-audit/src/module.ts:462:24)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)"
+      },
+      "status": "failed",
+      "_capturedAt": "2026-05-23T09:07:19.158Z",
+      "trace_id": "14300dacb0afd59ff55802a37c12ac73",
+      "span_id": "1aefa8854af45846",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "auth",
+      "eventId": "user-login",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "plugin:auth"
+      },
+      "meta": {
+        "provider": "guest",
+        "emailDomain": "guest",
+        "userEntityRef": "user:development/guest",
+        "correlationId": "d63ccb3e-bae0-44b7-80fe-19023ada7a97",
+        "entityRef": "user:development/guest"
+      },
+      "status": "succeeded",
+      "_capturedAt": "2026-05-23T09:07:19.160Z",
+      "trace_id": "14300dacb0afd59ff55802a37c12ac73",
+      "span_id": "60e3d5ccf708dff2",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-fetch",
+      "severityLevel": "low",
+      "actor": {
+        "actorId": "user:default/alice",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/entities/by-name/component/default/blitzy-sandbox-backstage",
+        "method": "GET"
+      },
+      "meta": {
+        "queryType": "by-name",
+        "entityRef": "component:default/blitzy-sandbox-backstage"
+      },
+      "status": "initiated",
+      "_capturedAt": "2026-05-23T09:07:19.187Z",
+      "trace_id": "6cf6b82e6cb5b0736dbab6db612722c0",
+      "span_id": "37ba1ef2cfba986d",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-fetch",
+      "severityLevel": "low",
+      "actor": {
+        "actorId": "user:default/alice",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/entities/by-name/component/default/blitzy-sandbox-backstage",
+        "method": "GET"
+      },
+      "meta": {
+        "queryType": "by-name",
+        "entityRef": "component:default/blitzy-sandbox-backstage"
+      },
+      "status": "succeeded",
+      "_capturedAt": "2026-05-23T09:07:19.194Z",
+      "trace_id": "6cf6b82e6cb5b0736dbab6db612722c0",
+      "span_id": "37ba1ef2cfba986d",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-access",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "user:default/alice",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/entities/by-name/component/default/blitzy-sandbox-backstage",
+        "method": "GET"
+      },
+      "meta": {
+        "principal": {
+          "type": "user",
+          "userEntityRef": "user:default/alice"
+        },
+        "action": "read",
+        "entityRef": "component:default/blitzy-sandbox-backstage"
+      },
+      "status": "initiated",
+      "_capturedAt": "2026-05-23T09:07:19.195Z",
+      "trace_id": "6cf6b82e6cb5b0736dbab6db612722c0",
+      "span_id": "4252365f39d06348",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-access",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "user:default/alice",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/entities/by-name/component/default/blitzy-sandbox-backstage",
+        "method": "GET"
+      },
+      "meta": {
+        "principal": {
+          "type": "user",
+          "userEntityRef": "user:default/alice"
+        },
+        "action": "read",
+        "entityRef": "component:default/blitzy-sandbox-backstage",
+        "statusCode": 200
+      },
+      "status": "succeeded",
+      "_capturedAt": "2026-05-23T09:07:19.195Z",
+      "trace_id": "6cf6b82e6cb5b0736dbab6db612722c0",
+      "span_id": "4252365f39d06348",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-fetch",
+      "severityLevel": "low",
+      "actor": {
+        "actorId": "user:default/bob",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/entities/by-name/component/default/blitzy-sandbox-backstage",
+        "method": "GET"
+      },
+      "meta": {
+        "queryType": "by-name",
+        "entityRef": "component:default/blitzy-sandbox-backstage"
+      },
+      "status": "initiated",
+      "_capturedAt": "2026-05-23T09:07:19.201Z",
+      "trace_id": "f24aec827c40ee5a1a7f7728963635e0",
+      "span_id": "25080ad2cb66c618",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-fetch",
+      "severityLevel": "low",
+      "actor": {
+        "actorId": "user:default/bob",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/entities/by-name/component/default/blitzy-sandbox-backstage",
+        "method": "GET"
+      },
+      "meta": {
+        "queryType": "by-name",
+        "entityRef": "component:default/blitzy-sandbox-backstage"
+      },
+      "status": "succeeded",
+      "_capturedAt": "2026-05-23T09:07:19.208Z",
+      "trace_id": "f24aec827c40ee5a1a7f7728963635e0",
+      "span_id": "25080ad2cb66c618",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-access",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "user:default/bob",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/entities/by-name/component/default/blitzy-sandbox-backstage",
+        "method": "GET"
+      },
+      "meta": {
+        "principal": {
+          "type": "user",
+          "userEntityRef": "user:default/bob"
+        },
+        "action": "read",
+        "entityRef": "component:default/blitzy-sandbox-backstage"
+      },
+      "status": "initiated",
+      "_capturedAt": "2026-05-23T09:07:19.208Z",
+      "trace_id": "f24aec827c40ee5a1a7f7728963635e0",
+      "span_id": "104dc0e6a32c7328",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-access",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "user:default/bob",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/entities/by-name/component/default/blitzy-sandbox-backstage",
+        "method": "GET"
+      },
+      "meta": {
+        "principal": {
+          "type": "user",
+          "userEntityRef": "user:default/bob"
+        },
+        "action": "read",
+        "entityRef": "component:default/blitzy-sandbox-backstage",
+        "statusCode": 200
+      },
+      "status": "succeeded",
+      "_capturedAt": "2026-05-23T09:07:19.209Z",
+      "trace_id": "f24aec827c40ee5a1a7f7728963635e0",
+      "span_id": "104dc0e6a32c7328",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-fetch",
+      "severityLevel": "low",
+      "actor": {
+        "actorId": "user:development/guest",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/entities/by-name/component/default/blitzy-sandbox-backstage",
+        "method": "GET"
+      },
+      "meta": {
+        "queryType": "by-name",
+        "entityRef": "component:default/blitzy-sandbox-backstage"
+      },
+      "status": "initiated",
+      "_capturedAt": "2026-05-23T09:07:19.214Z",
+      "trace_id": "57066c0041c51e19342ea645d3f0414c",
+      "span_id": "c8c40b4894eab3c3",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-fetch",
+      "severityLevel": "low",
+      "actor": {
+        "actorId": "user:development/guest",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/entities/by-name/component/default/blitzy-sandbox-backstage",
+        "method": "GET"
+      },
+      "meta": {
+        "queryType": "by-name",
+        "entityRef": "component:default/blitzy-sandbox-backstage"
+      },
+      "status": "succeeded",
+      "_capturedAt": "2026-05-23T09:07:19.221Z",
+      "trace_id": "57066c0041c51e19342ea645d3f0414c",
+      "span_id": "c8c40b4894eab3c3",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-access",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "user:development/guest",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/entities/by-name/component/default/blitzy-sandbox-backstage",
+        "method": "GET"
+      },
+      "meta": {
+        "principal": {
+          "type": "user",
+          "userEntityRef": "user:development/guest"
+        },
+        "action": "read",
+        "entityRef": "component:default/blitzy-sandbox-backstage"
+      },
+      "status": "initiated",
+      "_capturedAt": "2026-05-23T09:07:19.221Z",
+      "trace_id": "57066c0041c51e19342ea645d3f0414c",
+      "span_id": "4d6335f61a1cf5a7",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-access",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "user:development/guest",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/entities/by-name/component/default/blitzy-sandbox-backstage",
+        "method": "GET"
+      },
+      "meta": {
+        "principal": {
+          "type": "user",
+          "userEntityRef": "user:development/guest"
+        },
+        "action": "read",
+        "entityRef": "component:default/blitzy-sandbox-backstage",
+        "statusCode": 200
+      },
+      "status": "succeeded",
+      "_capturedAt": "2026-05-23T09:07:19.221Z",
+      "trace_id": "57066c0041c51e19342ea645d3f0414c",
+      "span_id": "4d6335f61a1cf5a7",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-mutate",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "user:default/alice",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/refresh",
+        "method": "POST"
+      },
+      "meta": {
+        "queryType": "refresh",
+        "entityRef": "component:default/blitzy-sandbox-backstage"
+      },
+      "status": "initiated",
+      "_capturedAt": "2026-05-23T09:07:19.227Z",
+      "trace_id": "0133699c8784a6881a714b398cc9ba22",
+      "span_id": "c3a08259790184b0",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-mutate",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "user:default/alice",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/refresh",
+        "method": "POST"
+      },
+      "meta": {
+        "queryType": "refresh",
+        "entityRef": "component:default/blitzy-sandbox-backstage"
+      },
+      "status": "succeeded",
+      "_capturedAt": "2026-05-23T09:07:19.237Z",
+      "trace_id": "0133699c8784a6881a714b398cc9ba22",
+      "span_id": "c3a08259790184b0",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-mutate",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "user:default/bob",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/refresh",
+        "method": "POST"
+      },
+      "meta": {
+        "queryType": "refresh",
+        "entityRef": "component:default/blitzy-sandbox-backstage"
+      },
+      "status": "initiated",
+      "_capturedAt": "2026-05-23T09:07:19.244Z",
+      "trace_id": "7dd2d4a59e1f9a5a15787ded1bf1e321",
+      "span_id": "18d25fa2efb779de",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-mutate",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "user:default/bob",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/refresh",
+        "method": "POST"
+      },
+      "meta": {
+        "queryType": "refresh",
+        "entityRef": "component:default/blitzy-sandbox-backstage"
+      },
+      "error": {
+        "name": "NotAllowedError",
+        "message": "",
+        "stack": "NotAllowedError\n    at AuthorizedRefreshService.refresh (/tmp/blitzy/blitzy-sandbox-backstage/blitzy-dee9c50d-b5a7-4294-9af0-a43c5d8d40df_a697cf/plugins/catalog-backend/src/service/AuthorizedRefreshService.ts:45:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async <anonymous> (/tmp/blitzy/blitzy-sandbox-backstage/blitzy-dee9c50d-b5a7-4294-9af0-a43c5d8d40df_a697cf/plugins/catalog-backend/src/service/createRouter.ts:143:9)"
+      },
+      "status": "failed",
+      "_capturedAt": "2026-05-23T09:07:19.250Z",
+      "trace_id": "7dd2d4a59e1f9a5a15787ded1bf1e321",
+      "span_id": "18d25fa2efb779de",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "auth",
+      "eventId": "user-login",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "plugin:auth"
+      },
+      "meta": {
+        "provider": "blitzy-e2e",
+        "username": "malicious\\n[FAKE_AUDIT]\\r\\nADMIN_LOGIN",
+        "emailDomain": "blitzy.com",
+        "userEntityRef": "user:default/malicious\\n[fake_audit]\\r\\nadmin_login",
+        "correlationId": "bbc99bb8-c3f6-44f8-90f5-1ada8447459d"
+      },
+      "status": "initiated",
+      "_capturedAt": "2026-05-23T09:07:40.992Z",
+      "trace_id": "bebb26d9db6b1cd5cc49e75326c9f263",
+      "span_id": "98ca51ed9314bacd",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "auth",
+      "eventId": "user-login",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "plugin:auth"
+      },
+      "meta": {
+        "provider": "blitzy-e2e",
+        "username": "malicious\\n[FAKE_AUDIT]\\r\\nADMIN_LOGIN",
+        "emailDomain": "blitzy.com",
+        "userEntityRef": "user:default/malicious\\n[fake_audit]\\r\\nadmin_login",
+        "correlationId": "bbc99bb8-c3f6-44f8-90f5-1ada8447459d",
+        "entityRef": "user:default/malicious\\n[fake_audit]\\r\\nadmin_login"
+      },
+      "status": "succeeded",
+      "_capturedAt": "2026-05-23T09:07:40.993Z",
+      "trace_id": "bebb26d9db6b1cd5cc49e75326c9f263",
+      "span_id": "98ca51ed9314bacd",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-fetch",
+      "severityLevel": "low",
+      "actor": {
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/entities?limit=1",
+        "method": "GET"
+      },
+      "meta": {
+        "queryType": "all",
+        "query": {
+          "limit": 1
+        }
+      },
+      "status": "initiated",
+      "_capturedAt": "2026-05-23T09:08:16.210Z",
+      "trace_id": "3d40a7efe07f397e45ba1531da5fb2ff",
+      "span_id": "c0494a29ac0f6b20",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-fetch",
+      "severityLevel": "low",
+      "actor": {
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/entities?limit=1",
+        "method": "GET"
+      },
+      "meta": {
+        "queryType": "all",
+        "query": {
+          "limit": 1
+        }
+      },
+      "status": "succeeded",
+      "_capturedAt": "2026-05-23T09:08:16.216Z",
+      "trace_id": "3d40a7efe07f397e45ba1531da5fb2ff",
+      "span_id": "c0494a29ac0f6b20",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-mutate",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "user:default/alice",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/refresh",
+        "method": "POST"
+      },
+      "meta": {
+        "queryType": "refresh",
+        "entityRef": "component:default/blitzy-sandbox-backstage"
+      },
+      "status": "initiated",
+      "_capturedAt": "2026-05-23T09:08:16.225Z",
+      "trace_id": "ec4407cb4041466ca9ce360b5e7d9f6f",
+      "span_id": "60fa284a8508baab",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-mutate",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "user:default/alice",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/refresh",
+        "method": "POST"
+      },
+      "meta": {
+        "queryType": "refresh",
+        "entityRef": "component:default/blitzy-sandbox-backstage"
+      },
+      "status": "succeeded",
+      "_capturedAt": "2026-05-23T09:08:16.235Z",
+      "trace_id": "ec4407cb4041466ca9ce360b5e7d9f6f",
+      "span_id": "60fa284a8508baab",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "auth",
+      "eventId": "user-login",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "plugin:auth"
+      },
+      "meta": {
+        "provider": "blitzy-e2e",
+        "username": "bob_tamper",
+        "emailDomain": "example.com",
+        "userEntityRef": "user:default/bob_tamper",
+        "correlationId": "edf05323-5ee0-4cf2-9e64-8f9f9f319399"
+      },
+      "status": "initiated",
+      "_capturedAt": "2026-05-23T09:09:07.557Z",
+      "trace_id": "327befe2ea7ff213cf49a42ea4c4e703",
+      "span_id": "a91d2922dfd3f0e6",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "auth",
+      "eventId": "user-login",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "plugin:auth"
+      },
+      "meta": {
+        "provider": "blitzy-e2e",
+        "username": "bob_tamper",
+        "emailDomain": "example.com",
+        "userEntityRef": "user:default/bob_tamper",
+        "correlationId": "edf05323-5ee0-4cf2-9e64-8f9f9f319399",
+        "entityRef": "user:default/bob_tamper"
+      },
+      "status": "succeeded",
+      "_capturedAt": "2026-05-23T09:09:07.560Z",
+      "trace_id": "327befe2ea7ff213cf49a42ea4c4e703",
+      "span_id": "a91d2922dfd3f0e6",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-mutate",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "user:default/bob_tamper",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/refresh",
+        "method": "POST"
+      },
+      "meta": {
+        "queryType": "refresh",
+        "entityRef": "component:default/blitzy-sandbox-backstage"
+      },
+      "status": "initiated",
+      "_capturedAt": "2026-05-23T09:09:07.592Z",
+      "trace_id": "fd8063a961cee60ff8e606c92889e563",
+      "span_id": "73e616bdd079d762",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-mutate",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "user:default/bob_tamper",
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/refresh",
+        "method": "POST"
+      },
+      "meta": {
+        "queryType": "refresh",
+        "entityRef": "component:default/blitzy-sandbox-backstage"
+      },
+      "error": {
+        "name": "NotAllowedError",
+        "message": "",
+        "stack": "NotAllowedError\n    at AuthorizedRefreshService.refresh (/tmp/blitzy/blitzy-sandbox-backstage/blitzy-dee9c50d-b5a7-4294-9af0-a43c5d8d40df_a697cf/plugins/catalog-backend/src/service/AuthorizedRefreshService.ts:45:13)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async <anonymous> (/tmp/blitzy/blitzy-sandbox-backstage/blitzy-dee9c50d-b5a7-4294-9af0-a43c5d8d40df_a697cf/plugins/catalog-backend/src/service/createRouter.ts:143:9)"
+      },
+      "status": "failed",
+      "_capturedAt": "2026-05-23T09:09:07.606Z",
+      "trace_id": "fd8063a961cee60ff8e606c92889e563",
+      "span_id": "73e616bdd079d762",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-fetch",
+      "severityLevel": "low",
+      "actor": {
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/entities?limit=1",
+        "method": "GET"
+      },
+      "meta": {
+        "queryType": "all",
+        "query": {
+          "limit": 1
+        }
+      },
+      "status": "initiated",
+      "_capturedAt": "2026-05-23T09:09:07.728Z",
+      "trace_id": "319a9b70f93c3678d14ce633219c6c13",
+      "span_id": "09d101465aa87f50",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-fetch",
+      "severityLevel": "low",
+      "actor": {
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/entities?limit=1",
+        "method": "GET"
+      },
+      "meta": {
+        "queryType": "all",
+        "query": {
+          "limit": 1
+        }
+      },
+      "status": "succeeded",
+      "_capturedAt": "2026-05-23T09:09:07.731Z",
+      "trace_id": "319a9b70f93c3678d14ce633219c6c13",
+      "span_id": "09d101465aa87f50",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "auth",
+      "eventId": "user-login",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "plugin:auth"
+      },
+      "meta": {
+        "provider": "blitzy-e2e",
+        "username": "env_var_check",
+        "emailDomain": "blitzy.com",
+        "userEntityRef": "user:default/env_var_check",
+        "correlationId": "d876ae50-083c-4065-8ce6-ca727c3cd223"
+      },
+      "status": "initiated",
+      "_capturedAt": "2026-05-23T09:09:27.602Z",
+      "trace_id": "18c8d320a60f0d9a38e521c5096faed2",
+      "span_id": "19152e85944cce71",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "auth",
+      "eventId": "user-login",
+      "severityLevel": "medium",
+      "actor": {
+        "actorId": "plugin:auth"
+      },
+      "meta": {
+        "provider": "blitzy-e2e",
+        "username": "env_var_check",
+        "emailDomain": "blitzy.com",
+        "userEntityRef": "user:default/env_var_check",
+        "correlationId": "d876ae50-083c-4065-8ce6-ca727c3cd223",
+        "entityRef": "user:default/env_var_check"
+      },
+      "status": "succeeded",
+      "_capturedAt": "2026-05-23T09:09:27.603Z",
+      "trace_id": "18c8d320a60f0d9a38e521c5096faed2",
+      "span_id": "19152e85944cce71",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-fetch",
+      "severityLevel": "low",
+      "actor": {
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/entities?limit=1",
+        "method": "GET"
+      },
+      "meta": {
+        "queryType": "all",
+        "query": {
+          "limit": 1
+        }
+      },
+      "status": "initiated",
+      "_capturedAt": "2026-05-23T09:09:27.617Z",
+      "trace_id": "8556389ed1edff1a470ed227534e538b",
+      "span_id": "4ee759818bd0dbd9",
+      "trace_flags": 1
+    },
+    {
+      "plugin": "catalog",
+      "eventId": "entity-fetch",
+      "severityLevel": "low",
+      "actor": {
+        "ip": "::ffff:127.0.0.1",
+        "hostname": "localhost",
+        "userAgent": "curl/8.14.1"
+      },
+      "request": {
+        "url": "/api/catalog/entities?limit=1",
+        "method": "GET"
+      },
+      "meta": {
+        "queryType": "all",
+        "query": {
+          "limit": 1
+        }
+      },
+      "status": "succeeded",
+      "_capturedAt": "2026-05-23T09:09:27.621Z",
+      "trace_id": "8556389ed1edff1a470ed227534e538b",
+      "span_id": "4ee759818bd0dbd9",
+      "trace_flags": 1
+    }
+  ]
+}

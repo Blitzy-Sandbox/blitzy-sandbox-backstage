@@ -1,0 +1,22 @@
+=== Service State at Test Completion ===
+Backend PID 2361270: 35:53
+LocalGCP PID 2356401: 39:58
+Frontend PID 2362119: 34:53
+
+=== Final Health Probes ===
+Backend HTTP 200
+Frontend HTTP 200
+LocalGCP HTTP 200
+
+=== Active Ports (LocalGCP emulators) ===
+  Port 4443: REACHABLE
+  Port 8085: REACHABLE
+  Port 8086: REACHABLE
+  Port 8088: REACHABLE
+  Port 8089: REACHABLE
+  Port 8090: REACHABLE
+  Port 8091: REACHABLE
+  Port 8092: REACHABLE
+  Port 8093: REACHABLE
+  Port 7007: REACHABLE
+  Port 3000: REACHABLE
