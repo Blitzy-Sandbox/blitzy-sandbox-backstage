@@ -165,6 +165,37 @@ export default defineConfig({
      * across different CI environments and local development machines.
      */
     viewport: { width: 1280, height: 720 },
+    /**
+     * Bypass Content-Security-Policy enforcement during E2E tests.
+     *
+     * Rationale (cross-browser correctness — AAP §0.8.2.5):
+     *   Backstage's default Helmet middleware emits a `upgrade-insecure-requests`
+     *   CSP directive on every response. Chromium and Firefox have built-in
+     *   exemptions for `http://localhost` URLs and therefore do not upgrade
+     *   subresources to `https://` during tests. WebKit, by contrast, enforces
+     *   the directive strictly even on `localhost`, which causes every static
+     *   JS/CSS chunk fetched by the SPA to fail with a TLS handshake error
+     *   (the local backend only serves plain HTTP). Without disabling CSP at
+     *   the browser context level, the WebKit project cannot load the Backstage
+     *   shell at all and every test in `refactor.test.ts`, `app.test.ts`,
+     *   `authorization.test.ts`, `auditing.test.ts`, `HomePage.test.ts`, and
+     *   `SearchPage.test.ts` fails with "element not found" on the very first
+     *   sign-in assertion.
+     *
+     * Why it is safe to set globally rather than per-browser:
+     *   - Chromium and Firefox already exempt `localhost` from CSP upgrades, so
+     *     toggling this flag is a no-op for those two projects (verified locally;
+     *     the existing chromium and firefox suites remain green).
+     *   - The flag only affects the browser context running test traffic. It
+     *     does not alter the backend's CSP headers in any way; production
+     *     deployments (which terminate TLS at a reverse proxy) are unaffected.
+     *   - CSP is not part of the assertion surface for any test in this
+     *     refactor — we verify chrome layout, permissions, audit events, and
+     *     catalog count semantics, none of which depend on CSP enforcement.
+     *
+     * See `docs/refactor/decision-log.md` for the full rationale.
+     */
+    bypassCSP: true,
   },
 
   outputDir: 'node_modules/.cache/e2e-test-results',

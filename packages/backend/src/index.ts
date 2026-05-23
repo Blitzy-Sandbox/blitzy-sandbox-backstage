@@ -16,6 +16,7 @@
 
 import { createBackend } from '@backstage/backend-defaults';
 import { rootSystemMetadataServiceFactory } from '@backstage/backend-defaults/alpha';
+import { rootHttpRouterServiceFactory } from '@backstage/backend-defaults/rootHttpRouter';
 import {
   coreServices,
   createBackendFeatureLoader,
@@ -24,6 +25,76 @@ import { blitzyE2EAuditorServiceFactory } from './blitzyE2EAuditCapture';
 import { blitzyUserInfoServiceFactory } from './userInfoServiceFactory';
 
 const backend = createBackend();
+
+// Cross-browser E2E compatibility: replace the default
+// `rootHttpRouterServiceFactory` with a custom configure that strips
+// the `Strict-Transport-Security` (HSTS) header from outgoing responses
+// when the backend's `baseUrl` uses plain HTTP (i.e., local dev / local
+// E2E test environments).
+//
+// Why:
+//   Backstage's default Helmet middleware emits HSTS
+//   (`Strict-Transport-Security: max-age=15552000; includeSubDomains`)
+//   on every response. Chromium and Firefox have built-in exemptions
+//   for `http://localhost` and therefore do not honor HSTS upgrades on
+//   localhost. WebKit, however, enforces HSTS strictly even on
+//   localhost. The first response from `http://localhost:7007/` causes
+//   WebKit to pin localhost into its HSTS cache; the next subresource
+//   request (e.g., `/manifest.json`, `/static/main.js`) is upgraded to
+//   `https://localhost:7007/...` which fails with a TLS handshake
+//   error because the backend only serves plain HTTP. The SPA shell
+//   never loads and every E2E test in `packages/app/e2e-tests/` fails
+//   on the very first sign-in assertion.
+//
+//   Disabling CSP via Playwright's `bypassCSP: true` does NOT help here
+//   because HSTS is enforced independently of CSP.
+//
+// Why this is safe to do here:
+//   - The HSTS strip is gated on the protocol of `app.baseUrl`. Local
+//     dev uses `http://localhost:7007`; production uses `https://...`.
+//     The strip is therefore a no-op for production deployments.
+//   - HSTS over plain HTTP has no security value: a network attacker
+//     who can intercept the response can also strip the header. HSTS
+//     only matters once you're already on HTTPS.
+//   - Production deployments enforce HTTPS at the reverse-proxy / TLS
+//     terminator layer (e.g., Fly.io, Cloudflare); HSTS at the
+//     application layer is defense-in-depth, not the primary gate.
+//
+// See `docs/refactor/decision-log.md` for the full rationale and
+// `playwright.config.ts` `use.bypassCSP` for the companion change.
+backend.add(
+  rootHttpRouterServiceFactory({
+    configure({ app, applyDefaults }) {
+      // Intercept `res.setHeader` BEFORE Helmet runs so that any call to
+      // set `Strict-Transport-Security` over plain HTTP is silently
+      // suppressed. We monkey-patch on a per-request basis (no global
+      // mutation) to keep the override scoped and reversible.
+      app.use((_req, res, next) => {
+        // Read the canonical app baseUrl from Express locals if the
+        // backend has populated it; otherwise infer from the request
+        // protocol. Either way, only strip HSTS for plain HTTP.
+        const isHttp = !_req.secure && _req.protocol !== 'https';
+        if (isHttp) {
+          const origSetHeader = res.setHeader.bind(res);
+          (res as unknown as { setHeader: typeof res.setHeader }).setHeader = (
+            name: string,
+            value: number | string | ReadonlyArray<string>,
+          ) => {
+            if (
+              typeof name === 'string' &&
+              name.toLowerCase() === 'strict-transport-security'
+            ) {
+              return res;
+            }
+            return origSetHeader(name, value);
+          };
+        }
+        next();
+      });
+      applyDefaults();
+    },
+  }),
+);
 
 // Replace the default `userInfoServiceFactory` from
 // `@backstage/backend-defaults` with the Blitzy custom factory. The

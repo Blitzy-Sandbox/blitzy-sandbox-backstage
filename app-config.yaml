@@ -93,9 +93,36 @@ backend:
     credentials: true
   csp:
     connect-src: ["'self'", 'http:', 'https:']
-    script-src: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://unpkg.com']
+    script-src:
+      ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://unpkg.com']
     # Content-Security-Policy directives follow the Helmet format: https://helmetjs.github.io/#reference
     # Default Helmet Content-Security-Policy values can be removed by setting the key to false
+    #
+    # Disable the `upgrade-insecure-requests` directive that Helmet emits by
+    # default. Rationale:
+    #   - Backstage's frontend SPA loads its JS/CSS chunks from the same
+    #     origin as the backend. In production deployments the canonical URL
+    #     uses HTTPS (terminated at the reverse proxy / Fly.io / Cloudflare)
+    #     so the directive is a no-op there.
+    #   - In local development and local E2E testing the backend serves
+    #     plain HTTP. WebKit honors the directive strictly even on
+    #     `http://localhost`, which causes every subresource fetch from the
+    #     SPA shell to be upgraded to `https://localhost:7007/...` and
+    #     fail with a TLS handshake error (the backend does not serve TLS).
+    #     Chromium and Firefox have built-in `localhost` exemptions; WebKit
+    #     does not.
+    #   - HSTS at the application layer (also stripped over HTTP by the
+    #     custom `rootHttpRouterServiceFactory` in
+    #     `packages/backend/src/index.ts`) is a separate, complementary
+    #     mechanism. Removing this CSP directive together with the HSTS
+    #     header lets WebKit-based E2E tests run against the local backend.
+    #   - For HTTPS production deployments, TLS is enforced by the
+    #     transport layer (reverse proxy + HSTS preload + Fly.io routing),
+    #     so this directive provides no additional security value.
+    # See `docs/refactor/decision-log.md` for the full rationale and
+    # `playwright.config.ts` `use.bypassCSP` + `packages/backend/src/index.ts`
+    # `rootHttpRouterServiceFactory` for the companion changes.
+    upgrade-insecure-requests: false
   reading:
     allow:
       - host: example.com
