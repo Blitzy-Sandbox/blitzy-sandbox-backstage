@@ -22,6 +22,10 @@ import {
   APIResponse,
 } from '@playwright/test';
 
+// Shared session helpers (preserves the React-state-only auth identity
+// across SPA route changes; see `sessionHelpers.ts` for the rationale).
+import { signInAsGuest } from './sessionHelpers';
+
 /**
  * Read-only enforcement E2E coverage for the BlitzyPermissionPolicy.
  *
@@ -125,18 +129,8 @@ async function mintIdentityToken(
   return { token };
 }
 
-/**
- * Sign-in helper for the Guest principal. The Blitzy-branded sign-in
- * page exposes the "Continue as Guest" button (the only browser
- * accessible non-GitHub sign-in path).
- */
-async function signInAsGuest(page: Page): Promise<void> {
-  await page.goto('/');
-  const guestButton = page.getByRole('button', { name: 'Continue as Guest' });
-  await expect(guestButton).toBeVisible();
-  await guestButton.click();
-  await expect(page.locator('[data-testid="app-top-bar"]')).toBeVisible();
-}
+// `signInAsGuest` is imported from `./sessionHelpers` at the top of the
+// file. Test bodies below call it directly.
 
 /**
  * Reads the backstage-identity bearer token that the frontend stores in
@@ -430,9 +424,18 @@ test.describe('BlitzyPermissionPolicy — read-only enforcement (E2E)', () => {
   test('write-affordance buttons surface a permission-denied state for Guest', async ({
     page,
   }) => {
+    // signInAsGuest already lands on /catalog (the GuestSignInPage
+    // navigates there after onSignInSuccess). A redundant
+    // page.goto('/catalog') here would wipe the React-state auth
+    // identity and bounce the test back to the sign-in page, where
+    // the register button trivially does not exist and the
+    // assertion would silently pass for the wrong reason.
     await signInAsGuest(page);
-    await page.goto('/catalog');
-    await page.waitForLoadState('networkidle');
+    // Catalog page serializes default filter state into the URL on first
+    // render — `/catalog?filters[kind]=component&limit=20` — so accept
+    // an optional query/hash suffix.
+    await expect(page).toHaveURL(/\/catalog\/?(?:[?#].*)?$/);
+    await expect(page.locator('[data-testid="app-top-bar"]')).toBeVisible();
 
     const registerButton = page
       .getByRole('button', { name: /register|create|new component/i })

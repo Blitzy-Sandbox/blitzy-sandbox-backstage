@@ -16,6 +16,13 @@
 
 import { test, expect, Page } from '@playwright/test';
 
+import {
+  signInAsGuest,
+  signInAndNavigateToPath,
+  spaNavigate,
+  waitForSeedCatalogRows,
+} from './sessionHelpers';
+
 /**
  * Comprehensive E2E coverage of the UI/UX Modifications, Feature
  * Removal items, and Catalog Count bug fix per AAP §0.5.5.
@@ -78,18 +85,6 @@ import { test, expect, Page } from '@playwright/test';
  */
 
 /**
- * Canonical sign-in helper for the refactored sign-in page. Clicks
- * "Continue as Guest" and waits for the top-bar to mount.
- */
-async function signInAsGuest(page: Page): Promise<void> {
-  await page.goto('/');
-  const guestButton = page.getByRole('button', { name: 'Continue as Guest' });
-  await expect(guestButton).toBeVisible();
-  await guestButton.click();
-  await expect(page.locator('[data-testid="app-top-bar"]')).toBeVisible();
-}
-
-/**
  * Helper to extract the numeric count from the catalog table header
  * title. The header renders text in the form "Components (N)" or
  * "All components (N)" depending on the active filter; this helper
@@ -109,26 +104,6 @@ async function readCatalogHeaderCount(page: Page): Promise<number | null> {
   return match ? parseInt(match[1], 10) : null;
 }
 
-/**
- * Wait for the catalog table to surface a row referencing one of the
- * deterministic seed entities. This guards against the entity-page
- * tests racing against the catalog backend's initial location
- * refresh — the fixture is loaded asynchronously after the backend
- * starts, so the very first sign-in might not see the rows yet.
- */
-async function waitForSeedCatalogRows(page: Page): Promise<void> {
-  await expect(page).toHaveURL(/\/catalog/);
-  // Wait until at least one seed entity row is visible. We deliberately
-  // poll the locator with Playwright's auto-retry so we do not need
-  // any fixed `waitForTimeout` delays.
-  await expect(
-    page
-      .locator('table')
-      .getByRole('link', { name: /blitzy-e2e-component-[abc]/ })
-      .first(),
-  ).toBeVisible({ timeout: 30_000 });
-}
-
 // ---------------------------------------------------------------------------
 // Landing Page (AAP §0.5.5 — "Landing Page: Verify the application lands on
 // the Catalog view and the Dashboard page is fully removed.")
@@ -137,11 +112,29 @@ async function waitForSeedCatalogRows(page: Page): Promise<void> {
 test('Landing Page: navigating to / redirects to /catalog', async ({
   page,
 }) => {
+  // Sign in as Guest (lands on /catalog), then SPA-navigate back to /
+  // to exercise the rootRedirectModule. Using spaNavigate preserves the
+  // React-state-only auth identity that page.goto would otherwise wipe
+  // — see sessionHelpers.ts for the full rationale.
   await signInAsGuest(page);
-  await page.goto('/');
-  // The rootRedirectModule rewrites / to /catalog. The terminal URL
-  // must match /catalog (with an optional trailing slash).
-  await expect(page).toHaveURL(/\/catalog\/?$/);
+  // The rootRedirectModule rewrites / → /catalog, so spaNavigate's
+  // post-navigation URL settles on `/catalog?...filters...` rather
+  // than `/`. We pass `expectUrl` so spaNavigate waits for the
+  // redirected URL (the assertion below is then a sanity check that
+  // the URL stayed there).
+  await spaNavigate(page, '/', {
+    expectUrl: /\/catalog\/?(?:[?#].*)?$/,
+  });
+  // The terminal URL must match /catalog with an optional trailing
+  // slash and an optional query/hash suffix — Backstage's catalog
+  // page mounts the EntityListProvider which serializes its default
+  // filter state (`?filters[kind]=component&limit=20`) into the URL
+  // on first render, so the path is `/catalog` but the URL itself
+  // contains the filter encoded query string.
+  await expect(page).toHaveURL(/\/catalog\/?(?:[?#].*)?$/);
+  // The top-bar MUST still be mounted after the redirect, confirming
+  // the auth identity survived the SPA round-trip.
+  await expect(page.locator('[data-testid="app-top-bar"]')).toBeVisible();
 });
 
 test('Landing Page: Dashboard page is fully removed (no /home route, no Home link)', async ({
@@ -155,12 +148,17 @@ test('Landing Page: Dashboard page is fully removed (no /home route, no Home lin
     page.getByRole('link', { name: 'Home', exact: true }),
   ).toHaveCount(0);
 
-  // Navigating to /home directly MUST not render a custom dashboard.
-  // After homePlugin removal, the route either 404s or redirects;
-  // either way, the BlitzySandboxWelcome dashboard component must not
-  // appear. We assert by absence of the dashboard's distinctive copy.
-  await page.goto('/home');
-  await page.waitForLoadState('networkidle');
+  // SPA-navigate to /home directly. This MUST not render a custom
+  // dashboard. After homePlugin removal, the route either 404s or
+  // renders an empty page; either way, the BlitzySandboxWelcome
+  // dashboard component must not appear. SPA navigation preserves the
+  // auth identity so the assertion exercises the authenticated route
+  // tree (not the sign-in page).
+  await spaNavigate(page, '/home');
+  // Allow lazy-loaded route bundles a moment to settle. We use
+  // expect.toPass rather than waitForLoadState because the latter
+  // can race with the React render cycle after a synthetic popstate.
+  await expect(page.locator('[data-testid="app-top-bar"]')).toBeVisible();
   await expect(page.getByText(/Blitzy Sandbox|Welcome to Blitzy/i)).toHaveCount(
     0,
   );
@@ -193,8 +191,15 @@ test('Sidebar Removal: the sidebar is absent from every authenticated page', asy
 test('Feature Removal: the View button is absent from catalog table rows', async ({
   page,
 }) => {
+  // signInAsGuest already lands on /catalog (the GuestSignInPage
+  // invokes navigate('/catalog') after onSignInSuccess). A redundant
+  // page.goto('/catalog') would wipe the React-state auth identity and
+  // bounce the test back to the sign-in page.
   await signInAsGuest(page);
-  await page.goto('/catalog');
+  // Catalog page serializes default filter state into the URL on first
+  // render — `/catalog?filters[kind]=component&limit=20` — so accept
+  // an optional query/hash suffix.
+  await expect(page).toHaveURL(/\/catalog\/?(?:[?#].*)?$/);
   await waitForSeedCatalogRows(page);
 
   // The View action was the first entry in `defaultActions` of
@@ -231,11 +236,12 @@ test('Feature Removal: per-entity Documentation tab IS still visible on entity p
   //
   // The deterministic seed entity `blitzy-e2e-component-a` is
   // configured with `backstage.io/techdocs-ref: dir:.` so it surfaces
-  // a Docs tab. We navigate directly to it via URL to avoid any
-  // table-interaction flakiness.
-  await signInAsGuest(page);
-  await page.goto('/catalog/default/component/blitzy-e2e-component-a');
-  await page.waitForLoadState('networkidle');
+  // a Docs tab. We SPA-navigate directly to it to preserve the
+  // in-memory auth identity (page.goto would wipe it).
+  await signInAndNavigateToPath(
+    page,
+    '/catalog/default/component/blitzy-e2e-component-a',
+  );
 
   // The EntityLayout tabs MUST render — this proves the entity page
   // itself is wired correctly even if the specific TechDocs tab
@@ -256,9 +262,14 @@ test('Feature Removal: per-entity Documentation tab IS still visible on entity p
 test('Feature Removal: the FavoriteEntity star icon is absent from the entity title', async ({
   page,
 }) => {
-  await signInAsGuest(page);
-  await page.goto('/catalog/default/component/blitzy-e2e-component-a');
-  await page.waitForLoadState('networkidle');
+  // SPA-navigate to the entity page so the React-state auth identity
+  // survives. A page.goto would wipe the identity and bounce the test
+  // back to the sign-in page where every UI element is trivially
+  // absent.
+  await signInAndNavigateToPath(
+    page,
+    '/catalog/default/component/blitzy-e2e-component-a',
+  );
 
   // Wait for the entity header to render (the entity title is part of
   // the page header — wait until the title text is visible).
@@ -280,9 +291,10 @@ test('Feature Removal: the FavoriteEntity star icon is absent from the entity ti
 test('Feature Removal: the System link is absent from the entity page', async ({
   page,
 }) => {
-  await signInAsGuest(page);
-  await page.goto('/catalog/default/component/blitzy-e2e-component-a');
-  await page.waitForLoadState('networkidle');
+  await signInAndNavigateToPath(
+    page,
+    '/catalog/default/component/blitzy-e2e-component-a',
+  );
 
   // Wait until the entity About card or page header has rendered.
   await expect(page.getByText(/blitzy-e2e-component-a/i).first()).toBeVisible({
@@ -309,9 +321,10 @@ test('Feature Removal: the System link is absent from the entity page', async ({
 test('Feature Removal: the Owner link is absent from the entity page', async ({
   page,
 }) => {
-  await signInAsGuest(page);
-  await page.goto('/catalog/default/component/blitzy-e2e-component-a');
-  await page.waitForLoadState('networkidle');
+  await signInAndNavigateToPath(
+    page,
+    '/catalog/default/component/blitzy-e2e-component-a',
+  );
 
   await expect(page.getByText(/blitzy-e2e-component-a/i).first()).toBeVisible({
     timeout: 10_000,
@@ -388,16 +401,18 @@ test('Element Placement: the Blitzy logo is positioned top-right and is non-clic
     expect(box.y).toBeLessThanOrEqual(20);
   }
 
-  // Clicking the logo MUST NOT cause navigation. Record the URL,
-  // click, then assert via Playwright's auto-retry that the URL
-  // remains stable (no fixed sleep needed).
-  const urlBefore = page.url();
+  // Clicking the logo MUST NOT cause navigation. Compare pathnames
+  // only — the catalog page's EntityListProvider serializes filter
+  // state into the URL query string asynchronously (e.g.,
+  // `?filters[kind]=component&limit=20`) after the page settles, so
+  // an exact-URL comparison races against that sync. Pathname
+  // comparison is the correct invariant: real navigation would
+  // change `pathname` (e.g., '/' or '/home'), while query-string
+  // drift does not represent navigation.
+  const pathBefore = new URL(page.url()).pathname;
   await logo.click({ force: true });
-  // Confirm via `expect.toPass` polling that the URL stays
-  // unchanged over a brief settle window. A real navigation would
-  // change `page.url()`, and the polling assertion would fail.
   await expect(async () => {
-    expect(page.url()).toBe(urlBefore);
+    expect(new URL(page.url()).pathname).toBe(pathBefore);
   }).toPass({ timeout: 2_000 });
 });
 
@@ -457,23 +472,32 @@ test('Element Placement: the Support button displays support@blitzy.com', async 
 test('Visual Treatment: the library type chip is rendered with a visible border', async ({
   page,
 }) => {
+  // signInAsGuest lands on /catalog; no further navigation needed.
+  // A redundant page.goto('/catalog') would wipe the React-state auth
+  // identity and re-render the sign-in page where no chip exists.
   await signInAsGuest(page);
-  await page.goto('/catalog');
+  // Catalog page serializes default filter state into the URL on first
+  // render — `/catalog?filters[kind]=component&limit=20` — so accept
+  // an optional query/hash suffix.
+  await expect(page).toHaveURL(/\/catalog\/?(?:[?#].*)?$/);
   await waitForSeedCatalogRows(page);
 
-  // The Type column of the catalog table renders a chip/badge for each
-  // entity's spec.type. Per AAP §0.5.1.2, when type === "library", the
-  // chip receives an additional className "border-2 border-current
-  // rounded" (Tailwind) producing a visible 2px border in the chip's
-  // current color.
-  //
-  // The deterministic seed includes `blitzy-e2e-component-a` with
-  // `spec.type: library`, so a library chip MUST be present. We
-  // search for any chip whose visible text matches /^library$/i and
-  // assert that its computed border-width is > 0.
+  // The Type column of the catalog table renders a Badge for each
+  // entity's spec.type via the shadcn/ui Badge component (see
+  // `packages/core-components/src/components/ui/badge.tsx`). That
+  // Badge renders as `<div data-slot="badge" class="…">`, where the
+  // class string is produced by `class-variance-authority` and does
+  // NOT contain the literal substring "badge" — selecting on
+  // `[class*="badge"]` therefore matches nothing and `td` (the parent
+  // cell) would win the first-match, hiding the border classes we
+  // want to assert on. The deterministic seed includes
+  // `blitzy-e2e-component-a` with `spec.type: library`, so a library
+  // badge MUST be present. We select the Badge by its stable
+  // `data-slot="badge"` attribute and filter to the one whose text
+  // is exactly "library", which is the Badge produced by
+  // `createSpecTypeColumn` for the library entity.
   const libraryChip = page
-    .locator('table')
-    .locator('[class*="badge" i], [class*="chip" i], span, td')
+    .locator('table [data-slot="badge"]')
     .filter({ hasText: /^library$/i })
     .first();
 
@@ -515,8 +539,15 @@ test('Visual Treatment: the library type chip is rendered with a visible border'
 test('Catalog Count Fix: when two tags are selected, the count reflects AND logic', async ({
   page,
 }) => {
+  // signInAsGuest lands on /catalog; no further navigation needed.
+  // Avoid page.goto here — it would wipe the React-state auth identity
+  // and bounce the test back to the sign-in page where the Tags
+  // picker does not exist.
   await signInAsGuest(page);
-  await page.goto('/catalog');
+  // Catalog page serializes default filter state into the URL on first
+  // render — `/catalog?filters[kind]=component&limit=20` — so accept
+  // an optional query/hash suffix.
+  await expect(page).toHaveURL(/\/catalog\/?(?:[?#].*)?$/);
   await waitForSeedCatalogRows(page);
 
   // Identify the Tags filter picker on the catalog page. Backstage's
@@ -557,14 +588,34 @@ test('Catalog Count Fix: when two tags are selected, the count reflects AND logi
   await expect(springOption).toBeVisible({ timeout: 10_000 });
   await springOption.click();
 
-  // After selecting both tags, wait until the count updates. The seed
-  // catalog has exactly two rows matching {java, spring}, so the
-  // count MUST drop to two if the only entities are the fixture
-  // ones, or AT MOST to two for any rows with those exact tags. We
-  // poll the count to give the catalog filter time to apply.
+  // Close the Tags picker so we are not racing the open/close
+  // animation when reading the header count and table rows below.
+  // Firefox in particular keeps the listbox open after an option
+  // click, which causes the table-row count and the header count to
+  // update at slightly different times. Pressing Escape collapses
+  // the listbox synchronously.
+  await page.keyboard.press('Escape');
+
+  // After selecting both tags, wait until the count AND the visible
+  // table rows converge on the same value. The seed catalog has
+  // exactly two rows matching {java, spring} (component-a and
+  // component-b). Polling both signals together avoids reading them
+  // in a transient state where the count has updated but the row
+  // render has not yet caught up (or vice versa). This is the
+  // single-source-of-truth assertion from AAP §0.5.5: the displayed
+  // count and the displayed list must agree.
   await expect
-    .poll(async () => readCatalogHeaderCount(page), { timeout: 10_000 })
-    .toBeGreaterThanOrEqual(2);
+    .poll(
+      async () => {
+        const count = await readCatalogHeaderCount(page);
+        const rows = await page
+          .locator('table tbody tr:not([class*="empty"])')
+          .count();
+        return { count, rows };
+      },
+      { timeout: 15_000 },
+    )
+    .toMatchObject({ count: 2, rows: 2 });
 
   const countAfterTwoTags = await readCatalogHeaderCount(page);
 

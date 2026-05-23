@@ -15,8 +15,17 @@
  */
 
 import { ConfigReader } from '@backstage/config';
-import { mockServices } from '@backstage/backend-test-utils';
-import { createBlitzyGuestSignInResolver } from './authModuleGuestProvider';
+import { mockServices, startTestBackend } from '@backstage/backend-test-utils';
+import {
+  authProvidersExtensionPoint,
+  type AuthProvidersExtensionPoint,
+} from '@backstage/plugin-auth-node';
+import { NotAllowedError } from '@backstage/errors';
+import {
+  authModuleGuestProvider,
+  createBlitzyGuestSignInResolver,
+  guestAuthenticator,
+} from './authModuleGuestProvider';
 import { userLoginTotal } from './metrics';
 
 /**
@@ -499,5 +508,213 @@ describe('createBlitzyGuestSignInResolver', () => {
         setNodeEnv(previousNodeEnv);
       }
     });
+  });
+});
+
+/**
+ * The exported `guestAuthenticator` is the result of
+ * `createProxyAuthenticator({ defaultProfileTransform, initialize,
+ * authenticate })`. `createProxyAuthenticator` is an identity function
+ * (see `node_modules/@backstage/plugin-auth-node/src/proxy/types.ts`),
+ * so the authenticator object exposes the three callbacks directly.
+ *
+ * This suite drives the security-critical `initialize` and
+ * `authenticate` callbacks under every combination of `NODE_ENV` and
+ * `dangerouslyAllowOutsideDevelopment` config. These callbacks gate
+ * whether the Guest provider can mint tokens at all; without coverage
+ * a future refactor could silently relax the production safeguard.
+ *
+ * The corresponding QA-CP14 finding (Issue 7) flagged the
+ * authenticator as uncovered (lines 105–123 in
+ * `authModuleGuestProvider.ts`). These tests bring that block above
+ * the AAP §0.8.1.2 >80% line-coverage threshold.
+ */
+describe('guestAuthenticator', () => {
+  const originalNodeEnv = process.env.NODE_ENV;
+  afterEach(() => {
+    setNodeEnv(originalNodeEnv);
+  });
+
+  describe('defaultProfileTransform', () => {
+    it('returns an empty profile object (guests have no identity claims)', async () => {
+      // Guests have no profile data — name, email, picture all
+      // intentionally omitted. The proxy auth route handler reads
+      // `profile` from this transform when constructing the response,
+      // so the empty shape here is the contract the frontend reads.
+      const transformed = await guestAuthenticator.defaultProfileTransform(
+        // The proxy authenticator's transform takes the authenticate
+        // result and the auth-resolver context; both are unused by the
+        // Guest transform so plain stubs suffice for the contract test.
+        {} as Parameters<typeof guestAuthenticator.defaultProfileTransform>[0],
+        {} as Parameters<typeof guestAuthenticator.defaultProfileTransform>[1],
+      );
+      expect(transformed).toEqual({ profile: {} });
+    });
+  });
+
+  describe('initialize', () => {
+    it('returns disabled=true when NODE_ENV is not "development" and the dangerous flag is unset', () => {
+      setNodeEnv('production');
+      const disabled = guestAuthenticator.initialize({
+        config: new ConfigReader({}),
+      });
+      expect(disabled).toBe(true);
+    });
+
+    it('returns disabled=true when NODE_ENV is "test" (Jest default) and the dangerous flag is unset', () => {
+      // Jest sets NODE_ENV=test by default — the production-guard
+      // logic treats anything other than "development" as non-dev.
+      setNodeEnv('test');
+      const disabled = guestAuthenticator.initialize({
+        config: new ConfigReader({}),
+      });
+      expect(disabled).toBe(true);
+    });
+
+    it('returns disabled=false when NODE_ENV is "development" regardless of the dangerous flag', () => {
+      setNodeEnv('development');
+      // The OR short-circuit means the dangerous flag is irrelevant
+      // when NODE_ENV is development. Verify both branches.
+      expect(
+        guestAuthenticator.initialize({
+          config: new ConfigReader({}),
+        }),
+      ).toBe(false);
+      expect(
+        guestAuthenticator.initialize({
+          config: new ConfigReader({
+            dangerouslyAllowOutsideDevelopment: false,
+          }),
+        }),
+      ).toBe(false);
+      expect(
+        guestAuthenticator.initialize({
+          config: new ConfigReader({
+            dangerouslyAllowOutsideDevelopment: true,
+          }),
+        }),
+      ).toBe(false);
+    });
+
+    it('returns disabled=false when dangerouslyAllowOutsideDevelopment is true outside development', () => {
+      setNodeEnv('production');
+      const disabled = guestAuthenticator.initialize({
+        config: new ConfigReader({
+          dangerouslyAllowOutsideDevelopment: true,
+        }),
+      });
+      expect(disabled).toBe(false);
+    });
+
+    it('returns disabled=true when dangerouslyAllowOutsideDevelopment is explicitly false outside development', () => {
+      setNodeEnv('production');
+      const disabled = guestAuthenticator.initialize({
+        config: new ConfigReader({
+          dangerouslyAllowOutsideDevelopment: false,
+        }),
+      });
+      // The strict !== true check rejects `false`, `undefined`, and
+      // every other falsy value — only literal `true` opens the gate.
+      expect(disabled).toBe(true);
+    });
+  });
+
+  describe('authenticate', () => {
+    it('throws NotAllowedError when disabled=true', async () => {
+      // First argument is `options: { req }`; second is the
+      // disabled flag from `initialize`. Guest auth does not read the
+      // request, so passing an empty stub is correct.
+      await expect(
+        guestAuthenticator.authenticate(
+          {} as Parameters<typeof guestAuthenticator.authenticate>[0],
+          true,
+        ),
+      ).rejects.toThrow(NotAllowedError);
+    });
+
+    it('throws an error whose message mentions dangerouslyAllowOutsideDevelopment when disabled', async () => {
+      // The error message is consumed by the auth route handler and
+      // surfaced in the auth-error log; the dangerous-flag mention
+      // is the actionable remediation a developer would need to read.
+      await expect(
+        guestAuthenticator.authenticate(
+          {} as Parameters<typeof guestAuthenticator.authenticate>[0],
+          true,
+        ),
+      ).rejects.toThrow(/dangerouslyAllowOutsideDevelopment/);
+    });
+
+    it('returns `{ result: {} }` when disabled=false', async () => {
+      const out = await guestAuthenticator.authenticate(
+        {} as Parameters<typeof guestAuthenticator.authenticate>[0],
+        false,
+      );
+      // Guest auth carries no per-request state — the result is
+      // intentionally an empty object so the resolver only relies on
+      // the config-supplied user entity ref.
+      expect(out).toEqual({ result: {} });
+    });
+  });
+});
+
+/**
+ * Module registration smoke test.
+ *
+ * Drives the `register` / `init` block (lines 334–358 in
+ * `authModuleGuestProvider.ts`) using the canonical
+ * `startTestBackend` harness from `@backstage/backend-test-utils`. The
+ * harness wires the extension-point mock the module depends on and
+ * invokes `init`; we assert that the module calls
+ * `providers.registerProvider({ providerId: 'guest', factory })`.
+ *
+ * This brings the module export above the AAP §0.8.1.2 >80%
+ * line-coverage threshold and protects against silent regressions if
+ * the module's deps or providerId ever change.
+ */
+describe('authModuleGuestProvider', () => {
+  it('registers the "guest" auth provider through authProvidersExtensionPoint', async () => {
+    // Tracks every registerProvider invocation observed during init.
+    const registerProvider = jest.fn();
+    const providersMock: AuthProvidersExtensionPoint = {
+      registerProvider,
+    };
+
+    // The Guest module reads `auth.providers.guest` from rootConfig
+    // and pulls the `auditor` from coreServices. Stub both via the
+    // mockServices helpers so the harness boots cleanly.
+    await startTestBackend({
+      features: [
+        authModuleGuestProvider,
+        mockServices.rootConfig.factory({
+          data: {
+            auth: {
+              providers: {
+                guest: {
+                  // Match the dev-config default so the secondary
+                  // resolver guard does not fire during this smoke test.
+                  dangerouslyAllowOutsideDevelopment: true,
+                },
+              },
+            },
+          },
+        }),
+      ],
+      // Inject the providers extension point implementation so the
+      // module's `deps.providers` resolves to our jest.fn() mock.
+      extensionPoints: [[authProvidersExtensionPoint, providersMock]],
+    });
+
+    expect(registerProvider).toHaveBeenCalledTimes(1);
+    const arg = registerProvider.mock.calls[0][0] as {
+      providerId: string;
+      factory: unknown;
+    };
+    expect(arg.providerId).toBe('guest');
+    // The factory is the result of createProxyAuthProviderFactory — a
+    // function that the auth backend invokes lazily. Verifying it is a
+    // function is the contract assertion (the implementation is an
+    // upstream concern); strict equality with a specific signature
+    // would couple this test to internal Backstage details.
+    expect(typeof arg.factory).toBe('function');
   });
 });

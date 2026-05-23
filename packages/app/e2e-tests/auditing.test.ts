@@ -14,7 +14,12 @@
  * limitations under the License.
  */
 
-import { test, expect, Page, APIRequestContext } from '@playwright/test';
+import { test, expect, APIRequestContext } from '@playwright/test';
+import {
+  signInAsGuest,
+  waitForSeedCatalogRows,
+  SEED_CATALOG_COMPONENTS,
+} from './sessionHelpers';
 
 /**
  * Audit event tracking E2E coverage.
@@ -160,19 +165,14 @@ async function waitForAuditEvent(
   return [];
 }
 
-/**
- * Mirrors the canonical sign-in helper used across the e2e suite:
- * clicks the "Continue as Guest" button on the Blitzy-branded sign-in
- * page and waits for the top-bar to mount (signalling the
- * authenticated shell is ready).
- */
-async function signInAsGuest(page: Page): Promise<void> {
-  await page.goto('/');
-  const guestButton = page.getByRole('button', { name: 'Continue as Guest' });
-  await expect(guestButton).toBeVisible();
-  await guestButton.click();
-  await expect(page.locator('[data-testid="app-top-bar"]')).toBeVisible();
-}
+// `signInAsGuest` is imported from `./sessionHelpers` at the top of
+// this file. The shared helper (a) clicks the "Continue as Guest"
+// button on the Blitzy-branded sign-in page, (b) waits for the
+// authenticated top-bar (`[data-testid="app-top-bar"]`) to mount, and
+// (c) leaves the page on `/catalog` (the GuestSignInPage handler calls
+// `navigate('/catalog')`). The React-state-only identity it produces
+// MUST NOT be wiped by any subsequent `page.goto` — use
+// `signInAndNavigateToPath` or `spaNavigate` for in-suite navigation.
 
 /**
  * Mints a deterministic GitHub-equivalent identity token via the
@@ -308,37 +308,53 @@ test.describe('Audit-event tracking (E2E)', () => {
   }) => {
     await signInAsGuest(page);
 
-    // Clear AGAIN to drop the user-login event from sign-in so this
-    // test only sees the entity-access events caused by navigation.
+    // signInAsGuest lands on /catalog. Asserting the URL here is a
+    // safety belt against any future regression that changes the
+    // post-sign-in redirect target — and explicitly documents that
+    // we do NOT call page.goto('/catalog') after sign-in because
+    // a full browser navigation would wipe the React-state-only
+    // identity produced by Guest sign-in (see QA CP14 Issue 1).
+    await expect(page).toHaveURL(/\/catalog\/?(?:[?#].*)?$/);
+    await expect(page.locator('[data-testid="app-top-bar"]')).toBeVisible();
+
+    // Wait for the deterministic seed entities to be visible. The
+    // earlier version of this test silently skipped when the catalog
+    // had no rows — that masked regressions in the audit pipeline
+    // because absence of entity links meant absence of clicks meant
+    // absence of audit emissions. The fixture loaded by
+    // app-config.yaml lines 267-268 (type: file, target:
+    // ../app/e2e-tests/fixtures/e2e-seed-catalog.yaml) guarantees
+    // three `blitzy-e2e-component-*` entities are always present.
+    await waitForSeedCatalogRows(page);
+
+    // Clear the audit buffer AFTER signing in and seeing seed rows.
+    // Sign-in emitted a `user-login` event we do not want to
+    // observe here; the catalog table refresh also issues
+    // collection-style /api/catalog/entities reads which the audit
+    // module deliberately excludes (see
+    // plugins/catalog-backend-module-access-audit/src/module.ts).
+    // Clearing now ensures the assertion below only sees the
+    // `entity-access` events caused by the click that follows.
     await clearCapturedAuditEvents(request);
 
-    await page.goto('/catalog');
-    await page.waitForLoadState('networkidle');
-
+    // Click the canonical seed library entity. This entity always
+    // exists in the seeded catalog, so this click is deterministic
+    // and the assertion below is strict (no skip path).
+    const entityName = SEED_CATALOG_COMPONENTS[0];
     const entityLink = page
-      .locator('table a, [data-testid="catalog-table"] a')
+      .locator(`a[href*="/catalog/default/component/${entityName}"]`)
       .first();
-    const entityVisible = await entityLink
-      .isVisible({ timeout: 5_000 })
-      .catch(() => false);
-    if (!entityVisible) {
-      // The catalog is empty in this environment. The entity-access
-      // audit emission contract is exercised by unit tests in
-      // plugins/catalog-backend-module-access-audit/. Skip with a
-      // clear reason rather than fail; the deterministic-sink check in
-      // beforeAll guarantees the audit pipeline itself is healthy.
-      test.skip(
-        true,
-        'Catalog has no entity rows in this environment; ' +
-          'entity-access emission is covered by the access-audit ' +
-          'module unit tests.',
-      );
-      return;
-    }
+    await expect(
+      entityLink,
+      `Seed catalog entity link "${entityName}" not visible; verify the ` +
+        `example-backend has loaded packages/app/e2e-tests/fixtures/` +
+        `e2e-seed-catalog.yaml via the type:file catalog location.`,
+    ).toBeVisible({ timeout: 10_000 });
 
     await entityLink.click();
-    await page.waitForLoadState('networkidle');
-    await expect(page).toHaveURL(/\/catalog\/[^/]+\/[^/]+\/[^/]+/);
+    await expect(page).toHaveURL(
+      new RegExp(`/catalog/default/component/${entityName}(?:[/?#].*)?$`),
+    );
 
     const events = await waitForAuditEvent(request, 'entity-access');
     expect(events.length).toBeGreaterThan(0);
@@ -348,6 +364,10 @@ test.describe('Audit-event tracking (E2E)', () => {
     expect(event.plugin).toBe('catalog');
     expect(event.status).toBe('succeeded');
     expect(event.meta?.entityRef).toEqual(expect.any(String));
+    // The entity-access event MUST identify the seed entity we just
+    // navigated to — this is the contract the access-audit module
+    // owns and what the audit consumer downstream depends on.
+    expect(String(event.meta?.entityRef)).toContain(entityName);
   });
 
   // ---------------------------------------------------------------------

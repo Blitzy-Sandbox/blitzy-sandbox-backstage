@@ -15,6 +15,7 @@
  */
 
 import { test, expect, Page } from '@playwright/test';
+import { signInAndNavigateToPath } from './sessionHelpers';
 
 /**
  * Sets the theme mode on the document root element via the `data-theme-mode`
@@ -32,85 +33,45 @@ async function setThemeMode(page: Page, mode: 'light' | 'dark') {
 }
 
 /**
- * Helper that signs into the Backstage example app by clicking the
- * "Continue as Guest" button on the new Blitzy-branded sign-in page
- * (replaces the previous "Enter" button — see
- * `packages/app/src/GuestSignInPage.tsx`), then waits for the authenticated
- * shell (top-bar with `data-testid="app-top-bar"`) to render. Optionally
- * navigates to a specific path after sign-in.
+ * Helper that signs into the Backstage example app and optionally navigates
+ * to a specific path after sign-in.
  *
- * Per AAP §0.5.1.1, the sidebar has been removed and replaced by a top-bar
- * that contains only the Blitzy logo, optional SignInAvatar, Settings link,
- * and Support button — there are no sidebar navigation links to wait on.
- * The presence of the top-bar is therefore the canonical signal that the
- * authenticated shell has finished mounting.
+ * Implementation is delegated to the shared `signInAndNavigateToPath`
+ * helper in `./sessionHelpers`, which encapsulates the auth-state
+ * preservation strategy required for tests that navigate after sign-in.
  *
- * IMPORTANT — auth-state preservation across navigations:
+ * Why this delegation exists
+ * --------------------------
+ * The `ProxiedSignInIdentity` produced by Guest sign-in lives in React
+ * state (`useState` at the SignInPage extension level). It is NOT
+ * persisted in `localStorage`, `sessionStorage`, or a session cookie.
+ * Consequently any `page.goto(targetPath)` after sign-in wipes the React
+ * tree and re-renders the sign-in page — silently defeating any assertion
+ * that follows.
  *
- * The `ProxiedSignInIdentity` instance produced by Guest sign-in lives in
- * React state at the `App`-level wrapper (see `packages/app/src/App.tsx`
- * + `packages/app/src/GuestSignInPage.tsx`). It is NOT persisted in
- * `localStorage`, `sessionStorage`, or a session cookie. Because of this,
- * a hard browser navigation via `page.goto(targetPath)` wipes the React
- * state tree and re-renders the sign-in page — defeating the purpose of
- * the prior sign-in click.
+ * `signInAndNavigateToPath` resolves this by:
+ *   1. Signing in via `signInAsGuest` (lands on `/catalog`).
+ *   2. If the target is `/catalog` or omitted, returning immediately.
+ *   3. If the target has a registered top-bar `data-testid` (`/settings`),
+ *      clicking the in-app `<Link>` so React Router navigates without a
+ *      browser reload.
+ *   4. Otherwise, using `spaNavigate` (`history.pushState` + a
+ *      synthesised `popstate` event) to push the path without reloading.
  *
- * To navigate while preserving the React-state auth, we prefer in-app
- * navigation via the top-bar's `<Link>` controls (Backstage `Link` from
- * `@backstage/core-components`, which delegates to React Router and
- * therefore does NOT trigger a browser reload). For paths that are
- * directly addressable from the top-bar (`/settings`, `/search`), the
- * helper clicks the matching `data-testid` control. For other paths
- * (`/catalog` is a no-op since Guest sign-in already lands there;
- * everything else falls back to `page.goto`), the previous behavior is
- * preserved.
- *
- * This mapping is sourced from the top-bar implementation in
- * `packages/app/src/modules/appModuleTopBar.tsx`, which exposes the
- * `data-testid` attributes referenced below.
+ * The previous local implementation in this file referenced a
+ * `data-testid="app-top-bar-search"` element that does NOT exist in the
+ * current top-bar (verified against
+ * `packages/app/src/modules/appModuleTopBar.tsx`). The legacy sidebar
+ * search affordance was removed by the refactor (AAP §0.5.1.1), so
+ * `/search` must be reached via `spaNavigate`. The local fallback to
+ * `page.goto(targetPath)` also wiped auth for the `/create` scaffolder
+ * path, which silently corrupted the regenerated visual baselines by
+ * capturing the sign-in page instead of the scaffolder. Using
+ * `signInAndNavigateToPath` guarantees the post-sign-in navigation
+ * preserves the React-state identity for every target path.
  */
 async function signInAndNavigate(page: Page, targetPath?: string) {
-  await page.goto('/');
-  const guestButton = page.getByRole('button', { name: 'Continue as Guest' });
-  await expect(guestButton).toBeVisible();
-  await guestButton.click();
-  // Wait for authenticated shell — the top-bar is the canonical chrome
-  // element mounted on every authenticated page (AAP §0.5.1.1).
-  await expect(page.locator('[data-testid="app-top-bar"]')).toBeVisible();
-
-  if (!targetPath) {
-    return;
-  }
-
-  // After Guest sign-in the GuestSignInPage navigates to `/catalog`, so if
-  // that is also the target we are already there and no further navigation
-  // is needed. (Reading `page.url()` is cheap and avoids a needless reload.)
-  const currentPath = new URL(page.url()).pathname;
-  if (currentPath === targetPath) {
-    return;
-  }
-
-  // Known top-bar destinations: click the matching React-Router-aware link
-  // so that the React-state-only auth identity survives the navigation.
-  // The data-testid values below MUST match those exported by
-  // `packages/app/src/modules/appModuleTopBar.tsx`.
-  const topBarSelectors: Record<string, string> = {
-    '/settings': '[data-testid="app-top-bar-settings"]',
-    '/search': '[data-testid="app-top-bar-search"]',
-  };
-  const topBarSelector = topBarSelectors[targetPath];
-  if (topBarSelector) {
-    await page.locator(topBarSelector).click();
-    // Use `toHaveURL` so the wait is matched against the resolved URL and
-    // remains robust to query strings or trailing slashes the route may
-    // add (e.g., `/settings` -> `/settings/`).
-    await expect(page).toHaveURL(new RegExp(`${targetPath}/?$`));
-    return;
-  }
-
-  // Fallback: hard navigation. Tests using this path must tolerate the
-  // auth-state wipe (e.g., re-sign-in flows) or migrate to an in-app link.
-  await page.goto(targetPath);
+  await signInAndNavigateToPath(page, targetPath);
 }
 
 // ---------------------------------------------------------------------------
@@ -189,8 +150,16 @@ test('App should render the welcome page', async ({ page }) => {
 
 test('Visual regression: Catalog browsing - light mode', async ({ page }) => {
   await signInAndNavigate(page, '/catalog');
-  // Wait for catalog page to render
+  // Wait for catalog page to render. `networkidle` alone is
+  // insufficient because the catalog table fetches via SWR/RTK
+  // patterns that may resolve after the page-level fetch graph
+  // settles — the spinner can still be visible when the snapshot is
+  // taken. Wait for the deterministic seed entity to appear so the
+  // table has rendered its rows before screenshotting.
   await page.waitForLoadState('networkidle');
+  await expect(
+    page.getByRole('link', { name: 'blitzy-e2e-component-a' }),
+  ).toBeVisible({ timeout: 15_000 });
   await setThemeMode(page, 'light');
   const screenshot = await page.screenshot({ fullPage: true });
   await expect(screenshot).toMatchSnapshot('catalog-browse-light.png');
@@ -199,6 +168,9 @@ test('Visual regression: Catalog browsing - light mode', async ({ page }) => {
 test('Visual regression: Catalog browsing - dark mode', async ({ page }) => {
   await signInAndNavigate(page, '/catalog');
   await page.waitForLoadState('networkidle');
+  await expect(
+    page.getByRole('link', { name: 'blitzy-e2e-component-a' }),
+  ).toBeVisible({ timeout: 15_000 });
   await setThemeMode(page, 'dark');
   const screenshot = await page.screenshot({ fullPage: true });
   await expect(screenshot).toMatchSnapshot('catalog-browse-dark.png');
@@ -209,14 +181,22 @@ test('Visual regression: Catalog browsing - dark mode', async ({ page }) => {
 test('Visual regression: Entity detail - light mode', async ({ page }) => {
   await signInAndNavigate(page, '/catalog');
   await page.waitForLoadState('networkidle');
-  // Click on first entity in the catalog list if available
-  const entityLink = page
-    .locator('table a, [data-testid="catalog-table"] a')
-    .first();
-  if (await entityLink.isVisible({ timeout: 5000 }).catch(() => false)) {
-    await entityLink.click();
-    await page.waitForLoadState('networkidle');
-  }
+  // Wait for the deterministic seed entity to render before clicking
+  // — the catalog table data sometimes lags after `networkidle`
+  // settles. Then click on the seed entity (instead of "first
+  // entity") so the entity-detail screenshot is deterministic
+  // regardless of catalog sort/filter state.
+  const entityLink = page.getByRole('link', {
+    name: 'blitzy-e2e-component-a',
+  });
+  await expect(entityLink).toBeVisible({ timeout: 15_000 });
+  await entityLink.click();
+  await page.waitForLoadState('networkidle');
+  // Wait for the entity title to render so we know the entity page
+  // has mounted (rather than catching a transitional loading state).
+  await expect(
+    page.getByRole('heading', { name: 'blitzy-e2e-component-a' }),
+  ).toBeVisible({ timeout: 15_000 });
   await setThemeMode(page, 'light');
   const screenshot = await page.screenshot({ fullPage: true });
   await expect(screenshot).toMatchSnapshot('entity-detail-light.png');
@@ -225,13 +205,15 @@ test('Visual regression: Entity detail - light mode', async ({ page }) => {
 test('Visual regression: Entity detail - dark mode', async ({ page }) => {
   await signInAndNavigate(page, '/catalog');
   await page.waitForLoadState('networkidle');
-  const entityLink = page
-    .locator('table a, [data-testid="catalog-table"] a')
-    .first();
-  if (await entityLink.isVisible({ timeout: 5000 }).catch(() => false)) {
-    await entityLink.click();
-    await page.waitForLoadState('networkidle');
-  }
+  const entityLink = page.getByRole('link', {
+    name: 'blitzy-e2e-component-a',
+  });
+  await expect(entityLink).toBeVisible({ timeout: 15_000 });
+  await entityLink.click();
+  await page.waitForLoadState('networkidle');
+  await expect(
+    page.getByRole('heading', { name: 'blitzy-e2e-component-a' }),
+  ).toBeVisible({ timeout: 15_000 });
   await setThemeMode(page, 'dark');
   const screenshot = await page.screenshot({ fullPage: true });
   await expect(screenshot).toMatchSnapshot('entity-detail-dark.png');

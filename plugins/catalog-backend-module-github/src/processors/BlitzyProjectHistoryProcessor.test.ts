@@ -111,6 +111,88 @@ describe('BlitzyProjectHistoryProcessor', () => {
     expect(provider.getOctokit).not.toHaveBeenCalled();
   });
 
+  it('preserves an explicit pre-stamp of "true" when no slug is present', async () => {
+    // Regression: E2E seed catalog fixtures
+    // (`packages/app/e2e-tests/fixtures/e2e-seed-catalog.yaml`)
+    // declare `blitzy.io/has-project-history: 'true'` without
+    // declaring a `github.com/project-slug`. The processor must
+    // honor the explicit declaration so the fixtures are visible in
+    // the catalog UI under `EntityHasProjectHistoryFilter(true)`,
+    // rather than overwriting the pre-stamp with `'false'`.
+    const provider = makeOctokitProvider(jest.fn());
+    const processor = new BlitzyProjectHistoryProcessor({
+      octokitProvider: provider,
+      logger,
+    });
+    const input = component({
+      [HAS_PROJECT_HISTORY_ANNOTATION]: 'true',
+    });
+    const out = await processor.postProcessEntity(
+      input,
+      LOCATION,
+      noop,
+      makeCache(),
+    );
+    // The entity is returned unchanged (same object identity, same value).
+    expect(out).toBe(input);
+    expect(out.metadata.annotations?.[HAS_PROJECT_HISTORY_ANNOTATION]).toBe(
+      'true',
+    );
+    expect(provider.getOctokit).not.toHaveBeenCalled();
+  });
+
+  it('preserves an explicit pre-stamp of "false" when no slug is present', async () => {
+    // Symmetric guarantee: an entity explicitly declaring it has no
+    // project history must NOT be re-stamped, since the value is
+    // already correct. This also documents that the only path that
+    // produces the same observable outcome (annotation === 'false')
+    // does not unnecessarily mutate the entity.
+    const provider = makeOctokitProvider(jest.fn());
+    const processor = new BlitzyProjectHistoryProcessor({
+      octokitProvider: provider,
+      logger,
+    });
+    const input = component({
+      [HAS_PROJECT_HISTORY_ANNOTATION]: 'false',
+    });
+    const out = await processor.postProcessEntity(
+      input,
+      LOCATION,
+      noop,
+      makeCache(),
+    );
+    expect(out).toBe(input);
+    expect(out.metadata.annotations?.[HAS_PROJECT_HISTORY_ANNOTATION]).toBe(
+      'false',
+    );
+    expect(provider.getOctokit).not.toHaveBeenCalled();
+  });
+
+  it('stamps false when no slug is present and the pre-stamp is invalid', async () => {
+    // Defensive: anything other than the canonical literal strings
+    // `'true'` or `'false'` is treated as no pre-stamp and the
+    // default `'false'` is applied. This prevents typo'd or
+    // accidentally truthy values (e.g. `'TRUE'`, `'yes'`,
+    // `'maybe'`) from leaking into the catalog UI.
+    const provider = makeOctokitProvider(jest.fn());
+    const processor = new BlitzyProjectHistoryProcessor({
+      octokitProvider: provider,
+      logger,
+    });
+    const out = await processor.postProcessEntity(
+      component({
+        [HAS_PROJECT_HISTORY_ANNOTATION]: 'maybe',
+      }),
+      LOCATION,
+      noop,
+      makeCache(),
+    );
+    expect(out.metadata.annotations?.[HAS_PROJECT_HISTORY_ANNOTATION]).toBe(
+      'false',
+    );
+    expect(provider.getOctokit).not.toHaveBeenCalled();
+  });
+
   it('stamps false when the slug is malformed', async () => {
     const provider = makeOctokitProvider(jest.fn());
     const processor = new BlitzyProjectHistoryProcessor({

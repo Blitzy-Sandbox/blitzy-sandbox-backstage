@@ -33,6 +33,25 @@
 # These entities are namespaced under the `default` namespace and
 # explicitly prefixed with `blitzy-e2e-` to avoid collisions with
 # real catalog content.
+#
+# Every fixture carries an explicit
+# `blitzy.io/has-project-history: 'true'` annotation. The
+# `DefaultCatalogPage` mounts a hidden
+# `EntityHasProjectHistoryPicker` that unconditionally installs
+# `EntityHasProjectHistoryFilter(true)`, hiding any Component whose
+# annotation is missing or `'false'`. The
+# `BlitzyProjectHistoryProcessor` stamps this annotation based on
+# GitHub PR history — for fixtures without a `github.com/project-slug`
+# (i.e. these), the processor would normally stamp `'false'`,
+# making the entities invisible in the catalog UI and breaking
+# every refactor.test.ts assertion that depends on them. The
+# processor was extended to honor an explicit pre-stamp when no
+# slug is present (see `BlitzyProjectHistoryProcessor.ts`), which
+# preserves the value below verbatim. Do NOT add a
+# `github.com/project-slug` to any of these fixtures: doing so
+# would cause the processor to query GitHub during catalog
+# processing and overwrite the pre-stamp based on the live API
+# response.
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
@@ -44,6 +63,7 @@ metadata:
     - spring
   annotations:
     backstage.io/techdocs-ref: dir:.
+    blitzy.io/has-project-history: 'true'
 spec:
   type: library
   lifecycle: production
@@ -73,6 +93,8 @@ metadata:
   tags:
     - java
     - spring
+  annotations:
+    blitzy.io/has-project-history: 'true'
 spec:
   type: service
   lifecycle: production
@@ -85,6 +107,8 @@ metadata:
   description: E2E fixture — service with only one of the shared tags.
   tags:
     - java
+  annotations:
+    blitzy.io/has-project-history: 'true'
 spec:
   type: service
   lifecycle: experimental
