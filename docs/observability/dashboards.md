@@ -86,7 +86,7 @@ To exercise tracing on a developer machine:
 
 ### 4.1 Metrics endpoint
 
-The Backstage backend exposes Prometheus metrics on `http://localhost:9464/metrics` via the `PrometheusExporter` from `@opentelemetry/exporter-prometheus`, wired in `packages/backend/src/instrumentation.js`. The scrape configuration template lives at `packages/backend/prometheus.yml` (default scrape interval `15s`, default target `host.docker.internal:9464`).
+The Backstage backend exposes Prometheus metrics on `http://127.0.0.1:9464/metrics` via the `PrometheusExporter` from `@opentelemetry/exporter-prometheus`, wired in `packages/backend/src/instrumentation.js`. The exporter binds to `127.0.0.1` by default so the endpoint is reachable only from the local host — a defense-in-depth measure against `target_info` disclosure (host id, process owner, process command path, runtime version) and against external read of the auto-instrumented HTTP request-volume histograms. To run the scraper on a different host (host-network Prometheus, Kubernetes sidecar with `hostNetwork: true`, a private interface in a multi-NIC deployment, etc.), set the `PROMETHEUS_BIND_HOST` environment variable on the backend process — common values are `0.0.0.0` (bind to all interfaces; only safe behind a firewall or NetworkPolicy) or a specific private interface IP. The scrape configuration template lives at `packages/backend/prometheus.yml` (default scrape interval `15s`, default target `host.docker.internal:9464` — `host.docker.internal` resolves to the host's loopback inside Docker Desktop, so this target works against the default `127.0.0.1` bind without further configuration).
 
 ### 4.2 Auto-instrumented metrics
 

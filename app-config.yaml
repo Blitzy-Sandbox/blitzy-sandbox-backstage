@@ -285,17 +285,16 @@ scaffolder:
       environment: ${NODE_ENV}
 
 auth:
-  experimentalDynamicClientRegistration:
-    enabled: true
-    allowedRedirectUriPatterns:
-      - cursor://*
-      - http://localhost:*
-      - http://127.0.0.1:*
-  experimentalClientIdMetadataDocuments:
-    enabled: true
-    allowedRedirectUriPatterns:
-      - http://127.0.0.1:*
-      - http://localhost:*
+  # The OIDC server's `experimentalDynamicClientRegistration` (DCR) and
+  # `experimentalClientIdMetadataDocuments` (CIMD) features are intentionally
+  # NOT enabled in this deployment. Both are unused by the active plugin set
+  # (no `mcp-actions-backend` is registered in `packages/backend/src/index.ts`)
+  # and enabling them on auth-backend 0.27.0 exposes the deployment to
+  # CVE-2026-32235 and CVE-2026-32236. The standard OIDC endpoints
+  # (`/.well-known/openid-configuration`, `/v1/token`, `/v1/userinfo`,
+  # `/.well-known/jwks.json`) continue to function without these flags.
+  # See `docs/refactor/decision-log.md` Section 2 (entry 14) for rationale,
+  # alternatives, and the re-enablement preconditions.
 
   ### Add auth.keyStore.provider to more granularly control how to store JWK data when running
   # the auth-backend.

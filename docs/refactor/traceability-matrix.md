@@ -93,10 +93,11 @@ Each row in the Reverse Matrix anchors on a file. The columns are `File`, `Chang
 
 ### Sub-group E: Configuration
 
-| File                          | Change Type | User Requirement(s) Addressed                                        |
-| ----------------------------- | ----------- | -------------------------------------------------------------------- |
-| `app-config.yaml`             | UPDATE      | Support button shows support@blitzy.com (extend `app.support.items`) |
-| `docker-compose.localgcp.yml` | CREATE      | R6 LocalGCP Verification                                             |
+| File                                      | Change Type | User Requirement(s) Addressed                                                                                                                                                                                                                                               |
+| ----------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app-config.yaml`                         | UPDATE      | Support button shows support@blitzy.com (extend `app.support.items`); QA CP10 Issue 1+2 — remove `auth.experimentalDynamicClientRegistration` and `auth.experimentalClientIdMetadataDocuments` blocks to neutralize CVE-2026-32235 and CVE-2026-32236 (decision-log row 14) |
+| `packages/backend/src/instrumentation.js` | UPDATE      | QA CP10 Issue 3 — bind `PrometheusExporter` to `127.0.0.1` by default (configurable via `PROMETHEUS_BIND_HOST`) so the `/metrics` endpoint and `target_info` disclosure are unreachable from external network neighbors (decision-log row 15)                               |
+| `docker-compose.localgcp.yml`             | CREATE      | R6 LocalGCP Verification                                                                                                                                                                                                                                                    |
 
 ### Sub-group F: Tests (highlights — full test coverage tracked in Section 1)
 
