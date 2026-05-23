@@ -47,6 +47,46 @@ Verify the bring-up by checking the following from a browser:
 - Clicking the Support button opens a popover listing `support@blitzy.com` and the GitHub Issues link.
 - No left-side sidebar is visible — the navigation lives entirely in the top bar now.
 
+If the backend logs a startup error mentioning `${AUTH_GITHUB_CLIENT_ID}` or `${AUTH_GITHUB_CLIENT_SECRET}` or `${GITHUB_TOKEN}`, you are missing the GitHub credentials enumerated in §1.5 below. Export them and re-run `yarn start`.
+
+### 1.5 GitHub OAuth credentials
+
+The `app-config.yaml` shipped with this refactor references three GitHub-related environment variables via `${VAR_NAME}` substitution. They are required for a complete bring-up of `yarn start`; without them, the backend either refuses to start (when `--strict` config validation is in force) or starts but every GitHub-mediated feature returns a 500 at runtime.
+
+Set these in a local `.env` file (the repository's `.gitignore` already excludes `.env`) or export them in your shell before running `yarn start`:
+
+- `AUTH_GITHUB_CLIENT_ID` — Required. The GitHub OAuth App's **Client ID**. Consumed at `auth.providers.github.development.clientId` in [`app-config.yaml`](../../app-config.yaml). Without it the GitHub sign-in page on the portal will fail with a "missing client id" error after the OAuth redirect.
+- `AUTH_GITHUB_CLIENT_SECRET` — Required. The GitHub OAuth App's **Client Secret**. Consumed at `auth.providers.github.development.clientSecret`. Without it the GitHub OAuth callback exchange (code → access token) fails with a 401 from GitHub's token endpoint.
+- `GITHUB_TOKEN` — Required. A GitHub **Personal Access Token** (classic PAT with `repo`, `read:org`, `read:user`, and `user:email` scopes — see the [GitHub fine-grained PAT documentation](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens) for the equivalent fine-grained permissions). Consumed in two places:
+
+  1. The `/github-api` proxy endpoint at [`app-config.yaml:114`](../../app-config.yaml) — the catalog-graph plugin and any UI that consumes the GitHub REST API through the Backstage proxy authenticate with this token.
+  2. The catalog `integrations.github[].token` entry at [`app-config.yaml:147`](../../app-config.yaml) — the catalog backend uses this token to read catalog-info.yaml files from GitHub repositories.
+
+  Without `GITHUB_TOKEN` the proxy returns 401 and catalog refresh of any GitHub-hosted entity fails. The token used here is distinct from the OAuth Client ID/Secret pair above: the OAuth credentials authenticate the **user**, while the PAT authenticates the **backend-as-a-service** for unattended API calls.
+
+#### 1.5.1 Creating the OAuth App
+
+Follow the canonical setup steps in [`../auth/github/provider.md`](../auth/github/provider.md) to create the GitHub OAuth App at <https://github.com/settings/developers>. The relevant local-development URLs are:
+
+- Application name: `Backstage` (or any name you prefer)
+- Homepage URL: `http://localhost:3000`
+- Authorization callback URL: `http://localhost:7007/api/auth/github/handler/frame`
+
+After creation, GitHub displays the Client ID immediately; click "Generate a new client secret" to obtain the Client Secret. Both values get exported as `AUTH_GITHUB_CLIENT_ID` and `AUTH_GITHUB_CLIENT_SECRET` respectively. Do NOT commit the secret to the repository — `.env` is gitignored for exactly this purpose.
+
+#### 1.5.2 Creating the Personal Access Token
+
+The Personal Access Token (`GITHUB_TOKEN`) is created separately at <https://github.com/settings/tokens>. Choose either:
+
+- **Classic PAT**: Select the `repo`, `read:org`, `read:user`, and `user:email` scopes. This is the simplest path for local development.
+- **Fine-grained PAT**: Select repository access (specific repositories or all), then enable `Contents: read`, `Metadata: read`, `Members: read`, and `Email addresses: read` under "Permissions".
+
+Tokens of either flavor are pasted verbatim as the value of `GITHUB_TOKEN`. The same token can satisfy both the proxy and the integrations consumer — there is no need to mint two PATs unless you want to separate access scopes for audit purposes.
+
+#### 1.5.3 The augmented `signInResolver` and `user-login` audit event
+
+Once `AUTH_GITHUB_CLIENT_ID` / `AUTH_GITHUB_CLIENT_SECRET` are in place, the GitHub sign-in flow exercises the augmented `signInResolver` in [`packages/backend/src/authModuleGithubProvider.ts`](../../packages/backend/src/authModuleGithubProvider.ts), which emits a `user-login` audit event for every successful sign-in via `coreServices.auditor`. The audit event includes the email domain (not the full email — PII discipline) so the [`BlitzyPermissionPolicy`](../../plugins/permission-backend-module-blitzy-policy/src/policy.ts) can apply read-only enforcement for non-`@blitzy.com` accounts. See [§6.6 "Email propagation — the two-source architecture"](#66-email-propagation--the-two-source-architecture) for the full lifecycle and [`../auth/identity-resolver.md`](../auth/identity-resolver.md) for the resolver pattern.
+
 ---
 
 ## 2. LocalGCP Setup
@@ -81,18 +121,53 @@ sleep 3
 
 The `--data-dir=./.localgcp` directory is gitignored at the repository root. The `--quiet` flag silences the emulator's stdout banner; `--no-docker` disables the orchestrated services (Spanner, Bigtable, Cloud SQL, Memorystore, BigQuery) that would otherwise require Docker-in-Docker — none of those are needed by the current Backstage refactor. `nohup` plus `&` backgrounds the emulator so the shell remains usable; `sleep 3` allows the gRPC and REST listeners to come online before the first SDK call.
 
-### 2.2 Option B — Docker Compose
+### 2.2 Option B — Docker Compose (build-from-tarball)
 
-For CI runners and developer machines that prefer not to install the host binary, the repository provides a dedicated compose file:
+For CI runners and developer machines that prefer not to install the host binary, the repository provides a dedicated compose file backed by a multi-stage Dockerfile that builds LocalGCP from the upstream tarball asset.
 
 ```bash
-docker compose -f docker-compose.localgcp.yml up -d     # start
-docker compose -f docker-compose.localgcp.yml down      # teardown
+# Build the image once (subsequent runs use the cached layer):
+docker compose -f docker-compose.localgcp.yml build localgcp
+
+# Start (compose will auto-build on first up if the image is absent):
+docker compose -f docker-compose.localgcp.yml up -d
+
+# Tail logs:
+docker compose -f docker-compose.localgcp.yml logs -f localgcp
+
+# Teardown:
+docker compose -f docker-compose.localgcp.yml down
 ```
 
-The compose file exposes the same ports as the host binary, so application code does not need to vary based on which option is in use.
+#### 2.2.1 What the compose file does
 
-### 2.3 Environment variables
+- The `services.localgcp` entry uses a `build:` directive that references `Dockerfile.localgcp` at the repository root. The Dockerfile downloads `localgcp_<version>_linux_<arch>.tar.gz` from `https://github.com/slokam-ai/localgcp/releases/download/v<version>/...` and installs the statically linked Go binary at `/usr/local/bin/localgcp` inside a slim Debian runtime stage.
+- The build tag is `blitzy-sandbox-localgcp:v0.6.0` (set via the compose `image:` field beside the `build:` block) so the resulting image is discoverable with `docker images | grep localgcp`.
+- Default `LOCALGCP_VERSION` is `0.6.0`. To pin a different release, pass `--build-arg LOCALGCP_VERSION=0.7.0` (or update the `args:` block in `docker-compose.localgcp.yml`).
+- The compose file exposes the same ports as the host binary (4443 GCS REST, 8085 Pub/Sub gRPC, 8088 Firestore gRPC), so application code does not need to vary based on which option is in use.
+- The `./.localgcp/` directory on the host is bind-mounted into `/data/.localgcp` inside the container for persistence across restarts; this directory is gitignored at the repository root.
+
+#### 2.2.2 Why we build instead of pulling
+
+The upstream `slokam-ai/localgcp` repository ships releases as `.tar.gz` assets only — it does not publish a public container image. The `ghcr.io/slokam-ai/localgcp` namespace is not anonymously accessible (`docker pull` returns `unauthorized`). Building locally from the public tarball is the only path that works without GHCR credentials and satisfies **Rule R6** ("no test, local dev workflow, or CI step may require real GCP credentials") for the compose-based workflow. See [`decision-log.md`](decision-log.md) row 16 for the full alternatives analysis.
+
+#### 2.2.3 Permissions and the bind-mount
+
+The container runs LocalGCP as root and the `/data/.localgcp` directory is created world-writable (`chmod 0777`). This sidesteps the bind-mount UID mismatch that otherwise prevents the emulator from writing `credentials.json` when the host directory is owned by a different user. For production-style deployments where root inside containers is disallowed, override the user at compose level (`services.localgcp.user: "${UID:-1000}:${GID:-1000}"`) and pre-chown `./.localgcp/` accordingly — but production must not use LocalGCP at all, see §9.7.
+
+#### 2.2.4 Verifying the compose-built emulator
+
+```bash
+docker compose -f docker-compose.localgcp.yml up -d
+# Wait for healthcheck (the compose file polls http://localhost:4443/ on a 10s interval):
+docker compose -f docker-compose.localgcp.yml ps         # expect STATUS to read "healthy"
+curl http://localhost:4443/                              # expect {"kind":"storage#serviceAccount","service":"localgcp"}
+docker compose -f docker-compose.localgcp.yml down
+```
+
+If `docker compose ... build` fails with a network error, the cause is most likely that the build cannot reach `github.com` to download the tarball; verify outbound HTTPS connectivity from the Docker engine's network namespace and retry.
+
+### 2.3 Environment variables (LocalGCP)
 
 The Backstage backend and any contributor scripts read four environment variables to locate the emulator:
 
@@ -102,6 +177,8 @@ The Backstage backend and any contributor scripts read four environment variable
 - `LOCALGCP_HOST` — optional. Used by test fixtures to gate integration tests on emulator availability; if unset, tests that exercise GCP services may be skipped rather than fail.
 
 Export these in your shell before running `yarn start` or tests that exercise GCP-bound code paths.
+
+This section covers LocalGCP-only variables. For the **Backstage runtime variables** (GitHub OAuth credentials and the integrations PAT — `AUTH_GITHUB_CLIENT_ID`, `AUTH_GITHUB_CLIENT_SECRET`, `GITHUB_TOKEN`) see §1.5. For the **E2E test-only variable** (`BLITZY_E2E_TEST_MODE`) see §9.2.
 
 ### 2.4 Verification
 

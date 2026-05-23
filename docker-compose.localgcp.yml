@@ -75,20 +75,39 @@
 # Image and Port Notes
 # -----------------------------------------------------------------------------
 #
-# Image: ghcr.io/slokam-ai/localgcp (official LocalGCP container image per
-#        the canonical upstream documentation at https://localgcp.com/docs/).
+# Container build: the LocalGCP container is built from `Dockerfile.localgcp`
+# in this repository. The upstream project (`slokam-ai/localgcp`) does NOT
+# publish a public container image on Docker Hub or GHCR — its GitHub release
+# v0.6.0 ships ONLY platform-specific tarballs (linux_amd64, linux_arm64,
+# darwin_*, windows_amd64). A previous iteration of this file referenced
+# `ghcr.io/slokam-ai/localgcp:v0.6.0`, but that path resolved to
+# `unauthorized` for every anonymous client (QA Checkpoint 13, Critical
+# Issue #1). The repository now builds an equivalent container locally from
+# the tarball; the resulting image is functionally identical to what a
+# registry-hosted image would provide, with the added benefit that the
+# Dockerfile, the version pin, and the build steps are reviewable in-tree.
 #
-# The image tag is pinned to a concrete version rather than `:latest` so that
-# CI and developer environments deterministically resolve the same emulator
-# binary across machines and across time (R6 LocalGCP Verification — every
-# GCP service interaction MUST be verifiable against a reproducible emulator
-# without supply-chain drift). The pinned tag matches the Setup Status Log's
-# "LocalGCP v0.6.0 (running)" entry. Bumping this pin should be a deliberate,
-# tested action accompanied by a decision-log entry rather than an implicit
-# upgrade triggered by re-pulling `:latest`.
+# Version pinning: the LocalGCP version is pinned at build time via the
+# `LOCALGCP_VERSION` build argument (defined and defaulted in
+# `Dockerfile.localgcp`). The default `0.6.0` matches the Setup Status Log
+# "LocalGCP v0.6.0 (running)" entry. Bumping this version requires editing
+# `Dockerfile.localgcp` (or passing `--build-arg LOCALGCP_VERSION=X.Y.Z` at
+# build time) AND adding a decision-log entry per Rule R3 (Explainability).
+# An implicit upgrade via a `:latest`-style reference is intentionally NOT
+# supported — the build-arg-pinned approach guarantees reproducibility
+# across machines and across time (R6 LocalGCP Verification — every GCP
+# service interaction MUST be verifiable against a reproducible emulator
+# without supply-chain drift).
+#
+# Build performance: the first `docker compose -f docker-compose.localgcp.yml
+# build` (or `up -d` with no cached image) downloads the LocalGCP tarball
+# (~7 MB compressed, ~19 MB extracted) and constructs the runtime image.
+# Subsequent builds reuse the Docker layer cache and complete in seconds.
+# In CI, cache the `~/.docker` and the Docker BuildKit cache between runs to
+# avoid the cold-cache cost on every PR.
 #
 # Default native service ports exposed by the LocalGCP container image
-# (from `docker run ... ghcr.io/slokam-ai/localgcp`):
+# (matching `docker run ... blitzy-sandbox-localgcp`):
 #
 #   4443  Cloud Storage (REST/JSON+XML API)         [EXPOSED]
 #   8085  Pub/Sub        (gRPC)                     [EXPOSED]
@@ -114,16 +133,33 @@ name: blitzy-sandbox-localgcp
 
 services:
   localgcp:
-    # Official LocalGCP container image from GitHub Container Registry.
-    # See https://localgcp.com/docs/ for the canonical reference.
+    # Build the LocalGCP emulator container locally from `Dockerfile.localgcp`,
+    # which downloads the publicly available LocalGCP release tarball
+    # (https://github.com/slokam-ai/localgcp/releases) and constructs a
+    # minimal runtime image around it. The previous attempt to pull
+    # `ghcr.io/slokam-ai/localgcp:v0.6.0` resolved to `unauthorized` for
+    # every anonymous client because the upstream LocalGCP project does NOT
+    # publish a container image (see Decision Log Entry 16 in
+    # `docs/refactor/decision-log.md`). Building locally eliminates the
+    # external authentication dependency and keeps the version pin
+    # reviewable in-tree.
     #
-    # Pinned to v0.6.0 (matching the Setup Status Log) for deterministic
-    # CI / local emulator behavior. Do NOT replace this with `:latest`; an
-    # unpinned tag breaks reproducibility and creates a supply-chain drift
-    # risk (R6 LocalGCP Verification). To bump, update the tag here, refresh
-    # the decision log, and verify the new image with the integration test
-    # suite before merging.
-    image: ghcr.io/slokam-ai/localgcp:v0.6.0
+    # The `LOCALGCP_VERSION` build arg (default `0.6.0` set in the
+    # Dockerfile) controls which release tarball is downloaded. Override via
+    # `docker compose build --build-arg LOCALGCP_VERSION=X.Y.Z localgcp` to
+    # test a newer version; bumps MUST be accompanied by a decision-log
+    # entry per Rule R3 (Explainability).
+    #
+    # The resulting image is tagged so that pure `docker run` consumers and
+    # subsequent compose invocations can reference it by name without
+    # triggering a rebuild. The tag mirrors the LocalGCP version for
+    # cache-friendly resolution.
+    build:
+      context: .
+      dockerfile: Dockerfile.localgcp
+      args:
+        LOCALGCP_VERSION: '0.6.0'
+    image: blitzy-sandbox-localgcp:v0.6.0
     container_name: blitzy-sandbox-localgcp
 
     # Host-to-container port mappings. The host port can be overridden via

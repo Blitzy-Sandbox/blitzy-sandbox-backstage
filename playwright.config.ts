@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-import { defineConfig } from '@playwright/test';
+import {
+  defineConfig,
+  devices,
+  type PlaywrightTestConfig,
+} from '@playwright/test';
 import { generateProjects } from '@backstage/e2e-test-utils/playwright';
 
 /**
@@ -25,8 +29,69 @@ import { generateProjects } from '@backstage/e2e-test-utils/playwright';
  * every redesigned user flow in both light and dark modes to verify component
  * rendering, layout consistency, and theme correctness.
  *
+ * Cross-browser coverage (AAP §0.8.2.5):
+ *   `generateProjects()` from `@backstage/e2e-test-utils/playwright` scans the
+ *   monorepo for packages with an `e2e-tests/` folder and emits a single project
+ *   per discovered package keyed to `channel: 'chrome'`. To satisfy the AAP's
+ *   cross-browser mandate without modifying that public export's signature, we
+ *   fan each discovered package out into three browser-specific projects
+ *   (chromium, firefox, webkit) using Playwright's bundled browser binaries via
+ *   `devices`. Each project's `name` is `<package>-<browser>` so test selection
+ *   via `--project` remains ergonomic in CI.
+ *
+ * Visual regression scope:
+ *   The 10 existing PNG baselines under `packages/app/e2e-tests/__screenshots__/`
+ *   were captured on chromium. To avoid spurious failures from cross-browser
+ *   pixel drift (font rendering, scrollbar widths, sub-pixel anti-aliasing —
+ *   industry-standard sources of cross-browser flake), tests prefixed with
+ *   `Visual regression:` are skipped on firefox and webkit at the test-file level
+ *   via a `test.beforeEach` gate. firefox and webkit therefore run the full
+ *   functional-assertion surface (welcome page, theme correctness, search,
+ *   authorization, auditing, refactor coverage) while visual regression remains
+ *   chromium-only. The chromium baselines remain the single source of truth.
+ *   See `docs/refactor/decision-log.md` Entry 18 and `docs/refactor/next-tasks.md`.
+ *
  * See https://playwright.dev/docs/test-configuration.
  */
+
+/**
+ * Browser dimension for the cross-browser fan-out below. Each entry maps a
+ * suffix used in the Playwright project name (e.g., `example-app-chromium`) to
+ * the `devices` preset that selects Playwright's bundled browser binary. We
+ * unset `channel` from the base project's `use` object because `channel` and
+ * a `devices[…]` preset are mutually exclusive — `channel` forces Playwright
+ * to launch the system-installed browser, whereas `devices[…]` configures
+ * Playwright's own bundled binary.
+ */
+const browsers = [
+  { suffix: 'chromium', use: devices['Desktop Chrome'] },
+  { suffix: 'firefox', use: devices['Desktop Firefox'] },
+  { suffix: 'webkit', use: devices['Desktop Safari'] },
+] as const;
+
+const baseProjects = generateProjects() ?? [];
+
+/**
+ * Fan each base project (one per package with `e2e-tests/`) across the three
+ * browsers above. The resulting `projects` array has length
+ * `baseProjects.length * browsers.length` (today: 1 × 3 = 3 projects, since
+ * only `packages/app/e2e-tests/` exists).
+ */
+const projects: PlaywrightTestConfig['projects'] = baseProjects.flatMap(base =>
+  browsers.map(b => ({
+    name: `${base.name}-${b.suffix}`,
+    testDir: base.testDir,
+    use: {
+      ...(base.use ?? {}),
+      // Drop `channel: 'chrome'` from generateProjects() — the devices preset
+      // selects Playwright's bundled browser, which is what we want for
+      // reproducible CI runs that don't depend on a system-installed Chrome.
+      channel: undefined,
+      ...b.use,
+    },
+  })),
+);
+
 export default defineConfig({
   timeout: 30_000,
 
@@ -118,5 +183,11 @@ export default defineConfig({
    */
   snapshotPathTemplate: '{testDir}/__screenshots__/{testFilePath}/{arg}{ext}',
 
-  projects: generateProjects(), // Find all packages with e2e-test folders
+  // Cross-browser fan-out of the packages discovered by `generateProjects()`.
+  // See the module-level JSDoc above for the strategy. Today this expands the
+  // single discovered package (`packages/app/e2e-tests/`, `name: example-app`)
+  // into three projects: `example-app-chromium`, `example-app-firefox`,
+  // `example-app-webkit`. Visual regression tests are gated to chromium at the
+  // test-file level via `test.beforeEach`; functional tests run on all three.
+  projects,
 });

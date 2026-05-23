@@ -114,6 +114,29 @@ async function signInAndNavigate(page: Page, targetPath?: string) {
 }
 
 // ---------------------------------------------------------------------------
+// Cross-browser visual regression gate (AAP §0.8.2.5)
+//
+// Tests whose title begins with `Visual regression:` consume PNG baselines
+// captured on chromium (see `packages/app/e2e-tests/__screenshots__/`). To
+// avoid spurious failures from cross-browser pixel drift (font rendering,
+// scrollbar widths, sub-pixel anti-aliasing — industry-standard sources of
+// cross-browser flake), these tests are skipped on firefox and webkit. The
+// functional tests in this file (welcome page, theme correctness, sidebar/
+// View-button/Documentation-tab/star-icon removals, top-bar placement, etc.)
+// continue to run on all three browsers to satisfy the cross-browser
+// functional-coverage mandate. See `docs/refactor/decision-log.md` Entry 18.
+// ---------------------------------------------------------------------------
+test.beforeEach(async ({ browserName }, testInfo) => {
+  test.skip(
+    testInfo.title.startsWith('Visual regression:') &&
+      browserName !== 'chromium',
+    `Visual regression baselines are chromium-only; firefox and webkit run ` +
+      `functional assertions only. Re-baselining for additional browsers is ` +
+      `tracked in docs/refactor/next-tasks.md.`,
+  );
+});
+
+// ---------------------------------------------------------------------------
 // Smoke test — validates the refactored chrome (top-bar replaces sidebar)
 //
 // Per AAP §0.5.1.1 (Workstream A — Chrome Refactor):
