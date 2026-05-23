@@ -104,9 +104,9 @@ See the **Refactor Documentation** section below for the decision log, traceabil
 
 4. Start the development servers (frontend + backend):
    ```sh
-   yarn dev
+   yarn start
    ```
-   The app will be available at `http://localhost:3000` and the backend at `http://localhost:7007`.
+   This invokes `backstage-cli repo start`, which boots the frontend (`packages/app`) and the backend (`packages/backend`, workspace name `example-backend`) together. The app will be available at `http://localhost:3000` and the backend at `http://localhost:7007`.
 
 ### Environment Setup
 
@@ -124,22 +124,32 @@ Key config values (set in `app-config.local.yaml` or as environment variables):
 ### Running in Development
 
 ```sh
-# Start frontend and backend together
-yarn dev
-
-# Backend only
-yarn start-backend
-
-# Frontend only
+# Start frontend and backend together (canonical local-dev launcher,
+# invokes `backstage-cli repo start` against both packages)
 yarn start
+
+# Backend only (run the example-backend workspace directly)
+yarn start example-backend
+# equivalently: yarn workspace example-backend start
 ```
+
+Note: the legacy `yarn dev` and `yarn start-backend` scripts in `package.json`
+are deprecation stubs that only print a pointer to the commands above; they do
+not start any service themselves. The canonical entry points are `yarn start`
+(frontend + backend together) and `yarn start example-backend` (backend only).
 
 ### Building for Production
 
 ```sh
+# Build all workspaces (frontend + backend + plugins) via the Backstage CLI
+yarn build:all
+
+# Or build only the backend workspace bundle
 yarn build:backend
-yarn build
 ```
+
+Note: there is no root-level `yarn build` script; the canonical entry point is
+`yarn build:all`, which delegates to `backstage-cli repo build --all`.
 
 ### Running Tests
 
@@ -226,7 +236,7 @@ blitzy-backstage/
 - The frontend uses **Declarative Integration** — plugins expose typed `Extension` objects (pages, nav items, entity content) assembled by `createApp()`. Routing is automatic.
 - **TechDocs search** is intentionally disabled to prevent OOM when indexing repositories that haven't built docs — see the comment in `packages/backend/src/index.ts`.
 - **Authorization** — A custom `BlitzyPermissionPolicy` is implemented in `plugins/permission-backend-module-blitzy-policy/` and registered in `packages/backend/src/index.ts`, replacing the upstream `AllowAllPermissionPolicy`. Users whose verified email domain is `@blitzy.com` retain full access; all other authenticated users and Guest sessions are constrained to **read-only** permissions enforced by the backend permission layer. The policy extracts the user email from the custom JWT `email` claim populated by the GitHub `signInResolver` (`packages/backend/src/authModuleGithubProvider.ts`) and decoded via `jose.decodeJwt(user.credentials.token)` — see `blitzy/documentation/Technical Specifications.md` IR-2 for the as-implemented email propagation path.
-- **Audit logging** — GitHub sign-in attempts and project (catalog entity) reads are recorded via Backstage's `AuditorService`. A `user-login` event is emitted on every sign-in (success and failure) by the augmented GitHub resolver; an `entity-access` event is emitted on every catalog entity read by the access-audit module in `plugins/catalog-backend-module-access-audit/`. `entity-access` events carry the canonical HTTP request correlation id; `user-login` events carry a synthetic resolver-generated `correlationId` (UUID) because the `SignInResolver` callback does not expose the HTTP request — see `docs/auth/index.md` and `docs/auth/identity-resolver.md` for the exact event contracts. The Grafana dashboard template lives at `docs/observability/dashboard-template.json` and is documented at `docs/observability/dashboards.md`. The custom Prometheus counters (`user_login_total`, `entity_access_total`, `blitzy_permission_decisions_total`) are emitted by the augmented sign-in resolver, the access-audit middleware, and the `BlitzyPermissionPolicy` respectively; auto-instrumented HTTP/runtime metrics from `@opentelemetry/auto-instrumentations-node` are available alongside them. Unit coverage on the access-audit middleware lives at `plugins/catalog-backend-module-access-audit/src/module.test.ts` (20 executed cases) in addition to the Playwright `auditing.test.ts` E2E suite. The CI workflow does **not yet invoke** `docker compose -f docker-compose.localgcp.yml up -d` before integration tests, even though the compose file is committed — this remaining item is tracked in `docs/refactor/next-tasks.md` entry 7.
+- **Audit logging** — GitHub sign-in attempts and project (catalog entity) reads are recorded via Backstage's `AuditorService`. A `user-login` event is emitted on every sign-in (success and failure) by the augmented GitHub resolver; an `entity-access` event is emitted on every catalog entity read by the access-audit module in `plugins/catalog-backend-module-access-audit/`. `entity-access` events carry the canonical HTTP request correlation id; `user-login` events carry a synthetic resolver-generated `correlationId` (UUID) because the `SignInResolver` callback does not expose the HTTP request — see `docs/auth/index.md` and `docs/auth/identity-resolver.md` for the exact event contracts. The Grafana dashboard template lives at `docs/observability/dashboard-template.json` and is documented at `docs/observability/dashboards.md`. The custom Prometheus counters (`user_login_total`, `entity_access_total`, `blitzy_permission_decisions_total`) are emitted by the augmented sign-in resolver, the access-audit middleware, and the `BlitzyPermissionPolicy` respectively; auto-instrumented HTTP/runtime metrics from `@opentelemetry/auto-instrumentations-node` are available alongside them. Unit coverage on the access-audit middleware lives at `plugins/catalog-backend-module-access-audit/src/module.test.ts` (25 executed cases) in addition to the Playwright `auditing.test.ts` E2E suite. The CI workflow does **not yet invoke** `docker compose -f docker-compose.localgcp.yml up -d` before integration tests, even though the compose file is committed — this remaining item is tracked in `docs/refactor/next-tasks.md` entry 7.
 
 ### Refactor Documentation
 

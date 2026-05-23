@@ -119,21 +119,39 @@ documented in the project decision log at
 Unit tests in `src/policy.test.ts` should cover each new allowlisted
 domain.
 
-## Observability (planned counter)
+## Observability (emitted counter)
 
-Each policy decision is **planned to** emit an OpenTelemetry counter
-`blitzy_permission_decisions_total{result, email_domain, action}` where
-`email_domain` is bucketed to `blitzy.com`, `other`, or `guest` (no
-PII). The counter is currently **not yet emitted** by `src/policy.ts` —
-no `@opentelemetry/api-metrics` import or `Counter.add(...)` call is
-present in the source. The Grafana dashboard at
+Each policy decision emits an OpenTelemetry counter
+`blitzy_permission_decisions_total{result, email_domain, action, otel_scope_name="blitzy-permission-policy"}`
+where `email_domain` is bucketed to `blitzy.com`, `other`, or `guest`
+(no PII), `action` is one of `read | create | update | delete | refresh | register | validate`,
+and `result` is `ALLOW` or `DENY`. The counter is declared in
+[`src/metrics.ts`](./src/metrics.ts) (which imports
+`{ Counter, metrics } from '@opentelemetry/api'` — the metrics API was
+unified into `@opentelemetry/api` in newer OpenTelemetry SDK versions;
+the obsolete `@opentelemetry/api-metrics` package is not used) and
+incremented inside `BlitzyPermissionPolicy.handle()` in
+[`src/policy.ts`](./src/policy.ts) on every decision via
+`blitzyPermissionDecisionsTotal.add(1, { result, email_domain, action })`.
+
+The counter is verified at runtime by:
+
+```bash
+curl -s http://localhost:9464/metrics | grep '^blitzy_permission_decisions_total'
+```
+
+After a guest sign-in and one entity read, a sample emission looks like:
+
+```
+blitzy_permission_decisions_total{result="ALLOW",email_domain="guest",action="read",otel_scope_name="blitzy-permission-policy"} 1
+```
+
+The Grafana dashboard at
 [`docs/observability/dashboard-template.json`](../../docs/observability/dashboard-template.json)
-references the counter and the panel will populate automatically once
-the instrumentation lands. See
-[`docs/refactor/next-tasks.md`](../../docs/refactor/next-tasks.md)
-entry 1 for the deferred follow-up tracker, and
-[`blitzy/documentation/Technical Specifications.md`](../../blitzy/documentation/Technical%20Specifications.md)
-IR-5 for the divergence record.
+consumes this counter (Permission Decisions panel). The
+`bucketEmailDomain(email)` helper in `src/metrics.ts` enforces label
+cardinality discipline: the full email address is never a label, only
+its bucketed domain class.
 
 ## Testing
 
@@ -165,8 +183,8 @@ yarn workspace @internal/plugin-permission-backend-module-blitzy-policy lint
   — rationale for choosing a separate plugin module over an inline
   policy in `packages/backend/src/`, the rejected alternatives for the
   email-source resolution path (including the catalog-lookup approach
-  described in earlier drafts of this README), and the deferred custom
-  Prometheus counter.
+  described in earlier drafts of this README), and the OpenTelemetry
+  counter wiring (`@opentelemetry/api` unified metrics API).
 - [`docs/permissions/writing-a-policy.md`](../../docs/permissions/writing-a-policy.md)
   — Backstage upstream guide to authoring permission policies.
 - [`packages/backend/src/authModuleGithubProvider.ts`](../../packages/backend/src/authModuleGithubProvider.ts)

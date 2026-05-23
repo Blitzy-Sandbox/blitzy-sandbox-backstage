@@ -212,7 +212,7 @@ To add a new rule (for example, deny all actions for a known compromised usernam
 
 ### 6.4 Adding a new audit event ID
 
-Audit events are emitted via the injected `auditor` service. Construct the event with `auditor.createEvent({ eventId: 'entity-access', severityLevel: 'low', request, meta: { entityRef, principal, action: 'read' } })`, then call `.success({ meta })` on success or `.fail({ error, meta })` on failure paths so the audit log captures the failure mode. To add an `entity-write` event when a future workstream introduces write paths through the policy, see entry 5 in [`next-tasks.md`](next-tasks.md) for the suggested approach.
+Audit events are emitted via the injected `auditor` service. Construct the event with `auditor.createEvent({ eventId: 'entity-access', severityLevel: 'medium', request, meta: { entityRef, principal, action: 'read' } })`, then call `.success({ meta })` on success or `.fail({ error, meta })` on failure paths so the audit log captures the failure mode. The severity is `medium` (not the lower `low`) so the event maps to Winston's `info` level by default and is not silently filtered by the default log threshold — see [`plugins/catalog-backend-module-access-audit/README.md`](../../plugins/catalog-backend-module-access-audit/README.md) for the level-mapping rationale. To add an `entity-write` event when a future workstream introduces write paths through the policy, see entry 5 in [`next-tasks.md`](next-tasks.md) for the suggested approach.
 
 ### 6.5 Registering a different policy module
 
@@ -271,21 +271,34 @@ The same pattern works for `user-login` events.
 
 ### 7.3 Mapping to Prometheus counters
 
-The Prometheus exporter on `http://localhost:9464/metrics` surfaces the **auto-instrumented** HTTP, runtime, and process metrics out of the box (for example, `http_server_requests_total`, `http_server_request_duration_seconds_bucket`, `nodejs_eventloop_lag_seconds`, `process_resident_memory_bytes`). The audit channel itself remains the authoritative source of truth for sign-in and entity-access events at this checkpoint.
+The Prometheus exporter on `http://localhost:9464/metrics` surfaces the **auto-instrumented** HTTP, runtime, and process metrics out of the box. The actual metric families emitted by `@opentelemetry/auto-instrumentations-node` v0.67.0 are `http_server_duration_bucket`/`_count`/`_sum` (HTTP latency in milliseconds; labels include `http_route`, `http_status_code`, `http_method`, `http_scheme`, `net_host_name`, `net_host_port`), `v8js_memory_heap_used`/`v8js_memory_heap_limit`/`v8js_memory_heap_space_*`, `nodejs_eventloop_delay_max`/`_mean`/`_min`/`_p50`/`_p90`/`_p99`/`_stddev`, and `v8js_gc_duration_*`. The legacy Prometheus names (`http_server_requests_total`, `http_server_request_duration_seconds_bucket`, `nodejs_eventloop_lag_seconds`, `process_resident_memory_bytes`, `nodejs_heap_size_used_bytes`) are **NOT** emitted by this auto-instrumentation version — see [`../observability/dashboards.md`](../observability/dashboards.md) §4.2 for the canonical inventory.
 
-Three custom counters are planned to surface the audit volume directly as Prometheus time series:
+Three custom counters surface the audit volume directly as Prometheus time series and are **implemented and emitting** at this checkpoint:
 
-- `blitzy_permission_decisions_total{result, email_domain, action}` — to be incremented inside `BlitzyPermissionPolicy.handle()` on every ALLOW or DENY decision
-- `user_login_total{provider, email_domain}` — to be incremented inside the augmented GitHub `signInResolver` (and any future Guest provider augmentation) on every successful sign-in
-- `entity_access_total{action}` — to be incremented inside the catalog access-audit middleware on every user-credentialed entity read
+- `blitzy_permission_decisions_total{result, email_domain, action, otel_scope_name="blitzy-permission-policy"}` — incremented inside `BlitzyPermissionPolicy.handle()` on every ALLOW or DENY decision (declared in [`plugins/permission-backend-module-blitzy-policy/src/metrics.ts`](../../plugins/permission-backend-module-blitzy-policy/src/metrics.ts), incremented at `policy.ts` line 100 via `blitzyPermissionDecisionsTotal.add(1, {...})`)
+- `user_login_total{provider, email_domain, otel_scope_name="blitzy-backstage-backend"}` — incremented inside the augmented GitHub `signInResolver` and the Guest sign-in path on every successful sign-in (declared in [`packages/backend/src/metrics.ts`](../../packages/backend/src/metrics.ts), incremented at `authModuleGithubProvider.ts` line 184)
+- `entity_access_total{action, otel_scope_name="blitzy-catalog-access-audit"}` — incremented inside the catalog access-audit middleware on every user-credentialed entity read (declared in [`plugins/catalog-backend-module-access-audit/src/metrics.ts`](../../plugins/catalog-backend-module-access-audit/src/metrics.ts), incremented inside the wrapped `getEntityByRef` path of `module.ts`)
 
-These counters are **NOT** emitted by the source code at this checkpoint and will return no rows from `curl :9464/metrics`. Their implementation is tracked in [`next-tasks.md`](next-tasks.md) entry 1 ("Wire the custom Prometheus counters documented in `docs/observability/dashboards.md` Section 4.3 into the actual emission sites"). Until they land, the Grafana dashboard panels that depend on them are marked as pending in [`../observability/dashboards.md`](../observability/dashboards.md) §6, and operator runbooks should join audit events to operational metrics via the structured-log channel and OpenTelemetry trace spans (which are emitted).
+All three counters import `{ Counter, metrics } from '@opentelemetry/api'` — the metrics API was unified into `@opentelemetry/api` in newer OpenTelemetry SDK versions (the obsolete `@opentelemetry/api-metrics` package is intentionally NOT used). Email-domain labels are bucketed via `bucketEmailDomain()` / `bucketSignInEmailDomain()` helpers to `'blitzy.com'`, `'other'`, `'guest'`, or `'unknown'` so cardinality is bounded.
+
+Verify emission by triggering a few interactions and grepping `/metrics`:
+
+```bash
+# In one shell: start backend
+yarn start example-backend
+
+# In another shell: trigger a guest sign-in + a few entity reads, then check counters
+curl -X POST http://localhost:7007/api/auth/guest/refresh    # → 200 with token
+curl -H "Authorization: Bearer $TOKEN" http://localhost:7007/api/catalog/entities/by-name/component/default/example-website
+curl -s http://localhost:9464/metrics | grep -E '^(user_login_total|entity_access_total|blitzy_permission_decisions_total)'
+# → all three lines emit with their label sets and current totals
+```
 
 See [`../observability/dashboards.md`](../observability/dashboards.md) for the full metric inventory, the canonical metric names and label sets, and the Grafana dashboard import workflow.
 
 ### 7.4 Grafana dashboard
 
-The repository ships a Grafana dashboard template at `docs/observability/dashboard-template.json`. Import it via Grafana's "Import Dashboard" UI (Dashboards → New → Import → Upload JSON), select your Prometheus datasource, and the dashboard renders panels for catalog query latency p50/p95/p99, HTTP error rate, and Node.js heap usage. Panels that depend on the custom counters listed in §7.3 will not display data until those counters are implemented (see [`next-tasks.md`](next-tasks.md) entry 1). The panel inventory and customization notes are in [`../observability/dashboards.md`](../observability/dashboards.md).
+The repository ships a Grafana dashboard template at `docs/observability/dashboard-template.json`. Import it via Grafana's "Import Dashboard" UI (Dashboards → New → Import → Upload JSON), select your Prometheus datasource, and the dashboard renders panels for the three custom counters (Permission Decisions, User Login Events, Entity Access Events), HTTP latency (via `http_server_duration_bucket`), HTTP error rate (via `http_server_duration_count{http_status_code=~"5.."}`), and Node.js heap usage (via `v8js_memory_heap_used`). All six panels render real data immediately after a few interactions with the running backend; the panel inventory and customization notes are in [`../observability/dashboards.md`](../observability/dashboards.md) §7.
 
 ---
 

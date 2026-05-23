@@ -90,13 +90,25 @@ The Backstage backend exposes Prometheus metrics on `http://127.0.0.1:9464/metri
 
 ### 4.2 Auto-instrumented metrics
 
-Out of the box, `@opentelemetry/auto-instrumentations-node` exposes the following metric families:
+Out of the box, `@opentelemetry/auto-instrumentations-node` v0.67.0 (as installed in this repo via `packages/backend/package.json`) exposes the following metric families against the running backend (verified against `/metrics` at runtime):
 
-- `http_server_request_duration_seconds` — histogram; per-route HTTP request latency.
-- `http_server_requests_total` — counter; per-route HTTP request count.
-- `process_resident_memory_bytes` — gauge; Node.js process resident memory.
-- `process_cpu_seconds_total` — counter; cumulative CPU time consumed by the process.
-- `nodejs_eventloop_lag_seconds` — gauge; current Node.js event loop lag.
+- `http_server_duration_bucket` / `_count` / `_sum` — histogram; per-route inbound HTTP request latency in **milliseconds**. The OTel HTTP instrumentation emits a unit-less histogram named `http_server_duration` (with the `_bucket`/`_count`/`_sum` suffix triad that Prometheus expects); the underlying unit is `ms`, declared via the `# UNIT http_server_duration ms` comment in the exposition output.
+- `http_client_duration_bucket` / `_count` / `_sum` — histogram; per-route outbound HTTP request latency (e.g. backend-initiated catalog refresh, GitHub API calls). Same unit as `http_server_duration`.
+- `http_client_request_duration_bucket` / `_count` / `_sum` — histogram; alternative client-side latency family emitted by the newer semantic-conventions instrumentation. Operators may see both `http_client_duration_*` and `http_client_request_duration_*` depending on which semconv version is active.
+- `v8js_memory_heap_used` — gauge; V8 heap currently in use (bytes). This is the closest analogue to Node.js process RSS exposed by this version of the auto-instrumentation — Prometheus's traditional `process_resident_memory_bytes` gauge is **not** emitted by `@opentelemetry/auto-instrumentations-node` v0.67.0.
+- `v8js_memory_heap_limit` — gauge; V8 max heap size (bytes).
+- `v8js_memory_heap_space_size` / `_available_size` / `_physical_size` — gauges; per-heap-space accounting.
+- `v8js_gc_duration_bucket` / `_count` / `_sum` — histogram; V8 GC pause durations.
+- `nodejs_eventloop_delay_max` / `_mean` / `_min` / `_p50` / `_p90` / `_p99` / `_stddev` — gauges; event-loop delay histogram percentiles (seconds). The legacy `nodejs_eventloop_lag_seconds` single-value gauge is **not** emitted by this auto-instrumentation version; use any of the percentile gauges instead.
+- `nodejs_eventloop_utilization` — gauge; fraction of the last interval the event loop spent active (0.0–1.0).
+- `nodejs_eventloop_time_total` — counter; cumulative event-loop active time in seconds.
+
+In addition to the Node.js runtime and HTTP families above, the Backstage backend emits two domain families out of the box (no extra wiring required):
+
+- `catalog_entities_count`, `catalog_relations_count`, `catalog_registered_locations_count`, `catalog_processed_entities_count_total`, `catalog_processing_duration_*`, `catalog_processing_queue_delay_*`, `catalog_processors_duration_*`, `catalog_stitched_entities_count_total`, `catalog_stitching_duration_*`, `catalog_stitching_queue_delay_*`, `catalog_stitching_queue_length` — emitted by `@backstage/plugin-catalog-backend`.
+- `backend_tasks_task_runs_started`, `backend_tasks_task_runs_completed`, `backend_tasks_task_runs_count_total`, `backend_tasks_task_runs_duration_*` — emitted by `@backstage/backend-defaults`'s scheduler.
+
+These names are stable across this Backstage version line (1.48.x) but are version-coupled to the installed `@opentelemetry/auto-instrumentations-node` major. If you upgrade the OTel auto-instrumentation, re-run the verification checklist in [§8.1](#81-step-by-step-checklist) and update this section accordingly.
 
 ### 4.3 Custom counters (implemented)
 
@@ -112,14 +124,15 @@ The `blitzy_` prefix on the permission counter distinguishes Blitzy-specific bus
 
 ### 4.4 Querying metrics
 
-Three reference PromQL queries:
+Reference PromQL queries for the custom counters and the auto-instrumented HTTP/runtime families documented in §4.2:
 
-- `rate(blitzy_permission_decisions_total{result="DENY"}[5m])` — DENY decisions per second over a 5-minute window.
-- `sum by (email_domain) (rate(user_login_total[5m]))` — sign-ins per second grouped by email domain.
-- `sum by (action) (rate(entity_access_total[5m]))` — entity reads per second grouped by action.
-- `histogram_quantile(0.95, rate(http_server_request_duration_seconds_bucket[5m]))` — p95 HTTP request latency (auto-instrumented by `@opentelemetry/auto-instrumentations-node`).
-- `rate(http_server_requests_total{status_code=~"5.."}[5m])` — server-error rate per second (auto-instrumented).
-- `process_resident_memory_bytes` — Node.js process RSS in bytes (auto-instrumented).
+- `rate(blitzy_permission_decisions_total{result="DENY"}[5m])` — DENY decisions per second over a 5-minute window (custom counter).
+- `sum by (email_domain) (rate(user_login_total[5m]))` — sign-ins per second grouped by email domain (custom counter).
+- `sum by (action) (rate(entity_access_total[5m]))` — entity reads per second grouped by action (custom counter).
+- `histogram_quantile(0.95, sum by (le) (rate(http_server_duration_bucket[5m])))` — p95 inbound HTTP request latency in milliseconds (auto-instrumented; the `http_server_duration` histogram family is documented in §4.2). Operators converting to seconds should divide by 1000 in panel transformations.
+- `sum(rate(http_server_duration_count{http_status_code=~"5.."}[5m])) / sum(rate(http_server_duration_count[5m]))` — server-error rate as a fraction of total inbound requests (auto-instrumented). Because the OTel HTTP instrumentation uses the histogram `_count` series as the per-request counter (rather than a separate `http_server_requests_total` series), the error rate is derived from the histogram count partitioned by status code.
+- `v8js_memory_heap_used` — V8 heap currently in use, in bytes (auto-instrumented; the OTel auto-instrumentation v0.67.0 does **not** emit Prometheus's traditional `process_resident_memory_bytes` gauge — use this instead, or compute `v8js_memory_heap_used / v8js_memory_heap_limit` for a saturation ratio).
+- `nodejs_eventloop_delay_p99` — 99th-percentile event-loop delay in seconds (auto-instrumented; the legacy `nodejs_eventloop_lag_seconds` is not emitted).
 
 ### 4.5 Cardinality discipline
 
@@ -151,7 +164,7 @@ Audit events are emitted through Backstage's `AuditorService` (`coreServices.aud
 The refactor introduces two event types:
 
 - **`user-login`** (severity `medium`) — emitted on every sign-in (successful or failed). Meta fields: `provider` (`github` or `guest`), `username`, `emailDomain`, `userEntityRef`, `correlationId`. Source: `packages/backend/src/authModuleGithubProvider.ts`'s augmented `signInResolver`. The `correlationId` is a synthetic UUID generated inside the resolver because Backstage's `SignInResolver` callback signature does not expose the inbound Express `request` object — see §6.3.
-- **`entity-access`** (severity `low`) — emitted on every user-credentialed entity read. Meta fields: `entityRef`, `principal`, `action` (`read`). Source: `plugins/catalog-backend-module-access-audit/src/module.ts`. Because this code runs as an Express middleware, it passes the inbound `request` object directly to `AuditorService.createEvent({ request, ... })`, so the correlation id is the canonical request-scoped correlation id rather than a synthetic UUID.
+- **`entity-access`** (severity `medium`) — emitted on every user-credentialed entity read. Meta fields: `entityRef`, `principal`, `action` (`read`). Source: `plugins/catalog-backend-module-access-audit/src/module.ts`. Because this code runs as an Express middleware, it passes the inbound `request` object directly to `AuditorService.createEvent({ request, ... })`, so the correlation id is the canonical request-scoped correlation id rather than a synthetic UUID. Severity is `medium` (not the lower `low`) so the event lands at the Winston `info` log level by default — the previous `low` setting mapped to Winston `debug` and was silently filtered by the default log threshold; see `plugins/catalog-backend-module-access-audit/README.md` for the level-mapping rationale.
 
 ### 6.2 Lifecycle and severity
 
@@ -187,9 +200,9 @@ The template ships six panels. All panels render data as soon as the correspondi
 
 - **Audit Events Per Minute** — `rate(user_login_total[1m])` and `rate(entity_access_total[1m])` stacked. Populated by the per-plugin custom counters described in §4.3.
 - **Permission Decisions (ALLOW / DENY)** — `sum by (result, email_domain) (rate(blitzy_permission_decisions_total[5m]))`. Populated by the counter emitted from `BlitzyPermissionPolicy.handle()` described in §4.3.
-- **Catalog Query Latency (p50 / p95 / p99)** — three series with `histogram_quantile(0.5|0.95|0.99, rate(http_server_request_duration_seconds_bucket{route=~".*catalog.*"}[5m]))` (auto-instrumented).
-- **HTTP Error Rate** — `sum(rate(http_server_requests_total{status_code=~"5.."}[5m])) / sum(rate(http_server_requests_total[5m]))` (auto-instrumented).
-- **Node.js Heap Usage** — `process_resident_memory_bytes` (auto-instrumented).
+- **Catalog Query Latency (p50 / p95 / p99)** — three series with `histogram_quantile(0.5|0.95|0.99, sum by (le) (rate(http_server_duration_bucket{http_route=~".*catalog.*"}[5m])))` (auto-instrumented; histogram name is `http_server_duration`, see §4.2). Values are in milliseconds.
+- **HTTP Error Rate** — `sum(rate(http_server_duration_count{http_status_code=~"5.."}[5m])) / sum(rate(http_server_duration_count[5m]))` (auto-instrumented; the OTel HTTP instrumentation uses the histogram `_count` series as the per-request counter, so the error rate is derived from it rather than a separate `http_server_requests_total` series).
+- **Node.js Heap Usage** — `v8js_memory_heap_used` (auto-instrumented; the OTel auto-instrumentation v0.67.0 emits this gauge for V8 heap-in-use bytes rather than Prometheus's traditional `process_resident_memory_bytes`, which is not exposed by this version).
 - **Service Health** — single-stat panel showing `up{job="blitzy-backstage"}` (Prometheus scrape liveness).
 
 ### 7.3 Customizing the template
@@ -204,10 +217,10 @@ The R1 rule states: "If you cannot exercise it locally, it is not delivered." Th
 
 1. **Start the backend**: `yarn start` (frontend + backend together) or `yarn start-backend` (backend only). Wait until the console prints `Listening on :7007`.
 2. **Confirm the metrics endpoint**: `curl -s http://localhost:9464/metrics | head -30` — should print Prometheus text format including `# HELP` and `# TYPE` lines for the auto-instrumented metrics.
-3. **Confirm auto-instrumented metrics are emitting** (these are available at this checkpoint):
-   - `curl -s http://localhost:9464/metrics | grep '^http_server_request_duration_seconds'` — HTTP request latency histogram (emitted by `@opentelemetry/auto-instrumentations-node`).
-   - `curl -s http://localhost:9464/metrics | grep '^process_resident_memory_bytes'` — Node.js process RSS (emitted by the Node runtime instrumentation).
-   - `curl -s http://localhost:9464/metrics | grep '^nodejs_heap_size_used_bytes'` — Node.js V8 heap usage (emitted by the Node runtime instrumentation).
+3. **Confirm auto-instrumented metrics are emitting** (these are available at this checkpoint and exercised by an out-of-the-box install of `@opentelemetry/auto-instrumentations-node` v0.67.0; see §4.2 for the full inventory and the rationale for these specific names):
+   - `curl -s http://localhost:9464/metrics | grep '^http_server_duration'` — inbound HTTP request latency histogram (`_bucket`/`_count`/`_sum` triad in milliseconds).
+   - `curl -s http://localhost:9464/metrics | grep '^v8js_memory_heap_used'` — V8 heap currently in use, in bytes (closest analogue to Node.js process RSS exposed by this auto-instrumentation version; the legacy `process_resident_memory_bytes` and `nodejs_heap_size_used_bytes` names are not emitted).
+   - `curl -s http://localhost:9464/metrics | grep '^nodejs_eventloop_delay_'` — event-loop delay percentile gauges (`_max`/`_mean`/`_min`/`_p50`/`_p90`/`_p99`/`_stddev`). The legacy `nodejs_eventloop_lag_seconds` single-value gauge is not emitted.
 4. **Confirm the canonical health endpoints**:
    - `curl -i http://localhost:7007/.backstage/health/v1/liveness` — should return `200 OK` with body `{"status":"ok"}`.
    - `curl -i http://localhost:7007/.backstage/health/v1/readiness` — should return `200 OK` with body `{"status":"ok"}` once initialization completes (it returns `503 Service Unavailable` during startup).

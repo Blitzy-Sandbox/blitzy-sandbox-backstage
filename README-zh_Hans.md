@@ -67,7 +67,7 @@ Backstage 的文档包括：
 - [`docs/observability/dashboards.md`](docs/observability/dashboards.md) — 可观测性文档与 Grafana 仪表板
 - [`docs/observability/dashboard-template.json`](docs/observability/dashboard-template.json) — 可导入的 Grafana 仪表板 JSON
 
-**关于延期项的说明**：可观测性文档中引用的自定义 Prometheus 计数器（`user_login_total`、`entity_access_total`、`blitzy_permission_decisions_total`）**已计划但尚未由源模块发出**；由 `@opentelemetry/auto-instrumentations-node` 自动检测的 HTTP/运行时指标今天即可使用。单元测试 `plugins/catalog-backend-module-access-audit/src/module.test.ts` **也尚未创建**（功能覆盖由 Playwright `auditing.test.ts` E2E 套件提供）。CI 工作流**尚未**在集成测试之前调用 `docker compose -f docker-compose.localgcp.yml up -d`，尽管 compose 文件已提交到仓库。这些项目在 `docs/refactor/next-tasks.md` 中跟踪。综合状态见 `blitzy/documentation/Project Guide.md` §0 _Verification Status (Implementation Reality)_。
+**可观测性状态**：可观测性文档中引用的自定义 Prometheus 计数器（`user_login_total`、`entity_access_total`、`blitzy_permission_decisions_total`）已通过统一的指标 API `@opentelemetry/api` 由源模块（`packages/backend/src/metrics.ts`、`plugins/catalog-backend-module-access-audit/src/metrics.ts`、`plugins/permission-backend-module-blitzy-policy/src/metrics.ts`）**实现并发出**；由 `@opentelemetry/auto-instrumentations-node` 自动检测的 HTTP/运行时指标与自定义计数器同时可用。单元测试 `plugins/catalog-backend-module-access-audit/src/module.test.ts` 已**创建并包含 25 个通过的测试用例**（与 Playwright `auditing.test.ts` E2E 套件互为补充）。CI 工作流**尚未**在集成测试之前调用 `docker compose -f docker-compose.localgcp.yml up -d`，尽管 compose 文件已提交到仓库——这一剩余事项在 `docs/refactor/next-tasks.md` 第 7 项中跟踪。综合状态见 `blitzy/documentation/Project Guide.md` §0 _Verification Status (Implementation Reality)_。
 
 ## 社区
 

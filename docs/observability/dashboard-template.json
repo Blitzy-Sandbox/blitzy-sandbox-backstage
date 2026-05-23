@@ -251,7 +251,7 @@
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
-      "description": "HTTP request duration quantiles for catalog API routes. Sourced from the auto-instrumented http_server_request_duration_seconds histogram.",
+      "description": "HTTP request duration quantiles for catalog API routes. Sourced from the auto-instrumented http_server_duration histogram (values in milliseconds, emitted by @opentelemetry/auto-instrumentations-node v0.67.0).",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -336,7 +336,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "histogram_quantile(0.50, sum by (le) (rate(http_server_request_duration_seconds_bucket{route=~\".*catalog.*\"}[5m])))",
+          "expr": "histogram_quantile(0.50, sum by (le) (rate(http_server_duration_bucket{http_route=~\".*catalog.*\"}[5m]))) / 1000",
           "interval": "",
           "legendFormat": "p50",
           "refId": "A"
@@ -346,7 +346,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_request_duration_seconds_bucket{route=~\".*catalog.*\"}[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(http_server_duration_bucket{http_route=~\".*catalog.*\"}[5m]))) / 1000",
           "interval": "",
           "legendFormat": "p95",
           "refId": "B"
@@ -356,7 +356,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_request_duration_seconds_bucket{route=~\".*catalog.*\"}[5m])))",
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(http_server_duration_bucket{http_route=~\".*catalog.*\"}[5m]))) / 1000",
           "interval": "",
           "legendFormat": "p99",
           "refId": "C"
@@ -457,7 +457,7 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "sum(rate(http_server_requests_total{status_code=~\"5..\"}[5m])) / sum(rate(http_server_requests_total[5m]))",
+          "expr": "sum(rate(http_server_duration_count{http_status_code=~\"5..\"}[5m])) / sum(rate(http_server_duration_count[5m]))",
           "interval": "",
           "legendFormat": "5xx ratio",
           "refId": "A"
@@ -471,7 +471,7 @@
         "type": "prometheus",
         "uid": "${DS_PROMETHEUS}"
       },
-      "description": "Resident memory consumed by the Backstage backend Node.js process.",
+      "description": "V8 heap currently in use by the Backstage backend Node.js process, in bytes. Emitted by @opentelemetry/auto-instrumentations-node v0.67.0 — this is the closest analogue to traditional Prometheus process_resident_memory_bytes, which is not exposed by this auto-instrumentation version.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -548,10 +548,20 @@
             "type": "prometheus",
             "uid": "${DS_PROMETHEUS}"
           },
-          "expr": "process_resident_memory_bytes",
+          "expr": "v8js_memory_heap_used",
           "interval": "",
-          "legendFormat": "resident memory",
+          "legendFormat": "heap used",
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "${DS_PROMETHEUS}"
+          },
+          "expr": "v8js_memory_heap_limit",
+          "interval": "",
+          "legendFormat": "heap limit",
+          "refId": "B"
         }
       ],
       "title": "Node.js Heap Usage",

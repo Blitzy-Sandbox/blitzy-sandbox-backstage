@@ -69,7 +69,7 @@ Backstage의 문서는 다음을 포함합니다:
 - [`docs/observability/dashboards.md`](docs/observability/dashboards.md) — 가관측성 문서, Grafana 대시보드
 - [`docs/observability/dashboard-template.json`](docs/observability/dashboard-template.json) — 가져올 수 있는 Grafana 대시보드 JSON
 
-**연기된 항목에 대한 주의**: 가관측성 문서에서 참조된 커스텀 Prometheus 카운터(`user_login_total`, `entity_access_total`, `blitzy_permission_decisions_total`)는 **계획되어 있으나 아직 소스 모듈에서 방출되지 않습니다**. `@opentelemetry/auto-instrumentations-node`로 자동 계측된 HTTP/런타임 메트릭은 오늘부터 사용 가능합니다. 단위 테스트 `plugins/catalog-backend-module-access-audit/src/module.test.ts`도 **아직 생성되지 않았습니다**(기능적 커버리지는 Playwright `auditing.test.ts` E2E 스위트에서 제공). CI 워크플로는 통합 테스트 전에 `docker compose -f docker-compose.localgcp.yml up -d`를 **아직 호출하지 않습니다**(compose 파일은 리포지토리에 커밋되어 있음). 이러한 항목은 `docs/refactor/next-tasks.md`에서 추적됩니다. 통합된 상태는 `blitzy/documentation/Project Guide.md` §0 _Verification Status (Implementation Reality)_ 참조.
+**가관측성 상태**: 가관측성 문서에서 참조된 커스텀 Prometheus 카운터(`user_login_total`, `entity_access_total`, `blitzy_permission_decisions_total`)는 통합 메트릭 API `@opentelemetry/api`를 통해 소스 모듈(`packages/backend/src/metrics.ts`, `plugins/catalog-backend-module-access-audit/src/metrics.ts`, `plugins/permission-backend-module-blitzy-policy/src/metrics.ts`)에서 **구현되어 방출되고 있습니다**. `@opentelemetry/auto-instrumentations-node`로 자동 계측된 HTTP/런타임 메트릭은 커스텀 카운터와 함께 사용 가능합니다. 단위 테스트 `plugins/catalog-backend-module-access-audit/src/module.test.ts`는 **25개의 실행 케이스가 통과하도록 생성되었습니다**(Playwright `auditing.test.ts` E2E 스위트의 보완). CI 워크플로는 통합 테스트 전에 `docker compose -f docker-compose.localgcp.yml up -d`를 **아직 호출하지 않습니다**(compose 파일은 리포지토리에 커밋되어 있음) — 이 남은 항목은 `docs/refactor/next-tasks.md` 항목 7에서 추적됩니다. 통합된 상태는 `blitzy/documentation/Project Guide.md` §0 _Verification Status (Implementation Reality)_ 참조.
 
 ## 커뮤니티
 
@@ -78,7 +78,7 @@ Backstage의 문서는 다음을 포함합니다:
 - [Discord chatroom](https://discord.gg/backstage-687207715902193673) - 지원 및 프로젝트 토론
 - [Contributing to Backstage](https://github.com/backstage/backstage/blob/master/CONTRIBUTING.md) - 프로젝트 기여
 - [RFCs](https://github.com/backstage/backstage/labels/rfc) - 기술 방향을 정하는 데 도움을 주세요.
-- [FAQ](https://backstage.io/docs/FAQ) - 자주 묻는 질문들
+- [FAQ](https://backstage.io/docs/faq) - 자주 묻는 질문들
 - [Code of Conduct](CODE_OF_CONDUCT.md) - 커뮤니티 운영 방식
 - [Adopters](ADOPTERS.md) - Backstage를 사용하고 있는 기업
 - [Blog](https://backstage.io/blog/) - 공지사항 및 업데이트

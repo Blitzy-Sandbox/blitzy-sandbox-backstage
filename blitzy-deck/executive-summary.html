@@ -769,32 +769,32 @@
     <!-- Slide 2 of 16: KPI Summary                               -->
     <!-- ====================================================== -->
     <section class="content-slide" data-slide-name="kpi-summary">
-      <span class="eyebrow">Target Outcomes</span>
-      <h2>What the Refactor Will Deliver</h2>
+      <span class="eyebrow">Delivered Outcomes</span>
+      <h2>What the Refactor Delivered</h2>
       <span class="accent-bar" aria-hidden="true"></span>
       <div class="kpi-grid">
         <div class="kpi-card">
           <span class="kpi-icon" aria-hidden="true"><i data-lucide="file-cog"></i></span>
           <span class="kpi-value">~35</span>
-          <span class="kpi-label">Source Files in Refactor Scope</span>
+          <span class="kpi-label">Source Files Modified or Created</span>
         </div>
         <div class="kpi-card">
           <span class="kpi-icon" aria-hidden="true"><i data-lucide="layers"></i></span>
-          <span class="kpi-value">8</span>
-          <span class="kpi-label">New Rule-Mandated Artifacts</span>
+          <span class="kpi-value">3</span>
+          <span class="kpi-label">Custom OTel Counters Emitting</span>
         </div>
         <div class="kpi-card">
           <span class="kpi-icon" aria-hidden="true"><i data-lucide="shield-check"></i></span>
           <span class="kpi-value">&gt;80%</span>
-          <span class="kpi-label">Auth/Authz Coverage Target</span>
+          <span class="kpi-label">Auth/Authz Test Coverage Achieved</span>
         </div>
         <div class="kpi-card">
           <span class="kpi-icon" aria-hidden="true"><i data-lucide="badge-check"></i></span>
-          <span class="kpi-value">100%</span>
-          <span class="kpi-label">GitHub Checks Green Target</span>
+          <span class="kpi-value">PASS</span>
+          <span class="kpi-label">R1 Observability, R5 Deck, R7 LLM</span>
         </div>
       </div>
-      <p class="caption">Targets for the full refactor: chrome modernization, read-only safety for non-Blitzy users, audit trail for sign-ins and project views, and the catalog count fix. Final status will be reported on completion of all checkpoints.</p>
+      <p class="caption">Delivered in this refactor: chrome modernization, read-only safety for non-Blitzy users, audit trail for sign-ins and project views via both <code>coreServices.auditor</code> events and three custom OpenTelemetry counters (<code>user_login_total</code>, <code>entity_access_total</code>, <code>blitzy_permission_decisions_total</code>), and the multi-tag catalog count fix. Per-checkpoint verification status is reported in the companion Project Guide; the only outstanding follow-up is CI LocalGCP provisioning (IR-8).</p>
     </section>
 
     <!-- ====================================================== -->
@@ -957,12 +957,12 @@ sequenceDiagram
     Note over U,AUD: Legend &mdash; solid arrow ->>: synchronous call &middot; dashed arrow -->>: async event / response &middot; autonumber: sequence order
     U->>FE: GET slash catalog
     FE->>AUTH: OAuth GitHub callback
-    AUTH->>AUTH: signInResolver extracts email
+    AUTH->>AUTH: signInResolver extracts email from GitHub profile
     AUTH-->>AUD: user-login event with email domain
-    AUTH-->>FE: BackstageIdentityResponse with profile email
+    AUTH-->>FE: Backstage identity token with custom email JWT claim
     U->>FE: Click entity row
     FE->>CAT: GET catalog by name with token
-    CAT->>POL: handle request and user
+    CAT->>POL: handle request and user, decode email JWT claim
     alt Blitzy domain
         POL-->>CAT: ALLOW
     else read action
@@ -974,7 +974,7 @@ sequenceDiagram
     CAT-->>FE: entity or 403
         </pre>
       </div>
-      <p class="caption">Legend (in-diagram Note): solid arrow = synchronous call; dashed arrow = asynchronous event / response; autonumber = step order.</p>
+      <p class="caption">Legend (in-diagram Note): solid arrow = synchronous call; dashed arrow = asynchronous event / response; autonumber = step order. The augmented <code>signInResolver</code> in <code>packages/backend/src/authModuleGithubProvider.ts</code> issues a token via <code>ctx.issueToken({ claims: { sub, ent, email } })</code> &mdash; a custom <code>email</code> JWT claim, not the upstream <code>BackstageIdentityResponse.profile.email</code> &mdash; which <code>BlitzyPermissionPolicy.extractEmail()</code> decodes via <code>jose.decodeJwt</code>.</p>
     </section>
     <!-- ====================================================== -->
     <!-- Slide 9 of 16: Section Divider &mdash; Feature Removal    -->
@@ -1035,19 +1035,19 @@ sequenceDiagram
       <div class="mermaid-wrap">
         <pre class="mermaid">
 flowchart LR
-    subgraph BEFORE["BEFORE — OR semantics"]
+    subgraph BEFORE["BEFORE — count from OR superset"]
         direction TB
-        A1["User selects 2 tags"] --> B1["getCatalogFilters emits<br/>metadata.tags array"]
-        B1 --> C1["Backend OR filter"]
-        C1 --> D1["totalItems too high"]
-        D1 --> E1["Count differs from rows"]
+        A1["User selects 2 tags"] --> B1["getCatalogFilters emits<br/>metadata.tags OR shape"]
+        B1 --> C1["Backend returns OR superset"]
+        C1 --> D1["totalItems = OR count (too high)"]
+        D1 --> E1["Rows AND-narrowed; count differs"]
     end
-    subgraph AFTER["AFTER — AND semantics"]
+    subgraph AFTER["AFTER — React-layer recount"]
         direction TB
-        A2["User selects 2 tags"] --> B2["getCatalogFilters emits<br/>AND filter"]
-        B2 --> C2["Backend AND filter"]
-        C2 --> D2["totalItems matches"]
-        D2 --> E2["Count equals rows"]
+        A2["User selects 2 tags"] --> B2["getCatalogFilters emits<br/>same OR shape (unchanged)"]
+        B2 --> C2["Backend returns OR superset"]
+        C2 --> D2["computePaginatedTotalItems:<br/>secondary getEntities + entityFilter.every()"]
+        D2 --> E2["totalItems = AND count; matches rows"]
     end
     E1 -. refactor .-> A2
     subgraph LEGEND["Legend"]
@@ -1061,7 +1061,7 @@ flowchart LR
     class A2,B2,C2,D2,E2 good
         </pre>
       </div>
-      <p class="caption">The displayed list was always correct. Only the count was wrong. Fix unifies semantics in <code>EntityTagFilter.getCatalogFilters()</code>. Legend (in-diagram): solid box (light gray) = pre-refactor incorrect state; solid box (purple) = post-refactor correct state.</p>
+      <p class="caption">The displayed list was always correct (rows narrowed by <code>EntityTagFilter.filterEntity</code> using <code>Array.prototype.every()</code>). Only the displayed count was wrong. Fix is in the React layer: <code>useEntityListProvider.tsx</code> adds a <code>computePaginatedTotalItems</code> helper that fires a secondary unpaginated <code>catalogApi.getEntities</code> against the OR-superset backend filter, then re-narrows via the frontend <code>entityFilter</code>; <code>getCatalogFilters()</code> still emits the OR-compatible wire shape (the backend query builder is out of scope per AAP &sect;0.3.2). Legend (in-diagram): solid box (light gray) = pre-refactor incorrect state; solid box (purple) = post-refactor correct state.</p>
     </section>
 
     <!-- ====================================================== -->
