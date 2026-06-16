@@ -22,6 +22,7 @@ metadata:
   tags:
   - javascript
   - typescript
+  - devex
 spec:
   type: library
   owner: blitzy-sandbox
