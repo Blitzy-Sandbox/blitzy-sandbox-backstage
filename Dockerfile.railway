@@ -48,17 +48,20 @@ RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 RUN pip3 install mkdocs-techdocs-core==1.1.7 mkdocs-mermaid2-plugin
 
-RUN mkdir -p /data && chown node:node /data
+# /data is where SQLite lives (configured in app-config.railway.yaml). Railway
+# mounts a fresh persistent volume on top of /data at runtime, owned by root —
+# so the previous `USER node` setup couldn't write to it. Run as root (same as
+# Dockerfile.dev and Dockerfile.localgcp in this repo) to avoid the volume
+# permission mismatch.
+RUN mkdir -p /data
 
 WORKDIR /app
-RUN chown node:node /app
-USER node
 
 ENV NODE_ENV=production
 
-COPY --chown=node:node .yarn ./.yarn
-COPY --chown=node:node .yarnrc.yml ./
-COPY --from=build --chown=node:node /app/packages/backend/dist/skeleton.tar.gz /app/yarn.lock /app/package.json ./
+COPY .yarn ./.yarn
+COPY .yarnrc.yml ./
+COPY --from=build /app/packages/backend/dist/skeleton.tar.gz /app/yarn.lock /app/package.json ./
 RUN tar xzf skeleton.tar.gz && rm skeleton.tar.gz
 
 RUN YARN_ENABLE_GLOBAL_CACHE=false yarn workspaces focus --all --production
@@ -71,10 +74,10 @@ RUN mkdir -p /tmp/sqlite3 && cd /tmp/sqlite3 && npm init -y && npm install bette
     { cp -r node_modules/node-addon-api /app/node_modules/ 2>/dev/null || true; } && \
     rm -rf /tmp/sqlite3
 
-COPY --from=build --chown=node:node /app/packages/backend/dist/bundle.tar.gz ./
-COPY --chown=node:node app-config.yaml app-config.railway.yaml ./
-COPY --chown=node:node catalog-blitzy-sandbox.yaml ./
-COPY --chown=node:node packages/app/app-config.yaml ./packages/app/app-config.yaml
+COPY --from=build /app/packages/backend/dist/bundle.tar.gz ./
+COPY app-config.yaml app-config.railway.yaml ./
+COPY catalog-blitzy-sandbox.yaml ./
+COPY packages/app/app-config.yaml ./packages/app/app-config.yaml
 RUN tar xzf bundle.tar.gz && rm bundle.tar.gz
 
 WORKDIR /app/packages/backend
