@@ -1,26 +1,50 @@
-# Exclude everything by default
-**
+# Railway builds Dockerfile.railway from a full source checkout.
+# Exclude only what isn't needed by the build (heavy dirs, caches, build outputs).
 
-# Yarn
-!.yarn/
-!.yarn/releases/
-!.yarn/releases/**
-!.yarnrc.yml
-!yarn.lock
-!package.json
+# VCS / CI / editor
+.git
+.github
+.husky
+.devcontainer
+.vscode
+.idea
+.cursor
+.claude
 
-# Pre-built backend artifacts
-!packages/
-!packages/backend/
-!packages/backend/dist/
-!packages/backend/dist/skeleton.tar.gz
-!packages/backend/dist/bundle.tar.gz
+# Docs and non-runtime sites
+microsite
+docs
+docs-ui
+beps
+contrib
+blitzy
+proposals
+.storybook
+.changeset
 
-# Frontend app config (loaded at runtime by the backend)
-!packages/app/
-!packages/app/app-config.yaml
+# Yarn working state (keep releases/ and patches/, drop caches)
+.yarn/cache
+.yarn/unplugged
+.yarn/install-state.gz
+.yarn/build-state.yml
+.yarn/sdks
 
-# App configs and catalog
-!app-config.yaml
-!app-config.railway.yaml
-!catalog-blitzy-sandbox.yaml
+# Node deps and build outputs
+node_modules
+**/node_modules
+packages/*/dist
+packages/*/dist-types
+packages/*/coverage
+plugins/*/dist
+plugins/*/dist-types
+plugins/*/coverage
+coverage
+.nyc_output
+*.tsbuildinfo
+
+# Local env and OS cruft
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
