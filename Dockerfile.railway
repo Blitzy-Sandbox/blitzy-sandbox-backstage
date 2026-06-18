@@ -18,6 +18,12 @@ COPY yarn.lock package.json tsconfig.json ./
 COPY packages/ ./packages/
 COPY plugins/ ./plugins/
 
+# Root app-config files. The frontend bundle (built as part of
+# `yarn workspace example-backend build`) templates index.html with
+# values from app-config (e.g. app.title), so they must be present at
+# build time, not just at runtime.
+COPY app-config.yaml app-config.production.yaml ./
+
 # Install all dependencies (including devDependencies for build)
 RUN YARN_ENABLE_GLOBAL_CACHE=false yarn install --immutable
 
