@@ -62,7 +62,7 @@ export function CatalogTableToolbar(props: {
   title?: string | ReactElement<any>;
 }) {
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 pt-2.5 pl-3 sm:pl-5 pb-1.5 pr-3 sm:pr-4 flex-wrap">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 pt-2.5 pl-5 pb-1.5 pr-4 flex-wrap">
       {/*
        * CP9 QA fix — Issue #11 (MAJOR, WCAG 1.3.1 Info & Relationships):
        *
@@ -77,8 +77,8 @@ export function CatalogTableToolbar(props: {
       <h2 className="truncate text-lg font-medium shrink-0 max-w-full">
         {props.title}
       </h2>
-      <div className="flex w-full sm:w-auto sm:flex-1 items-center gap-2 sm:justify-end min-w-0 flex-wrap">
-        <div className="w-full sm:flex-1 sm:max-w-xs sm:min-w-[180px]">
+      <div className="flex w-full sm:w-auto items-center gap-2 justify-end min-w-0 flex-wrap ml-auto">
+        <div className="w-full max-w-xs shrink-0">
           <EntitySearchBar />
         </div>
         <EntityTypePicker inline />

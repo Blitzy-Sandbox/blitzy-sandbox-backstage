@@ -193,10 +193,10 @@ const TopBarSupport = () => (
  * below it without requiring `padding-top` on every page or any
  * SidebarPage-style left gutter.
  *
- * Right-cluster ordering (left-to-right): Logo, Avatar, Settings, Support.
- * All cluster children remain on the right via `justify-end`, satisfying
- * the AAP requirement to "Relocate the Blitzy logo to the top right
- * corner".
+ * Layout: Logo is anchored to the top-left; the interactive cluster
+ * (Avatar, Settings, Support) is anchored to the top-right. The header
+ * uses `justify-between` so the two groups sit at opposite edges of the
+ * bar.
  *
  * Per AAP §0.5.4 the strict ordering is Logo → Settings → Support; the
  * SignInAvatar is retained as informational user-context for Guest UX
@@ -253,7 +253,7 @@ const SkipNavLink = () => (
 
 const TopBar = () => (
   <header
-    className="relative flex w-full items-center justify-end gap-3 px-4 py-2 bg-primary text-primary-foreground shadow-sm z-[1100]"
+    className="relative flex w-full items-center justify-between gap-3 px-4 py-2 bg-primary text-primary-foreground shadow-sm z-[1100]"
     style={
       {
         minHeight: 56,
