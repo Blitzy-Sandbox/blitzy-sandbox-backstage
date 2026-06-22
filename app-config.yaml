@@ -21,8 +21,33 @@ app:
         links:
           - url: https://github.com/Blitzy-Sandbox/blitzy-sandbox-backstage/issues
             title: GitHub Issues
+      - title: Email
+        icon: email
+        links:
+          - url: 'mailto:support@blitzy.com'
+            title: 'support@blitzy.com'
 
   packageName: example-app
+
+  # Frontend extensions config — declarative override of extension props.
+  # See https://backstage.io/docs/frontend-system/architecture/configuring-extensions
+  #
+  # CP8 QA finding F6: restore Language selector in Settings → Appearance card.
+  # The `UserSettingsLanguageToggle` upstream component renders `null` when
+  # only one language is registered (see
+  # plugins/user-settings/src/components/General/UserSettingsLanguageToggle.tsx
+  # L43–L45: "if (languages.length <= 1) return null;").
+  #
+  # The repository ships four README locale variants per AAP §0.6.1.7
+  # (English, French, Korean, Simplified Chinese), so we register the
+  # matching locale codes here. This causes the Language selector to
+  # render alongside the Theme selector, restoring the CP7-fix-03
+  # baseline behavior.
+  extensions:
+    - api:app/app-language:
+        config:
+          availableLanguages: ['en', 'fr', 'ko', 'zh-Hans']
+          defaultLanguage: 'en'
 
 backend:
   # Used for enabling authentication, secret is shared by all backend plugins
@@ -43,6 +68,15 @@ backend:
     # is require for the backend-next to work in this repo
     dangerouslyDisableDefaultAuthPolicy: true
 
+  # HTTP error response shape control.
+  # The root HTTP router serializes errors into a JSON envelope. By default
+  # the envelope omits the `stack` field so internal filesystem paths and
+  # code structure are never disclosed to clients. To opt back in for local
+  # plugin debugging, set the flag below to `true`. Errors are always logged
+  # server-side with full stack traces regardless of this setting.
+  # error:
+  #   includeStack: true
+
   baseUrl: http://localhost:7007
   listen:
     port: 7007
@@ -59,9 +93,36 @@ backend:
     credentials: true
   csp:
     connect-src: ["'self'", 'http:', 'https:']
-    script-src: ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://unpkg.com']
+    script-src:
+      ["'self'", "'unsafe-inline'", "'unsafe-eval'", 'https://unpkg.com']
     # Content-Security-Policy directives follow the Helmet format: https://helmetjs.github.io/#reference
     # Default Helmet Content-Security-Policy values can be removed by setting the key to false
+    #
+    # Disable the `upgrade-insecure-requests` directive that Helmet emits by
+    # default. Rationale:
+    #   - Backstage's frontend SPA loads its JS/CSS chunks from the same
+    #     origin as the backend. In production deployments the canonical URL
+    #     uses HTTPS (terminated at the reverse proxy / Fly.io / Cloudflare)
+    #     so the directive is a no-op there.
+    #   - In local development and local E2E testing the backend serves
+    #     plain HTTP. WebKit honors the directive strictly even on
+    #     `http://localhost`, which causes every subresource fetch from the
+    #     SPA shell to be upgraded to `https://localhost:7007/...` and
+    #     fail with a TLS handshake error (the backend does not serve TLS).
+    #     Chromium and Firefox have built-in `localhost` exemptions; WebKit
+    #     does not.
+    #   - HSTS at the application layer (also stripped over HTTP by the
+    #     custom `rootHttpRouterServiceFactory` in
+    #     `packages/backend/src/index.ts`) is a separate, complementary
+    #     mechanism. Removing this CSP directive together with the HSTS
+    #     header lets WebKit-based E2E tests run against the local backend.
+    #   - For HTTPS production deployments, TLS is enforced by the
+    #     transport layer (reverse proxy + HSTS preload + Fly.io routing),
+    #     so this directive provides no additional security value.
+    # See `docs/refactor/decision-log.md` for the full rationale and
+    # `playwright.config.ts` `use.bypassCSP` + `packages/backend/src/index.ts`
+    # `rootHttpRouterServiceFactory` for the companion changes.
+    upgrade-insecure-requests: false
   reading:
     allow:
       - host: example.com
@@ -223,6 +284,18 @@ catalog:
       rules:
         - allow: [Component, Group, System]
 
+    # E2E test fixture catalog. Loaded by the example backend so the
+    # Playwright suite always has deterministic entities to assert
+    # against. The fixture file is committed under
+    # `packages/app/e2e-tests/fixtures/` to keep the test data
+    # co-located with the tests that consume it. The entities are
+    # namespaced under `blitzy-e2e-` to make them easy to identify and
+    # exclude from non-test queries if needed.
+    - type: file
+      target: ../app/e2e-tests/fixtures/e2e-seed-catalog.yaml
+      rules:
+        - allow: [Component]
+
 scaffolder:
   auditor:
     taskParameterMaxLength: 256
@@ -239,17 +312,16 @@ scaffolder:
       environment: ${NODE_ENV}
 
 auth:
-  experimentalDynamicClientRegistration:
-    enabled: true
-    allowedRedirectUriPatterns:
-      - cursor://*
-      - http://localhost:*
-      - http://127.0.0.1:*
-  experimentalClientIdMetadataDocuments:
-    enabled: true
-    allowedRedirectUriPatterns:
-      - http://127.0.0.1:*
-      - http://localhost:*
+  # The OIDC server's `experimentalDynamicClientRegistration` (DCR) and
+  # `experimentalClientIdMetadataDocuments` (CIMD) features are intentionally
+  # NOT enabled in this deployment. Both are unused by the active plugin set
+  # (no `mcp-actions-backend` is registered in `packages/backend/src/index.ts`)
+  # and enabling them on auth-backend 0.27.0 exposes the deployment to
+  # CVE-2026-32235 and CVE-2026-32236. The standard OIDC endpoints
+  # (`/.well-known/openid-configuration`, `/v1/token`, `/v1/userinfo`,
+  # `/.well-known/jwks.json`) continue to function without these flags.
+  # See `docs/refactor/decision-log.md` Section 2 (entry 14) for rationale,
+  # alternatives, and the re-enablement preconditions.
 
   ### Add auth.keyStore.provider to more granularly control how to store JWK data when running
   # the auth-backend.
@@ -336,6 +408,21 @@ auth:
         clientSecret: ${AUTH_ATLASSIAN_CLIENT_SECRET}
         scope: ${AUTH_ATLASSIAN_SCOPES}
     myproxy: {}
+    # E2E TEST-ONLY proxy auth provider. Registered as a backend module
+    # at `packages/backend/src/authModuleBlitzyE2E.ts` ONLY when
+    # `BLITZY_E2E_TEST_MODE=true` is set on the backend process. The
+    # auth-backend requires a corresponding `auth.providers.<id>` config
+    # entry (even if empty) to mount the OAuth routes for the provider —
+    # without this entry the `POST /api/auth/blitzy-e2e/refresh` endpoint
+    # returns 404 "No auth provider registered" even though the module is
+    # registered (QA CP6 Finding F-001). The empty object form matches
+    # the `myproxy: {}` precedent above. The provider's authenticator
+    # additionally gates itself on `BLITZY_E2E_TEST_MODE === 'true'`
+    # (see `blitzyE2EAuthenticator.initialize`/`authenticate` in
+    # `authModuleBlitzyE2E.ts`) so any production deployment that
+    # somehow carried this config block would still reject every
+    # request with `NotAllowedError` — defense in depth.
+    blitzy-e2e: {}
     guest:
       dangerouslyAllowOutsideDevelopment: true
 

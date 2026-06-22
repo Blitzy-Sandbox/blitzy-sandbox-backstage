@@ -162,7 +162,16 @@ export function CatalogAutocomplete<
     open: controlledOpen,
     onOpen,
     onClose,
-    size = 'small',
+    // `size` is preserved as a public prop on the component's TypeScript
+    // surface for compatibility with callers that pre-date the
+    // shadcn-style refactor (the MUI v4 Autocomplete accepted
+    // `'small' | 'medium'`). The Radix-style trigger renders with a
+    // fixed `h-9` height regardless, so the prop is intentionally
+    // unused inside the component body — a future iteration may bind it
+    // to a Tailwind size variant. Underscore-prefixed alias keeps the
+    // value reachable without triggering the TS6133 unused-binding
+    // error.
+    size: _size = 'small',
     className,
     id,
     ListboxProps: listboxProps,
@@ -543,21 +552,15 @@ export function CatalogAutocomplete<
   /* Default input renderer                                                 */
   /* --------------------------------------------------------------------- */
   /* --------------------------------------------------------------------- */
-  /* Tag removal handler (multi-select chip delete)                         */
+  /* Multi-select chip removal handler:                                    */
+  /*                                                                       */
+  /* The collapsed multi-select trigger currently renders a                */
+  /* "${selectedCount} selected" summary instead of per-chip remove        */
+  /* buttons, so a per-tag removal handler is not wired up at this layer.  */
+  /* If chip-style rendering is reintroduced, restore a useCallback that   */
+  /* filters `value` and calls `onChange` with the narrowed list — see the */
+  /* git history for the previous implementation.                          */
   /* --------------------------------------------------------------------- */
-  const handleTagRemove = useCallback(
-    (e: React.SyntheticEvent, tagValue: T) => {
-      e.stopPropagation();
-      const currentValues = ((value as T[] | null) ?? []) as T[];
-      const newValues = currentValues.filter(v =>
-        getOptionSelected ? !getOptionSelected(tagValue, v) : v !== tagValue,
-      );
-      setInternalValue(newValues);
-      onChange?.(e, newValues as Multiple extends true ? T[] : T | null);
-      inputRef.current?.focus();
-    },
-    [value, getOptionSelected, onChange],
-  );
 
   /* --------------------------------------------------------------------- */
   /* Default input renderer                                                 */
@@ -565,14 +568,90 @@ export function CatalogAutocomplete<
   const selectedCount =
     multiple && Array.isArray(value) ? (value as T[]).length : 0;
 
+  /**
+   * CP9 QA fix — Issue #13 (CRITICAL, WCAG 2.1.1 Level A):
+   *
+   * Keyboard accessibility handler for the collapsed trigger element. When
+   * the picker is closed the user-visible element is a non-input `<div>`
+   * with `role="combobox"`, so Backstage must replicate the keyboard
+   * activation semantics that the upstream MUI Autocomplete provided
+   * before the radix-ui migration. The handler:
+   *
+   * - Enter / Space  — toggles the listbox open and focuses the inner
+   *                    search input so subsequent keystrokes go to that
+   *                    input. (Once open, `handleKeyDown` on the input
+   *                    takes over for navigation, selection, and
+   *                    Escape.)
+   * - ArrowDown      — same open-and-focus behavior so users can begin
+   *                    navigating immediately.
+   * - Escape         — when somehow open while the trigger is focused,
+   *                    closes the listbox.
+   *
+   * All other keys propagate (no `preventDefault`) so that page-wide
+   * keyboard shortcuts still work and Tab continues to traverse focus.
+   * The trigger is unconditionally `tabIndex={0}` when not disabled so
+   * it appears in the document's natural tab order; previously the
+   * `<div>` was not focusable at all, which meant keyboard-only and
+   * screen reader users could not open the picker.
+   */
+  const handleTriggerKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (disabled) return;
+      switch (e.key) {
+        case 'Enter':
+        case ' ':
+        case 'ArrowDown':
+          e.preventDefault();
+          if (!open) {
+            handleOpen(e);
+            // Defer focusing the input until after the open state flush
+            // so the input element has been rendered.
+            setTimeout(() => inputRef.current?.focus(), 0);
+          }
+          break;
+        case 'Escape':
+          if (open) {
+            e.preventDefault();
+            handleClose(e, 'escape');
+          }
+          break;
+        default:
+          break;
+      }
+    },
+    [disabled, open, handleOpen, handleClose],
+  );
+
+  // Derive an accessible name for the trigger. Prefer the explicit
+  // `label` prop, fall back to the textFieldProps placeholder, and as a
+  // last resort use the `name` prop. The aria-label is required by
+  // WCAG 4.1.2 since the trigger has no visible textual label of its
+  // own when collapsed (the rendered placeholder or count chip is
+  // styled with `text-muted-foreground` and is not always recognized
+  // as the accessible name by screen readers).
+  const triggerAccessibleName =
+    typeof label === 'string'
+      ? label
+      : (mergedTextFieldProps.placeholder as string | undefined) ||
+        (typeof name === 'string' ? name : undefined) ||
+        'Filter';
+
   const renderDefaultInput = () => (
     <div className="relative">
-      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div
+        role="combobox"
+        tabIndex={disabled ? -1 : 0}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        aria-controls={open ? listboxId : undefined}
+        aria-disabled={disabled || undefined}
+        aria-label={triggerAccessibleName}
+        data-testid={name ? `${name}-trigger` : undefined}
         className={cn(
           'flex h-9 w-full items-center justify-between whitespace-nowrap rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm ring-offset-background',
           'transition-all duration-150',
           'hover:border-primary/40 hover:shadow',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:border-primary',
           'focus-within:outline-none focus-within:ring-2 focus-within:ring-ring/30 focus-within:border-primary',
           disabled && 'cursor-not-allowed opacity-50',
           mergedTextFieldProps.className,
@@ -587,6 +666,7 @@ export function CatalogAutocomplete<
             }
           }
         }}
+        onKeyDown={handleTriggerKeyDown}
       >
         {/* Collapsed: show count or placeholder, matching SelectTrigger */}
         {(() => {

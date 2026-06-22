@@ -64,9 +64,27 @@ export const EntitySearchBar = () => {
   return (
     <div className={cn('flex items-center px-0 py-0')}>
       <div className="relative w-full">
+        {/*
+         * CP9 QA fix — Issue #19 (LOW, a11y best practice + Chrome
+         * DevTools form-field check):
+         *
+         * The catalog search `<input>` previously relied on
+         * `aria-label="search"` for its accessible name. That alone is
+         * WCAG-acceptable (SC 4.1.2), but Chrome DevTools' Issues panel
+         * still flags the form field as lacking an associated
+         * `<label for="...">` element. Adding a visually-hidden
+         * `<label htmlFor>` paired with `id="input-with-icon-adornment"`
+         * satisfies both requirements: screen readers continue to
+         * announce the field correctly, and tooling no longer reports a
+         * label-association defect. The label text is sourced from the
+         * existing translation namespace so it remains localized.
+         */}
+        <label htmlFor="input-with-icon-adornment" className="sr-only">
+          {t('entitySearchBar.placeholder')}
+        </label>
         <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
         <input
-          aria-label="search"
+          aria-label={t('entitySearchBar.placeholder')}
           id="input-with-icon-adornment"
           className={cn(
             'flex h-9 w-full rounded-lg border border-input bg-background py-2 text-sm shadow-sm transition-colors',

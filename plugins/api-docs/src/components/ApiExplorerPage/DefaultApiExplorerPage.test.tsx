@@ -125,8 +125,6 @@ describe('DefaultApiExplorerPage', () => {
     await waitFor(() =>
       expect(columnHeaderLabels).toEqual([
         'Name',
-        'System',
-        'Owner',
         'Type',
         'Lifecycle',
         'Description',
@@ -160,11 +158,13 @@ describe('DefaultApiExplorerPage', () => {
       expect(screen.getByText(/All apis \(1\)/)).toBeInTheDocument();
     });
 
+    // Per the Blitzy Sandbox chrome refactor, CatalogTable no longer renders
+    // the View action or the FavoriteEntity (star) action. Only Edit remains.
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /view/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument();
     });
-    expect(screen.getByRole('button', { name: /edit/i })).toBeInTheDocument();
-    expect(screen.getByTitle(/Add to favorites/)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /view/i })).toBeNull();
+    expect(screen.queryByTitle(/Add to favorites/)).toBeNull();
   });
 
   it('should render the custom actions of an item passed as prop', async () => {

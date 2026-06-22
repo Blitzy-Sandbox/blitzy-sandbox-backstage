@@ -47,8 +47,6 @@ import { apiDocsTranslationRef } from '../../translation';
 const defaultColumns: TableColumn<CatalogTableRow>[] = [
   CatalogTable.columns.createTitleColumn({ hidden: true }),
   CatalogTable.columns.createNameColumn({ defaultKind: 'API' }),
-  CatalogTable.columns.createSystemColumn(),
-  CatalogTable.columns.createOwnerColumn(),
   CatalogTable.columns.createSpecTypeColumn(),
   CatalogTable.columns.createSpecLifecycleColumn(),
   CatalogTable.columns.createMetadataDescriptionColumn(),

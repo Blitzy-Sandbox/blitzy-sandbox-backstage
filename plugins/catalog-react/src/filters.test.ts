@@ -22,6 +22,7 @@ import {
   EntityHasProjectHistoryFilter,
   EntityOrphanFilter,
   EntityOwnerFilter,
+  EntityTagFilter,
   EntityTextFilter,
 } from './filters';
 
@@ -282,5 +283,115 @@ describe('EntityOwnerFilter', () => {
       } as Entity),
     ).toBeTruthy();
     expect(filter.values).toStrictEqual(['user:default/my-user']);
+  });
+});
+
+describe('EntityTagFilter', () => {
+  it('emits a wire-format-compatible catalog filter when multiple tags are selected', () => {
+    // The catalog backend currently evaluates `{ 'metadata.tags': [...] }` as OR
+    // across the listed values. AND-semantics across all selected tags is enforced
+    // by `filterEntity` (every()) on the frontend, and the displayed count is
+    // narrowed defensively in useEntityListProvider via
+    // Math.min(response.totalItems, filteredEntities.length).
+    const filter = new EntityTagFilter(['java', 'spring']);
+    expect(filter.getCatalogFilters()).toEqual({
+      'metadata.tags': ['java', 'spring'],
+    });
+  });
+
+  it('emits a wire-format-compatible catalog filter when a single tag is selected', () => {
+    const filter = new EntityTagFilter(['java']);
+    expect(filter.getCatalogFilters()).toEqual({
+      'metadata.tags': ['java'],
+    });
+  });
+
+  it('emits a wire-format-compatible catalog filter when no tags are selected', () => {
+    const filter = new EntityTagFilter([]);
+    expect(filter.getCatalogFilters()).toEqual({ 'metadata.tags': [] });
+  });
+
+  it('applies AND semantics in filterEntity when multiple tags are selected', () => {
+    // This assertion is the source-of-truth for AND across selected tags.
+    // The user-observed behavior `the actual catalog items displayed are correct`
+    // (AAP §0.1.3) is anchored on this `every()` semantics.
+    const filter = new EntityTagFilter(['java', 'spring']);
+    expect(
+      filter.filterEntity({
+        apiVersion: '1',
+        kind: 'Component',
+        metadata: { name: 'matches-both', tags: ['java', 'spring'] },
+      } as Entity),
+    ).toBe(true);
+    expect(
+      filter.filterEntity({
+        apiVersion: '1',
+        kind: 'Component',
+        metadata: { name: 'matches-java-only', tags: ['java'] },
+      } as Entity),
+    ).toBe(false);
+    expect(
+      filter.filterEntity({
+        apiVersion: '1',
+        kind: 'Component',
+        metadata: { name: 'matches-spring-only', tags: ['spring'] },
+      } as Entity),
+    ).toBe(false);
+    expect(
+      filter.filterEntity({
+        apiVersion: '1',
+        kind: 'Component',
+        metadata: { name: 'matches-neither', tags: ['scala'] },
+      } as Entity),
+    ).toBe(false);
+    expect(
+      filter.filterEntity({
+        apiVersion: '1',
+        kind: 'Component',
+        metadata: { name: 'no-tags' },
+      } as Entity),
+    ).toBe(false);
+  });
+
+  it('applies AND semantics in filterEntity for a superset of selected tags', () => {
+    const filter = new EntityTagFilter(['java', 'spring']);
+    expect(
+      filter.filterEntity({
+        apiVersion: '1',
+        kind: 'Component',
+        metadata: {
+          name: 'matches-and-more',
+          tags: ['java', 'spring', 'extra-tag'],
+        },
+      } as Entity),
+    ).toBe(true);
+  });
+
+  it('returns true from filterEntity when no tags are selected (vacuously true)', () => {
+    const filter = new EntityTagFilter([]);
+    expect(
+      filter.filterEntity({
+        apiVersion: '1',
+        kind: 'Component',
+        metadata: { name: 'any-entity', tags: ['anything'] },
+      } as Entity),
+    ).toBe(true);
+    expect(
+      filter.filterEntity({
+        apiVersion: '1',
+        kind: 'Component',
+        metadata: { name: 'any-entity-no-tags' },
+      } as Entity),
+    ).toBe(true);
+  });
+
+  it('preserves toQueryValue() shape for URL query parameter serialization', () => {
+    const filter = new EntityTagFilter(['java', 'spring']);
+    expect(filter.toQueryValue()).toEqual(['java', 'spring']);
+  });
+
+  it('preserves the constructor values via the readonly `values` property', () => {
+    const filter = new EntityTagFilter(['java', 'spring']);
+    expect(filter.values).toEqual(['java', 'spring']);
   });
 });

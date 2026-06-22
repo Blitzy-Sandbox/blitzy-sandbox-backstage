@@ -1,0 +1,170 @@
+# =============================================================================
+# Dockerfile for LocalGCP Emulator Container
+# =============================================================================
+#
+# Builds a LocalGCP emulator container from the publicly available GitHub
+# release tarball (https://github.com/slokam-ai/localgcp/releases). This file
+# replaces the previous attempt to pull `ghcr.io/slokam-ai/localgcp:v0.6.0`
+# from GitHub Container Registry: the upstream LocalGCP release does NOT
+# publish a container image — it ships only platform-specific tarballs — so
+# the `ghcr.io/slokam-ai/localgcp` reference resolved to `unauthorized` for
+# every anonymous client. This Dockerfile constructs an equivalent container
+# directly from the tarball, restoring the R6 LocalGCP Verification posture
+# (every GCP service interaction MUST be verifiable against LocalGCP with
+# zero live GCP dependencies, including the Docker Compose provisioning
+# path) without requiring authentication to a private registry.
+#
+# Per the QA Checkpoint 13 finding (Issue #1, CRITICAL) and the Agent Action
+# Plan §0.4.3 / §0.7.1.6 (R6 LocalGCP Verification) mandate, this file is the
+# canonical artifact for the compose-based emulator path:
+#
+#   docker compose -f docker-compose.localgcp.yml up -d
+#
+# -----------------------------------------------------------------------------
+# Architecture matrix
+# -----------------------------------------------------------------------------
+#
+# Multi-architecture is supported via Docker BuildKit's automatic
+# `${TARGETOS}` and `${TARGETARCH}` build args. The LocalGCP releases publish
+# tarballs for `{darwin,linux,windows}_{amd64,arm64}`; this container targets
+# `linux_amd64` and `linux_arm64`, which together cover the GitHub Actions
+# ubuntu-latest runners (amd64) and Apple-silicon developer workstations
+# (arm64). To extend, build with:
+#
+#   docker buildx build --platform linux/amd64,linux/arm64 \
+#       -f Dockerfile.localgcp -t blitzy-sandbox-localgcp:v0.6.0 .
+#
+# -----------------------------------------------------------------------------
+# Version pinning
+# -----------------------------------------------------------------------------
+#
+# The LocalGCP version is pinned via the `LOCALGCP_VERSION` build arg
+# (default `0.6.0`). Bumping the pin requires a deliberate update to this
+# file plus a corresponding decision-log entry per Rule R3 (Explainability).
+# The pin matches the Setup Status Log "LocalGCP v0.6.0 (running)" entry and
+# the prior tag pinned in `docker-compose.localgcp.yml` before the registry-
+# pull failure was discovered.
+#
+# =============================================================================
+
+# syntax=docker/dockerfile:1.7
+
+# -----------------------------------------------------------------------------
+# Stage 1 — Downloader: fetches the official LocalGCP release tarball for the
+# target architecture and extracts the statically-linked Go binary. Running
+# this in a separate stage keeps the final runtime image small (the tarball
+# and intermediate tooling like curl/tar do not ship to the runtime layer).
+# -----------------------------------------------------------------------------
+FROM --platform=$BUILDPLATFORM debian:bookworm-slim AS downloader
+
+# Re-declare the BuildKit-provided platform args so they are usable in RUN.
+ARG TARGETOS
+ARG TARGETARCH
+
+# Pinned LocalGCP version (matches the Setup Status Log and the docker-compose
+# file). Override with `--build-arg LOCALGCP_VERSION=X.Y.Z` to test a newer
+# release before promoting; bumps MUST be accompanied by a decision-log entry
+# per Rule R3.
+ARG LOCALGCP_VERSION=0.6.0
+
+# Install the minimum tooling required to fetch and extract the tarball.
+# `ca-certificates` is required for the HTTPS request to github.com to verify
+# the server certificate. `curl` is preferred over `wget` because it follows
+# redirects (GitHub release downloads redirect through `release-assets`) by
+# default with `-L`. `tar` is part of the base image but listed explicitly
+# for documentation.
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        tar && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /tmp/localgcp-download
+
+# Download the platform-specific tarball directly from the GitHub release
+# (publicly accessible — no authentication required, in contrast to the
+# previous `ghcr.io/slokam-ai/localgcp` reference). The URL pattern is the
+# canonical upstream layout documented in the GitHub release notes for
+# v0.6.0. `-f` causes curl to fail on HTTP errors so a missing artifact
+# produces an immediate non-zero build exit rather than an empty tarball.
+# `-sS` keeps output quiet while still surfacing errors. `-L` follows the
+# redirect through GitHub's release-assets CDN.
+RUN curl -fsSL \
+        -o localgcp.tar.gz \
+        "https://github.com/slokam-ai/localgcp/releases/download/v${LOCALGCP_VERSION}/localgcp_${LOCALGCP_VERSION}_${TARGETOS}_${TARGETARCH}.tar.gz" && \
+    tar -xzf localgcp.tar.gz && \
+    rm localgcp.tar.gz && \
+    chmod 0755 localgcp && \
+    # Sanity check: the binary must be executable and report a version. The
+    # `--help` invocation exits 0 and prints the supported subcommands; we
+    # discard the output but rely on the exit code to fail the build if the
+    # binary is broken for the target architecture.
+    ./localgcp --help >/dev/null
+
+# -----------------------------------------------------------------------------
+# Stage 2 — Runtime: minimal Debian slim image carrying ONLY the LocalGCP
+# binary, the bare-minimum runtime tooling (curl + wget for the compose
+# healthcheck), and a non-root user. Total size is approximately 110 MB
+# (Debian slim ~80 MB + LocalGCP binary ~19 MB + curl/wget overhead).
+# -----------------------------------------------------------------------------
+FROM debian:bookworm-slim
+
+# Install the runtime tooling the compose healthcheck depends on. The
+# healthcheck shell command tries `curl -fsS http://localhost:4443/ ||
+# wget -q -O - http://localhost:4443/` and falls back across both tools, so
+# the image needs both to ensure the healthcheck never reports unhealthy due
+# to a missing probe tool. `ca-certificates` is required for any outbound
+# HTTPS the emulator may perform (none is currently expected, but the
+# package is small and avoids surprise failures).
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        wget && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create the persistent data directory. The emulator writes
+# bucket/topic/document state to `--data-dir`, and the
+# `docker-compose.localgcp.yml` bind-mounts the host's `./.localgcp` into
+# `/data/.localgcp`. The directory is world-writable so the bind-mount can
+# accept files from a host directory owned by any UID/GID — the LocalGCP
+# emulator is intentionally permissive about its data directory because it
+# is a local-development/CI artifact, not a production data store.
+#
+# We deliberately do NOT create a non-root user inside the image. Locking
+# down to a non-root UID conflicts with bind-mount usage: the host's
+# `./.localgcp` directory may be owned by any UID/GID, and there is no
+# portable way to reconcile that with a baked-in container UID. Running as
+# root inside the container is acceptable here because:
+#   1. The container is ephemeral and only used in development/CI.
+#   2. LocalGCP binds non-privileged ports (>= 1024), so no escalated
+#      privilege is required for the workload itself.
+#   3. Operators who require non-root execution can override at compose-time
+#      via `services.localgcp.user: "${UID:-1000}:${GID:-1000}"` plus a
+#      pre-chowned host bind-mount target. See decision-log entry 16 for
+#      the rationale and the security-context trade-off analysis.
+RUN mkdir -p /data/.localgcp && \
+    chmod -R 0777 /data
+
+# Install the LocalGCP binary from the downloader stage.
+COPY --from=downloader --chown=root:root /tmp/localgcp-download/localgcp /usr/local/bin/localgcp
+
+WORKDIR /data
+
+# Expose all LocalGCP-emulated service ports. The compose file only
+# publishes a subset (4443, 8085, 8088) but listing every port here makes
+# the container self-documenting and lets future operators publish
+# additional ports without modifying the Dockerfile. See
+# `docker-compose.localgcp.yml` for the canonical port-to-service mapping.
+EXPOSE 4443 8085 8086 8088 8089 8090 8091 8092 8093
+
+# Default command: bring all native emulators up against the bind-mounted
+# data directory. The `--no-docker` flag disables orchestrated services
+# (Spanner, Bigtable, Cloud SQL, Memorystore, BigQuery) that would
+# otherwise require Docker-in-Docker — none of those are needed by the
+# current Backstage refactor. The compose file overrides this CMD with the
+# same arguments for parity; the duplication is intentional so this
+# Dockerfile is usable standalone via `docker run`.
+ENTRYPOINT ["/usr/local/bin/localgcp"]
+CMD ["up", "--data-dir=/data/.localgcp", "--no-docker"]

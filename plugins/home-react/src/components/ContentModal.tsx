@@ -62,13 +62,7 @@ export const ContentModal = (props: ContentModalProps) => {
 
   return (
     <div className={styles.linkText} data-testid="content-modal-container">
-      <Link
-        to="#"
-        component="button"
-        variant="h6"
-        underline="none"
-        onClick={() => setOpen(true)}
-      >
+      <Link to="#" component="button" onClick={() => setOpen(true)}>
         {linkContent}
       </Link>
       <Modal

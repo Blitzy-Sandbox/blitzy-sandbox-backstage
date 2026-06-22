@@ -33,6 +33,14 @@ export const catalogTranslationRef = createTranslationRef({
       title: 'About',
       refreshButtonTitle: 'Schedule entity refresh',
       editButtonTitle: 'Edit Metadata',
+      // QA finding F8 (CP7) — distinct tooltip + aria-label for the
+      // disabled state of the Edit Metadata button, explaining why the
+      // action is unavailable to the user. The button is disabled when
+      // the entity has no `backstage.io/edit-url` annotation (e.g., for
+      // entities introspected by a Github discovery provider).
+      editButtonDisabledTitle:
+        'Edit Metadata is unavailable for this entity (no edit URL is configured).',
+      editButtonDisabledAriaLabel: 'Edit Metadata unavailable',
       editButtonAriaLabel: 'Edit',
       createSimilarButtonTitle: 'Create something similar',
       refreshScheduledMessage: 'Refresh scheduled',
@@ -79,7 +87,11 @@ export const catalogTranslationRef = createTranslationRef({
       kind: 'Kind',
       type: 'Type',
       lifecycle: 'Lifecycle',
-      owner: 'Owner',
+      // `owner` translation key removed — Owner functionality fully
+      // removed across the application per AAP §0.1.2. The
+      // CatalogSearchResultListItem no longer renders the owner badge,
+      // and the default catalog collator entity transformer no longer
+      // emits an `owner` field in indexed documents.
     },
     catalogTable: {
       warningPanelTitle: 'Could not fetch catalog entities.',
@@ -117,7 +129,6 @@ export const catalogTranslationRef = createTranslationRef({
     },
     entityLabels: {
       warningPanelTitle: 'Entity not found',
-      ownerLabel: 'Owner',
       lifecycleLabel: 'Lifecycle',
     },
     entityLinksCard: {

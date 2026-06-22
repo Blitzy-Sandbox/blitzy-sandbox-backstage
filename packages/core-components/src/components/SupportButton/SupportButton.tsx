@@ -117,7 +117,16 @@ export function SupportButton(props: SupportButtonProps) {
             data-testid="support-button"
             aria-label="Support"
           >
-            <HelpCircle />
+            {/*
+             * CP9 QA fix — Issue #18 (MINOR, design system consistency):
+             *
+             * The lucide-react `<HelpCircle />` default size is 24px,
+             * which sat 4px larger than the adjacent top-bar Settings
+             * icon (size={20}). Explicitly setting `size={20}`
+             * standardizes the icons in the top-right cluster so
+             * Settings and Support share a single visual rhythm.
+             */}
+            <HelpCircle size={20} />
             <span className="hidden md:inline">{t('supportButton.title')}</span>
           </Button>
         </PopoverTrigger>

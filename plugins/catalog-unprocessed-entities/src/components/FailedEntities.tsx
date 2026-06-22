@@ -190,9 +190,14 @@ export const FailedEntities = () => {
       title: <Typography>Owner</Typography>,
       sorting: true,
       field: 'unprocessed_entity.spec.owner',
-      render: (rowData: UnprocessedEntity | {}) =>
-        (rowData as UnprocessedEntity).unprocessed_entity.spec?.owner ||
-        'unknown',
+      render: (rowData: UnprocessedEntity | {}) => {
+        const owner = (rowData as UnprocessedEntity).unprocessed_entity.spec
+          ?.owner;
+        // Owner is a JsonValue from the unprocessed entity spec; coerce to a
+        // displayable string regardless of whether the upstream provided a
+        // plain string, number, or unexpected object/array shape.
+        return typeof owner === 'string' ? owner : String(owner ?? 'unknown');
+      },
     },
     {
       title: <Typography>Last Discovery At</Typography>,
@@ -255,7 +260,7 @@ export const FailedEntities = () => {
         onSearchChange={(searchTerm: string) =>
           setSelectedSearchTerm(searchTerm)
         }
-        detailPanel={({ rowData }) => {
+        detailPanel={({ rowData }: { rowData: UnprocessedEntity | {} }) => {
           const errors = (rowData as UnprocessedEntity).errors;
           return (
             <>

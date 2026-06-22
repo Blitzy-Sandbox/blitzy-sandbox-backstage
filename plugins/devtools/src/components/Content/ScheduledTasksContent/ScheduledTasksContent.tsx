@@ -308,7 +308,7 @@ export const ScheduledTasksContent = () => {
               No scheduled tasks found for {selectedPlugin}.
             </Alert>
           }
-          detailPanel={({ rowData }) => {
+          detailPanel={({ rowData }: { rowData: TaskApiTasksResponse }) => {
             return <ScheduledTaskDetailPanel rowData={rowData} />;
           }}
         />

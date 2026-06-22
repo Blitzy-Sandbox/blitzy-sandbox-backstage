@@ -148,11 +148,34 @@ export function InternalAboutCard(props: InternalAboutCardProps) {
               <RefreshCw className="h-4 w-4" />
             </Button>
           )}
+          {/*
+           * QA finding F8 (CP7) — when the Edit Metadata button is
+           * disabled (no `backstage.io/edit-url` annotation on the
+           * entity), surface a tooltip and an aria-label that explain
+           * WHY the action is unavailable. Previously the same generic
+           * "Edit Metadata" text was used for both enabled and disabled
+           * states, leaving users — especially screen-reader users —
+           * with no explanation. The native HTML `title` attribute
+           * (consumed by the existing core-components ShadcnButton
+           * wrapper) is propagated to the wrapping span so the
+           * disabled-state tooltip still appears on hover even though
+           * `pointer-events: none` is applied to disabled buttons by
+           * the design system. The `aria-label` swap makes the disabled
+           * state distinguishable to assistive technology.
+           */}
           <Button
             variant="ghost"
             size="icon"
-            aria-label={t('aboutCard.editButtonAriaLabel')}
-            title={t('aboutCard.editButtonTitle')}
+            aria-label={
+              entityMetadataEditUrl
+                ? t('aboutCard.editButtonAriaLabel')
+                : t('aboutCard.editButtonDisabledAriaLabel')
+            }
+            title={
+              entityMetadataEditUrl
+                ? t('aboutCard.editButtonTitle')
+                : t('aboutCard.editButtonDisabledTitle')
+            }
             disabled={!entityMetadataEditUrl}
             asChild={!!entityMetadataEditUrl}
           >
@@ -161,7 +184,7 @@ export function InternalAboutCard(props: InternalAboutCardProps) {
                 <Pencil className="h-4 w-4" />
               </Link>
             ) : (
-              <span>
+              <span title={t('aboutCard.editButtonDisabledTitle')}>
                 <Pencil className="h-4 w-4" />
               </span>
             )}

@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: internal-plugin-catalog-backend-module-access-audit
+  title: '@internal/plugin-catalog-backend-module-access-audit'
+  description: A catalog backend module that emits entity-access audit events for user-credentialed catalog entity reads.
+spec:
+  lifecycle: experimental
+  type: backstage-backend-plugin-module
+  owner: catalog-maintainers

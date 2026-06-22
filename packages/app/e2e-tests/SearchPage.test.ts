@@ -16,6 +16,8 @@
 
 import { test, expect, Page } from '@playwright/test';
 
+import { signInAsGuest, spaNavigate } from './sessionHelpers';
+
 /**
  * Sets the theme mode on the document root element via the `data-theme-mode`
  * attribute, which is Backstage's convention for light/dark theme switching
@@ -30,39 +32,97 @@ async function setThemeMode(page: Page, mode: 'light' | 'dark') {
   await page.waitForTimeout(300);
 }
 
-test('the results are rendered as expected', async ({ page }) => {
-  await page.goto('/');
+/**
+ * The placeholder rendered by `@backstage/plugin-search-react`'s
+ * `<SearchBar>`. The component sources `org` from
+ * `configApi.getOptionalString('app.title') || 'Backstage'` (see
+ * `plugins/search-react/src/components/SearchBar/SearchBar.tsx:142`)
+ * and the i18n template is `'Search in {{org}}'`.
+ *
+ * `app.title` in `app-config.yaml:2` is `Blitzy Sandbox`, so the
+ * placeholder resolves to `Search in Blitzy Sandbox`. Tests use this
+ * exact string to target the SearchBar input deterministically.
+ */
+const SEARCH_BAR_PLACEHOLDER = 'Search in Blitzy Sandbox';
 
-  const enterButton = page.getByRole('button', { name: 'Enter' });
-  await expect(enterButton).toBeVisible();
-  await enterButton.click();
+/**
+ * Mock payload used to make `/api/search/query?term=*` deterministic for
+ * the visual regression and result-rendering assertions. Hoisted so all
+ * tests in this file share the same response shape.
+ */
+const MOCK_SEARCH_RESULTS = [
+  {
+    type: 'software-catalog',
+    document: {
+      title: 'backstage',
+      text: 'Backstage system documentation',
+      location: '/result/location/path',
+    },
+  },
+];
 
-  // Wait for sign-in to complete before navigating
-  await expect(page.getByRole('link', { name: 'Catalog' })).toBeVisible();
-
-  // Set up route interception BEFORE navigating to the search page
-  await page.route(`**/api/search/query?term=*`, async route => {
-    const results = [
-      {
-        type: 'software-catalog',
-        document: {
-          title: 'backstage',
-          text: 'Backstage system documentation',
-          location: '/result/location/path',
-        },
-      },
-    ];
-    await route.fulfill({ json: { results } });
+/**
+ * Register a deterministic search-API mock on the given page. The mock
+ * is installed BEFORE the SPA navigates to `/search`, ensuring the
+ * `useSearch` effect inside the SearchPage sees the deterministic
+ * payload regardless of backend state.
+ */
+async function mockSearchAPI(page: Page): Promise<void> {
+  await page.route('**/api/search/query?term=*', async route => {
+    await route.fulfill({ json: { results: MOCK_SEARCH_RESULTS } });
   });
+}
 
-  await page.goto('/search');
+/**
+ * Session preservation
+ * --------------------
+ * Every test below signs in via the shared `signInAsGuest` helper and
+ * reaches `/search` via `spaNavigate`. Using `spaNavigate` (HTML5
+ * History API + popstate) preserves the React-state-only Guest
+ * identity that a `page.goto` would otherwise wipe — see
+ * `sessionHelpers.ts` for the full rationale and
+ * `blitzy/qa_reports/cp14/final-qa-report.md` Issues 5 and 6 for the
+ * QA findings these fixes address.
+ */
 
-  await expect(
-    page.getByPlaceholder('Search in Backstage Example App'),
-  ).toBeVisible();
+// ---------------------------------------------------------------------------
+// Cross-browser visual regression gate (AAP §0.8.2.5)
+//
+// Tests whose title begins with `Visual regression:` consume PNG baselines
+// captured on chromium. To avoid spurious failures from cross-browser pixel
+// drift (font rendering, scrollbar widths, sub-pixel anti-aliasing), these
+// tests are skipped on firefox and webkit. The functional tests in this file
+// (Command-dialog search pattern, search-results rendering) continue to run
+// on all three browsers. See `docs/refactor/decision-log.md` Entry 18.
+// ---------------------------------------------------------------------------
+test.beforeEach(async ({ browserName }, testInfo) => {
+  test.skip(
+    testInfo.title.startsWith('Visual regression:') &&
+      browserName !== 'chromium',
+    `Visual regression baselines are chromium-only; firefox and webkit run ` +
+      `functional assertions only. Re-baselining for additional browsers is ` +
+      `tracked in docs/refactor/next-tasks.md.`,
+  );
+});
 
-  // Type a search query to trigger the mocked response
-  await page.getByPlaceholder('Search in Backstage Example App').fill('test');
+test('the results are rendered as expected', async ({ page }) => {
+  // Sign in (lands on /catalog) and arm the search API mock BEFORE
+  // SPA-navigating to /search. The mock must be in place before the
+  // SearchContextProvider triggers its first fetch.
+  await signInAsGuest(page);
+  await mockSearchAPI(page);
+
+  // SPA-navigate to /search while preserving the React-state auth
+  // identity. The top-bar remains mounted, confirming the route
+  // change happened inside the authenticated shell.
+  await spaNavigate(page, '/search');
+  await expect(page.locator('[data-testid="app-top-bar"]')).toBeVisible();
+
+  const searchInput = page.getByPlaceholder(SEARCH_BAR_PLACEHOLDER);
+  await expect(searchInput).toBeVisible({ timeout: 10_000 });
+
+  // Type a search query to trigger the mocked response.
+  await searchInput.fill('test');
   await expect(page.getByText('Backstage system documentation')).toBeVisible();
 });
 
@@ -77,98 +137,44 @@ test('the results are rendered as expected', async ({ page }) => {
  */
 
 test('Visual regression: Search page - light mode', async ({ page }) => {
-  await page.goto('/');
-  const enterButton = page.getByRole('button', { name: 'Enter' });
-  await expect(enterButton).toBeVisible();
-  await enterButton.click();
-  await expect(page.getByRole('link', { name: 'Catalog' })).toBeVisible();
-
-  // Set up search API mock for consistent visual regression
-  await page.route(`**/api/search/query?term=*`, async route => {
-    const results = [
-      {
-        type: 'software-catalog',
-        document: {
-          title: 'backstage',
-          text: 'Backstage system documentation',
-          location: '/result/location/path',
-        },
-      },
-    ];
-    await route.fulfill({ json: { results } });
+  await signInAsGuest(page);
+  await mockSearchAPI(page);
+  await spaNavigate(page, '/search');
+  await expect(page.locator('[data-testid="app-top-bar"]')).toBeVisible();
+  await expect(page.getByPlaceholder(SEARCH_BAR_PLACEHOLDER)).toBeVisible({
+    timeout: 10_000,
   });
-
-  await page.goto('/search');
-  await page.waitForLoadState('networkidle');
   await setThemeMode(page, 'light');
   const screenshot = await page.screenshot({ fullPage: true });
   await expect(screenshot).toMatchSnapshot('search-page-light.png');
 });
 
 test('Visual regression: Search page - dark mode', async ({ page }) => {
-  await page.goto('/');
-  const enterButton = page.getByRole('button', { name: 'Enter' });
-  await expect(enterButton).toBeVisible();
-  await enterButton.click();
-  await expect(page.getByRole('link', { name: 'Catalog' })).toBeVisible();
-
-  // Set up search API mock for consistent visual regression
-  await page.route(`**/api/search/query?term=*`, async route => {
-    const results = [
-      {
-        type: 'software-catalog',
-        document: {
-          title: 'backstage',
-          text: 'Backstage system documentation',
-          location: '/result/location/path',
-        },
-      },
-    ];
-    await route.fulfill({ json: { results } });
+  await signInAsGuest(page);
+  await mockSearchAPI(page);
+  await spaNavigate(page, '/search');
+  await expect(page.locator('[data-testid="app-top-bar"]')).toBeVisible();
+  await expect(page.getByPlaceholder(SEARCH_BAR_PLACEHOLDER)).toBeVisible({
+    timeout: 10_000,
   });
-
-  await page.goto('/search');
-  await page.waitForLoadState('networkidle');
   await setThemeMode(page, 'dark');
   const screenshot = await page.screenshot({ fullPage: true });
   await expect(screenshot).toMatchSnapshot('search-page-dark.png');
 });
 
 test('Visual regression: Search results - light mode', async ({ page }) => {
-  await page.goto('/');
-  const enterButton = page.getByRole('button', { name: 'Enter' });
-  await expect(enterButton).toBeVisible();
-  await enterButton.click();
-  await expect(page.getByRole('link', { name: 'Catalog' })).toBeVisible();
+  await signInAsGuest(page);
+  await mockSearchAPI(page);
+  await spaNavigate(page, '/search');
+  await expect(page.locator('[data-testid="app-top-bar"]')).toBeVisible();
 
-  // Set up search API mock for consistent visual regression
-  await page.route(`**/api/search/query?term=*`, async route => {
-    const results = [
-      {
-        type: 'software-catalog',
-        document: {
-          title: 'backstage',
-          text: 'Backstage system documentation',
-          location: '/result/location/path',
-        },
-      },
-    ];
-    await route.fulfill({ json: { results } });
-  });
-
-  await page.goto('/search');
-  await page.waitForLoadState('networkidle');
-
-  // Type search to trigger results — verify the Command dialog pattern renders
-  // correctly. The placeholder text may need updating if the search UI is
-  // redesigned to use the cmdk Command component with a different placeholder.
-  const searchInput = page.getByPlaceholder('Search in Backstage Example App');
-  if (await searchInput.isVisible({ timeout: 5000 }).catch(() => false)) {
-    await searchInput.fill('test');
-    await expect(
-      page.getByText('Backstage system documentation'),
-    ).toBeVisible();
-  }
+  // Strict assertion — the SearchBar MUST be present for the visual
+  // regression to be meaningful. We do not silently skip when the
+  // input is missing (per QA Checkpoint 14 anti-silent-skip mandate).
+  const searchInput = page.getByPlaceholder(SEARCH_BAR_PLACEHOLDER);
+  await expect(searchInput).toBeVisible({ timeout: 10_000 });
+  await searchInput.fill('test');
+  await expect(page.getByText('Backstage system documentation')).toBeVisible();
 
   await setThemeMode(page, 'light');
   const screenshot = await page.screenshot({ fullPage: true });
@@ -176,39 +182,15 @@ test('Visual regression: Search results - light mode', async ({ page }) => {
 });
 
 test('Visual regression: Search results - dark mode', async ({ page }) => {
-  await page.goto('/');
-  const enterButton = page.getByRole('button', { name: 'Enter' });
-  await expect(enterButton).toBeVisible();
-  await enterButton.click();
-  await expect(page.getByRole('link', { name: 'Catalog' })).toBeVisible();
+  await signInAsGuest(page);
+  await mockSearchAPI(page);
+  await spaNavigate(page, '/search');
+  await expect(page.locator('[data-testid="app-top-bar"]')).toBeVisible();
 
-  // Set up search API mock for consistent visual regression
-  await page.route(`**/api/search/query?term=*`, async route => {
-    const results = [
-      {
-        type: 'software-catalog',
-        document: {
-          title: 'backstage',
-          text: 'Backstage system documentation',
-          location: '/result/location/path',
-        },
-      },
-    ];
-    await route.fulfill({ json: { results } });
-  });
-
-  await page.goto('/search');
-  await page.waitForLoadState('networkidle');
-
-  // Type search to trigger results — the placeholder selector may need updating
-  // if the Command dialog (cmdk) redesign changes the input placeholder text.
-  const searchInput = page.getByPlaceholder('Search in Backstage Example App');
-  if (await searchInput.isVisible({ timeout: 5000 }).catch(() => false)) {
-    await searchInput.fill('test');
-    await expect(
-      page.getByText('Backstage system documentation'),
-    ).toBeVisible();
-  }
+  const searchInput = page.getByPlaceholder(SEARCH_BAR_PLACEHOLDER);
+  await expect(searchInput).toBeVisible({ timeout: 10_000 });
+  await searchInput.fill('test');
+  await expect(page.getByText('Backstage system documentation')).toBeVisible();
 
   await setThemeMode(page, 'dark');
   const screenshot = await page.screenshot({ fullPage: true });
@@ -217,35 +199,20 @@ test('Visual regression: Search results - dark mode', async ({ page }) => {
 
 /**
  * Verifies that the search page renders with a recognizable search UI element.
- * Per AAP 0.5.4, the search page uses a Command dialog pattern (cmdk) for
- * global search. This test uses flexible selectors to detect either the legacy
- * placeholder-based search input or the new Command dialog root element.
+ * Per AAP §0.5.1.2 the global `/docs` index page is removed; the `/search`
+ * route still mounts the search plugin's page extension. This test asserts
+ * the new SearchBar is present (rather than silently skipping when the
+ * legacy placeholder is missing, as the prior implementation did).
  */
-test('Search page renders with Command dialog pattern', async ({ page }) => {
-  await page.goto('/');
-  const enterButton = page.getByRole('button', { name: 'Enter' });
-  await expect(enterButton).toBeVisible();
-  await enterButton.click();
-  await expect(page.getByRole('link', { name: 'Catalog' })).toBeVisible();
+test('Search page renders with a SearchBar', async ({ page }) => {
+  await signInAsGuest(page);
+  await spaNavigate(page, '/search');
+  await expect(page.locator('[data-testid="app-top-bar"]')).toBeVisible();
 
-  await page.goto('/search');
-  await page.waitForLoadState('networkidle');
-
-  // Verify search UI is present — the Command dialog or search input should be
-  // visible. Use flexible selectors since the implementation may use the cmdk
-  // Command component ([cmdk-root]), a combobox role, or a standard search input.
-  const searchVisible = await page
-    .getByPlaceholder('Search in Backstage Example App')
-    .isVisible({ timeout: 5000 })
-    .catch(() => false);
-
-  // Fallback: detect cmdk root, combobox, or generic search input
-  const commandDialogVisible = await page
-    .locator('[cmdk-root], [role="combobox"], input[type="search"]')
-    .first()
-    .isVisible({ timeout: 5000 })
-    .catch(() => false);
-
-  // Search UI should be present in at least one of the expected forms
-  expect(searchVisible || commandDialogVisible).toBeTruthy();
+  // The SearchBar input must be present and visible. We assert
+  // strictly (no silent skip) so any regression that removes the
+  // SearchBar surfaces is caught.
+  await expect(page.getByPlaceholder(SEARCH_BAR_PLACEHOLDER)).toBeVisible({
+    timeout: 10_000,
+  });
 });

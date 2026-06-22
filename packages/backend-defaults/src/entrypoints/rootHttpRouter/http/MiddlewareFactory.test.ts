@@ -242,6 +242,119 @@ describe('MiddlewareFactory', () => {
       expect(childLogger.error).toHaveBeenCalled();
     });
 
+    // Regression coverage for QA finding F6/F4 — stack traces MUST NOT leak
+    // into HTTP error response bodies by default. The previous behavior
+    // (showStackTraces = NODE_ENV === 'development') exposed internal
+    // filesystem paths and code structure to clients during local dev and in
+    // any environment that forgot to set NODE_ENV=production.
+
+    it('does not include stack in error responses by default', async () => {
+      const defaultMiddleware = MiddlewareFactory.create({
+        logger: mockServices.logger.mock({ child: () => childLogger }),
+        config: mockServices.rootConfig.mock(),
+      });
+
+      const app = express();
+      app.use('/breaks', () => {
+        throw new InputError('boom');
+      });
+      app.use(defaultMiddleware.error());
+
+      const response = await request(app).get('/breaks');
+
+      expect(response.status).toBe(400);
+      // The error envelope is present but MUST NOT carry a `stack` field.
+      expect(response.body.error).toEqual(
+        expect.objectContaining({
+          name: 'InputError',
+          message: 'boom',
+        }),
+      );
+      expect(response.body.error).not.toHaveProperty('stack');
+    });
+
+    it('omits stack even when NODE_ENV is development (config-driven default)', async () => {
+      // `process.env.NODE_ENV` is typed as readonly by recent @types/node releases;
+      // bracket-notation access via a widened view bypasses that compile-time check
+      // for legitimate test scaffolding without changing runtime semantics.
+      const env = process.env as Record<string, string | undefined>;
+      const previousNodeEnv = env.NODE_ENV;
+      // Simulate `yarn dev` which exports NODE_ENV=development; the QA report
+      // F6/F4 reproduction was run in exactly this environment.
+      env.NODE_ENV = 'development';
+      try {
+        const devMiddleware = MiddlewareFactory.create({
+          logger: mockServices.logger.mock({ child: () => childLogger }),
+          config: mockServices.rootConfig.mock(),
+        });
+
+        const app = express();
+        app.use('/breaks', () => {
+          throw new NotFoundError('missing');
+        });
+        app.use(devMiddleware.error());
+
+        const response = await request(app).get('/breaks');
+
+        expect(response.status).toBe(404);
+        expect(response.body.error).not.toHaveProperty('stack');
+      } finally {
+        if (previousNodeEnv === undefined) {
+          delete env.NODE_ENV;
+        } else {
+          env.NODE_ENV = previousNodeEnv;
+        }
+      }
+    });
+
+    it('includes stack when backend.error.includeStack is true in config', async () => {
+      const optInMiddleware = MiddlewareFactory.create({
+        logger: mockServices.logger.mock({ child: () => childLogger }),
+        config: mockServices.rootConfig({
+          data: { backend: { error: { includeStack: true } } },
+        }),
+      });
+
+      const app = express();
+      app.use('/breaks', () => {
+        throw new InputError('boom');
+      });
+      app.use(optInMiddleware.error());
+
+      const response = await request(app).get('/breaks');
+
+      expect(response.status).toBe(400);
+      // Opt-in path still works for local debugging when explicitly enabled.
+      expect(response.body.error).toEqual(
+        expect.objectContaining({
+          name: 'InputError',
+          message: 'boom',
+          stack: expect.any(String),
+        }),
+      );
+    });
+
+    it('honours explicit showStackTraces option overriding config', async () => {
+      const optInMiddleware = MiddlewareFactory.create({
+        logger: mockServices.logger.mock({ child: () => childLogger }),
+        config: mockServices.rootConfig({
+          // Config says no stack…
+          data: { backend: { error: { includeStack: false } } },
+        }),
+      });
+
+      const app = express();
+      app.use('/breaks', () => {
+        throw new InputError('boom');
+      });
+      // …but the explicit option overrides config.
+      app.use(optInMiddleware.error({ showStackTraces: true }));
+
+      const response = await request(app).get('/breaks');
+
+      expect(response.body.error).toHaveProperty('stack');
+    });
+
     it('should log incoming requests', async () => {
       const app = express();
       app.use(middleware.logging());

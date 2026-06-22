@@ -1,0 +1,115 @@
+# Deterministic seed catalog used by the Playwright E2E suite.
+#
+# This file is loaded by the example-backend via a `type: file`
+# catalog location declared in `app-config.yaml`. It guarantees the
+# fixtures the e2e suite needs are present at every run, regardless of
+# whether the developer has bound the optional remote catalog
+# providers (GitHub, GitHubOrg, AzureBlob) to live integrations.
+#
+# Entities below cover three test-data requirements identified by the
+# Checkpoint 3 review of `packages/app/e2e-tests/refactor.test.ts`:
+#
+#   1. At least one entity with `spec.type: library` so the
+#      "Visual Treatment: library type chip border" test can locate
+#      and assert the visible border on the library chip.
+#
+#   2. At least two entities sharing at least two distinct tags so
+#      the "Catalog Count Fix: AND logic" test can intersect the
+#      tag filter and assert the displayed count strictly less than
+#      the one-tag count.
+#
+#   3. At least one entity with a TechDocs annotation so the
+#      "per-entity Documentation tab" test can verify the per-entity
+#      tab is still reachable (the global /docs index page is
+#      removed; only the entity-scoped tab remains per AAP
+#      §0.8.1.3).
+#
+# Selecting tags ["java", "spring"] returns:
+#   - blitzy-e2e-component-a   (java, spring, library)  ← library entity
+#   - blitzy-e2e-component-b   (java, spring)
+# but NOT blitzy-e2e-component-c (java only) — proving AND semantics.
+# OR semantics would have returned 3 results.
+#
+# These entities are namespaced under the `default` namespace and
+# explicitly prefixed with `blitzy-e2e-` to avoid collisions with
+# real catalog content.
+#
+# Every fixture carries an explicit
+# `blitzy.io/has-project-history: 'true'` annotation. The
+# `DefaultCatalogPage` mounts a hidden
+# `EntityHasProjectHistoryPicker` that unconditionally installs
+# `EntityHasProjectHistoryFilter(true)`, hiding any Component whose
+# annotation is missing or `'false'`. The
+# `BlitzyProjectHistoryProcessor` stamps this annotation based on
+# GitHub PR history — for fixtures without a `github.com/project-slug`
+# (i.e. these), the processor would normally stamp `'false'`,
+# making the entities invisible in the catalog UI and breaking
+# every refactor.test.ts assertion that depends on them. The
+# processor was extended to honor an explicit pre-stamp when no
+# slug is present (see `BlitzyProjectHistoryProcessor.ts`), which
+# preserves the value below verbatim. Do NOT add a
+# `github.com/project-slug` to any of these fixtures: doing so
+# would cause the processor to query GitHub during catalog
+# processing and overwrite the pre-stamp based on the live API
+# response.
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: blitzy-e2e-component-a
+  description: E2E fixture — library with two shared tags and TechDocs.
+  tags:
+    - java
+    - spring
+  annotations:
+    backstage.io/techdocs-ref: dir:.
+    blitzy.io/has-project-history: 'true'
+spec:
+  type: library
+  lifecycle: production
+  # Component entities require `spec.owner` per the Backstage Component
+  # entity schema (see
+  # `@backstage/plugin-catalog-backend-module-scaffolder-entity-model`
+  # / `@backstage/catalog-model`'s entity policy). Without an owner the
+  # catalog processor flags the entity with a validation error
+  # (`spec.owner is required to be a non-empty string`) and the entity
+  # never finishes processing — blocking the AAP §0.5.5 Catalog Count
+  # Fix E2E test from exercising real data (QA CP6 F-005).
+  #
+  # The owner is a synthetic reference that does NOT need to be present
+  # in the catalog for the seed entities to validate (catalog validation
+  # only enforces the field's presence and shape, not the existence of
+  # the referenced entity). Using `user:default/blitzy-e2e` keeps the
+  # owner ref namespaced under the same `blitzy-e2e-` prefix as the
+  # consumer entities, making it trivially identifiable in catalog
+  # queries and easy to exclude from non-test queries.
+  owner: user:default/blitzy-e2e
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: blitzy-e2e-component-b
+  description: E2E fixture — service sharing tags with component-a.
+  tags:
+    - java
+    - spring
+  annotations:
+    blitzy.io/has-project-history: 'true'
+spec:
+  type: service
+  lifecycle: production
+  owner: user:default/blitzy-e2e
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: blitzy-e2e-component-c
+  description: E2E fixture — service with only one of the shared tags.
+  tags:
+    - java
+  annotations:
+    blitzy.io/has-project-history: 'true'
+spec:
+  type: service
+  lifecycle: experimental
+  owner: user:default/blitzy-e2e

@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-import { defineConfig } from '@playwright/test';
+import {
+  defineConfig,
+  devices,
+  type PlaywrightTestConfig,
+} from '@playwright/test';
 import { generateProjects } from '@backstage/e2e-test-utils/playwright';
 
 /**
@@ -25,8 +29,69 @@ import { generateProjects } from '@backstage/e2e-test-utils/playwright';
  * every redesigned user flow in both light and dark modes to verify component
  * rendering, layout consistency, and theme correctness.
  *
+ * Cross-browser coverage (AAP §0.8.2.5):
+ *   `generateProjects()` from `@backstage/e2e-test-utils/playwright` scans the
+ *   monorepo for packages with an `e2e-tests/` folder and emits a single project
+ *   per discovered package keyed to `channel: 'chrome'`. To satisfy the AAP's
+ *   cross-browser mandate without modifying that public export's signature, we
+ *   fan each discovered package out into three browser-specific projects
+ *   (chromium, firefox, webkit) using Playwright's bundled browser binaries via
+ *   `devices`. Each project's `name` is `<package>-<browser>` so test selection
+ *   via `--project` remains ergonomic in CI.
+ *
+ * Visual regression scope:
+ *   The 10 existing PNG baselines under `packages/app/e2e-tests/__screenshots__/`
+ *   were captured on chromium. To avoid spurious failures from cross-browser
+ *   pixel drift (font rendering, scrollbar widths, sub-pixel anti-aliasing —
+ *   industry-standard sources of cross-browser flake), tests prefixed with
+ *   `Visual regression:` are skipped on firefox and webkit at the test-file level
+ *   via a `test.beforeEach` gate. firefox and webkit therefore run the full
+ *   functional-assertion surface (welcome page, theme correctness, search,
+ *   authorization, auditing, refactor coverage) while visual regression remains
+ *   chromium-only. The chromium baselines remain the single source of truth.
+ *   See `docs/refactor/decision-log.md` Entry 18 and `docs/refactor/next-tasks.md`.
+ *
  * See https://playwright.dev/docs/test-configuration.
  */
+
+/**
+ * Browser dimension for the cross-browser fan-out below. Each entry maps a
+ * suffix used in the Playwright project name (e.g., `example-app-chromium`) to
+ * the `devices` preset that selects Playwright's bundled browser binary. We
+ * unset `channel` from the base project's `use` object because `channel` and
+ * a `devices[…]` preset are mutually exclusive — `channel` forces Playwright
+ * to launch the system-installed browser, whereas `devices[…]` configures
+ * Playwright's own bundled binary.
+ */
+const browsers = [
+  { suffix: 'chromium', use: devices['Desktop Chrome'] },
+  { suffix: 'firefox', use: devices['Desktop Firefox'] },
+  { suffix: 'webkit', use: devices['Desktop Safari'] },
+] as const;
+
+const baseProjects = generateProjects() ?? [];
+
+/**
+ * Fan each base project (one per package with `e2e-tests/`) across the three
+ * browsers above. The resulting `projects` array has length
+ * `baseProjects.length * browsers.length` (today: 1 × 3 = 3 projects, since
+ * only `packages/app/e2e-tests/` exists).
+ */
+const projects: PlaywrightTestConfig['projects'] = baseProjects.flatMap(base =>
+  browsers.map(b => ({
+    name: `${base.name}-${b.suffix}`,
+    testDir: base.testDir,
+    use: {
+      ...(base.use ?? {}),
+      // Drop `channel: 'chrome'` from generateProjects() — the devices preset
+      // selects Playwright's bundled browser, which is what we want for
+      // reproducible CI runs that don't depend on a system-installed Chrome.
+      channel: undefined,
+      ...b.use,
+    },
+  })),
+);
+
 export default defineConfig({
   timeout: 30_000,
 
@@ -43,7 +108,18 @@ export default defineConfig({
     },
   },
 
-  // Run your local dev server before starting the tests
+  // Run your local dev server before starting the tests.
+  //
+  // BLITZY_E2E_TEST_MODE=true is exported into the backend's environment
+  // so that the `blitzy-e2e` proxy auth provider is registered and able
+  // to mint identity tokens with arbitrary `email` JWT claims for the
+  // `authorization.test.ts` deterministic-token suite. The provider is
+  // intentionally gated behind this env var with multiple layers of
+  // defense (see `packages/backend/src/authModuleBlitzyE2E.ts`).
+  //
+  // CI environments that start the backend out-of-band MUST set the
+  // same env var; otherwise the authorization E2E suite will fail-fast
+  // rather than silently skip the non-Blitzy and Blitzy-domain paths.
   webServer: process.env.CI
     ? []
     : [
@@ -58,6 +134,10 @@ export default defineConfig({
           port: 7007,
           reuseExistingServer: true,
           timeout: 60_000,
+          env: {
+            ...process.env,
+            BLITZY_E2E_TEST_MODE: 'true',
+          },
         },
       ],
 
@@ -85,6 +165,37 @@ export default defineConfig({
      * across different CI environments and local development machines.
      */
     viewport: { width: 1280, height: 720 },
+    /**
+     * Bypass Content-Security-Policy enforcement during E2E tests.
+     *
+     * Rationale (cross-browser correctness — AAP §0.8.2.5):
+     *   Backstage's default Helmet middleware emits a `upgrade-insecure-requests`
+     *   CSP directive on every response. Chromium and Firefox have built-in
+     *   exemptions for `http://localhost` URLs and therefore do not upgrade
+     *   subresources to `https://` during tests. WebKit, by contrast, enforces
+     *   the directive strictly even on `localhost`, which causes every static
+     *   JS/CSS chunk fetched by the SPA to fail with a TLS handshake error
+     *   (the local backend only serves plain HTTP). Without disabling CSP at
+     *   the browser context level, the WebKit project cannot load the Backstage
+     *   shell at all and every test in `refactor.test.ts`, `app.test.ts`,
+     *   `authorization.test.ts`, `auditing.test.ts`, `HomePage.test.ts`, and
+     *   `SearchPage.test.ts` fails with "element not found" on the very first
+     *   sign-in assertion.
+     *
+     * Why it is safe to set globally rather than per-browser:
+     *   - Chromium and Firefox already exempt `localhost` from CSP upgrades, so
+     *     toggling this flag is a no-op for those two projects (verified locally;
+     *     the existing chromium and firefox suites remain green).
+     *   - The flag only affects the browser context running test traffic. It
+     *     does not alter the backend's CSP headers in any way; production
+     *     deployments (which terminate TLS at a reverse proxy) are unaffected.
+     *   - CSP is not part of the assertion surface for any test in this
+     *     refactor — we verify chrome layout, permissions, audit events, and
+     *     catalog count semantics, none of which depend on CSP enforcement.
+     *
+     * See `docs/refactor/decision-log.md` for the full rationale.
+     */
+    bypassCSP: true,
   },
 
   outputDir: 'node_modules/.cache/e2e-test-results',
@@ -103,5 +214,11 @@ export default defineConfig({
    */
   snapshotPathTemplate: '{testDir}/__screenshots__/{testFilePath}/{arg}{ext}',
 
-  projects: generateProjects(), // Find all packages with e2e-test folders
+  // Cross-browser fan-out of the packages discovered by `generateProjects()`.
+  // See the module-level JSDoc above for the strategy. Today this expands the
+  // single discovered package (`packages/app/e2e-tests/`, `name: example-app`)
+  // into three projects: `example-app-chromium`, `example-app-firefox`,
+  // `example-app-webkit`. Visual regression tests are gated to chromium at the
+  // test-file level via `test.beforeEach`; functional tests run on all three.
+  projects,
 });

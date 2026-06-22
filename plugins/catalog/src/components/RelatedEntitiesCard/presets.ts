@@ -25,7 +25,6 @@ import { TableColumn } from '@backstage/core-components';
 
 export const componentEntityColumns: TableColumn<ComponentEntity>[] = [
   EntityTable.columns.createEntityRefColumn({ defaultKind: 'component' }),
-  EntityTable.columns.createOwnerColumn(),
   EntityTable.columns.createSpecTypeColumn(),
   EntityTable.columns.createSpecLifecycleColumn(),
   EntityTable.columns.createMetadataDescriptionColumn(),
@@ -37,7 +36,6 @@ export const asComponentEntities = (entities: Entity[]): ComponentEntity[] =>
 
 export const resourceEntityColumns: TableColumn<ResourceEntity>[] = [
   EntityTable.columns.createEntityRefColumn({ defaultKind: 'resource' }),
-  EntityTable.columns.createOwnerColumn(),
   EntityTable.columns.createSpecTypeColumn(),
   EntityTable.columns.createSpecLifecycleColumn(),
   EntityTable.columns.createMetadataDescriptionColumn(),
@@ -49,7 +47,6 @@ export const asResourceEntities = (entities: Entity[]): ResourceEntity[] =>
 
 export const systemEntityColumns: TableColumn<SystemEntity>[] = [
   EntityTable.columns.createEntityRefColumn({ defaultKind: 'system' }),
-  EntityTable.columns.createOwnerColumn(),
   EntityTable.columns.createMetadataDescriptionColumn(),
 ];
 export const systemEntityHelpLink: string =
@@ -59,7 +56,6 @@ export const asSystemEntities = (entities: Entity[]): SystemEntity[] =>
 
 export const domainEntityColumns: TableColumn<DomainEntity>[] = [
   EntityTable.columns.createEntityRefColumn({ defaultKind: 'domain' }),
-  EntityTable.columns.createOwnerColumn(),
   EntityTable.columns.createMetadataDescriptionColumn(),
 ];
 export const domainEntityHelpLink: string =

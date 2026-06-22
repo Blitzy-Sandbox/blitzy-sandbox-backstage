@@ -15,6 +15,7 @@
  */
 
 import { Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import {
   CatalogIcon,
@@ -22,7 +23,6 @@ import {
   DocsIcon,
   Header,
   Page,
-  useSidebarPinState,
 } from '@backstage/core-components';
 import {
   useApi,
@@ -138,7 +138,47 @@ export const searchPage = PageBlueprint.makeWithOverrides({
         );
 
         const Component = () => {
-          const { isMobile } = useSidebarPinState();
+          /*
+           * Mobile-viewport detection via native `window.matchMedia`.
+           *
+           * The legacy implementation derived `isMobile` from
+           * `useSidebarPinState()` (the Backstage Sidebar's
+           * `SidebarPinStateProvider` context). When the sidebar was
+           * removed per AAP §0.5.1.1, no `SidebarPinStateProvider`
+           * remained in the React tree, so `useSidebarPinState()`
+           * unconditionally returned the default
+           * `{ isPinned: true, isMobile: false }` — meaning the Search
+           * filter sidebar was rendered at every viewport size,
+           * including 375px. That caused the QA Issue #4 mobile
+           * truncation observed in the CP8 report ("Software Catalog"
+           * filter button truncated to "Soft / Cat..." etc.).
+           *
+           * The replacement mirrors the established pattern in
+           * `packages/core-components/src/layout/Sidebar/Page.tsx`
+           * (lines 78-90) and matches the `xs` MUI breakpoint
+           * `max-width: 599.95px`. The `useState(false)` initial value
+           * is intentional — it matches the legacy
+           * `useMediaQuery(..., { noSsr: true })` initial-render
+           * behavior, preventing a server-side hydration mismatch.
+           *
+           * The `matchMedia` guard handles JSDOM / SSR environments
+           * where `window.matchMedia` is undefined; in those cases
+           * the component renders the desktop layout, which is the
+           * correct degradation path for tests that do not exercise
+           * the mobile breakpoint.
+           */
+          const [isMobile, setIsMobile] = useState(false);
+          useEffect(() => {
+            if (typeof window.matchMedia !== 'function') {
+              return undefined;
+            }
+            const mql = window.matchMedia('(max-width: 599.95px)');
+            setIsMobile(mql.matches);
+            const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+            mql.addEventListener('change', handler);
+            return () => mql.removeEventListener('change', handler);
+          }, []);
+
           const { types } = useSearch();
           const catalogApi = useApi(catalogApiRef);
           const configApi = useApi(configApiRef);

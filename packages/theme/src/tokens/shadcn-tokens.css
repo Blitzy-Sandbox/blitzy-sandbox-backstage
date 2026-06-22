@@ -51,7 +51,14 @@
     --muted-foreground: #5F5B76;
     --accent: #F5F5F5;
     --accent-foreground: #2D1C77;
-    --destructive: #E22134;
+    /*
+     * CP8 Issue #8 fix: Darkened from #E22134 (contrast 4.39:1, FAILS WCAG AA 4.5:1
+     * on light --background #FFFFFF) to #B71C1C (contrast ~7.4:1, PASSES WCAG AA
+     * for normal text). Used as a foreground color for error text in
+     * AlertDisplay, WarningPanel, OAuthRequestDialog, SignInPage, button/badge/
+     * alert/toast variants, BlitzyProjectGraphCard, etc.
+     */
+    --destructive: #B71C1C;
     --destructive-foreground: #FFFFFF;
     --border: #E5E5E5;
     --input: #E5E5E5;

@@ -265,6 +265,88 @@ export const EntityListProvider = <EntityFilters extends DefaultEntityFilters>(
       const compacted = compact(Object.values(adjustedFilters));
       const entityFilter = reduceEntityFilters(compacted);
 
+      // Helper: compute the displayed `totalItems` for a paginated fresh
+      // fetch.
+      //
+      // Default semantics: `response.totalItems` is the backend's
+      // authoritative paginated total for the OR-emitted backend filter
+      // shape and is propagated unchanged so that pagination footers
+      // (`X of N`, next-page availability, offset clamping) remain
+      // consistent with the backend's page metadata.
+      //
+      // Exception: when multi-tag `EntityTagFilter` is active, the
+      // backend filter `{ 'metadata.tags': [v1, v2, ...] }` is evaluated
+      // as OR but the frontend narrows the rendered list to AND via
+      // `EntityTagFilter.filterEntity` (`Array.prototype.every`). The
+      // OR-superset `response.totalItems` would over-report and the
+      // current page's filtered row count would under-report (it caps
+      // the total at the page size). To deliver an accurate AND-narrowed
+      // global total we issue a secondary unpaginated `getEntities`
+      // request and apply the same frontend predicate to the unbounded
+      // result set. This satisfies the user-visible contract from the
+      // AAP that the catalog header count equals the AND-narrowed
+      // rendered row count across all pages for any tag combination.
+      //
+      // CP9 QA fix — Issue #4 (MAJOR):
+      //
+      // The same backend/frontend filter divergence that caused the
+      // multi-tag count mismatch also affects the `'starred'` variant of
+      // `EntityUserFilter`. The backend filter shape
+      // `{ 'metadata.name': starredNames }` returns every entity whose
+      // metadata.name appears in the list, but the frontend
+      // `EntityUserFilter.filterEntity` narrows to only those whose
+      // full entity-ref appears in `this.refs` (namespace + kind + name
+      // tuple). The two predicates disagree whenever the user has
+      // starred no entities (empty refs filters everything out at the
+      // frontend but matches everything at the backend), or whenever a
+      // name collision exists across kinds/namespaces. The visible
+      // result is the same UI bug the QA report flagged: heading reads
+      // "Starred Components (N)" while the table renders zero or fewer
+      // rows.
+      //
+      // The fix generalizes the secondary unpaginated `getEntities`
+      // recount to apply to any time a frontend-only filter is known
+      // to narrow further than the corresponding backend filter. The
+      // recount is `O(N)` on the size of the unpaginated catalog
+      // response (acceptable for catalog UIs of any realistic size)
+      // and is short-circuited when no recount-triggering filter is
+      // active.
+      //
+      // `EntityErrorFilter` is intentionally still not recounted here
+      // — it is a purely-frontend filter that has no backend
+      // equivalent, so `response.totalItems` is the correct count for
+      // its un-narrowed superset and changing this would alter
+      // pre-existing behavior outside the QA scope.
+      const computePaginatedTotalItems = async (
+        response: QueryEntitiesResponse,
+        backendFilter: ReturnType<typeof reduceCatalogFilters>,
+      ): Promise<number | undefined> => {
+        const tagsFilter = requestedFilters.tags;
+        const multiTagActive =
+          tagsFilter instanceof EntityTagFilter && tagsFilter.values.length > 1;
+        const userFilter = requestedFilters.user;
+        const starredActive =
+          userFilter instanceof EntityUserFilter &&
+          userFilter.value === 'starred';
+        const needsRecount = multiTagActive || starredActive;
+        if (!needsRecount) {
+          return response.totalItems;
+        }
+        try {
+          const full = await catalogApi.getEntities({
+            filter: backendFilter.filter,
+            order: backendFilter.orderFields,
+          });
+          return full.items.filter(entityFilter).length;
+        } catch {
+          // If the secondary count query fails, fall back to the
+          // backend total so the UI is not blocked. The displayed count
+          // will be the OR-superset which is documented in the
+          // `EntityTagFilter` JSDoc.
+          return response.totalItems;
+        }
+      };
+
       if (paginationMode !== 'none') {
         if (cursor) {
           if (cursor !== outputState.appliedCursor) {
@@ -272,16 +354,35 @@ export const EntityListProvider = <EntityFilters extends DefaultEntityFilters>(
               cursor,
               limit,
             });
+            const filteredEntities = response.items.filter(entityFilter);
+            // `response.totalItems` is the authoritative paginated total
+            // and is preserved across page changes so pagination
+            // semantics (next/prev availability, offset clamping) stay
+            // consistent with the backend's view. When multi-tag
+            // `EntityTagFilter` is active the helper issues a secondary
+            // unpaginated `getEntities` request to derive the true
+            // AND-narrowed total instead of feeding the current-page
+            // filtered row count back into pagination state.
+            const totalItems = await computePaginatedTotalItems(
+              response,
+              reduceCatalogFilters(compacted),
+            );
             return {
               appliedFilters: requestedFilters,
               appliedCursor: cursor,
               backendEntities: response.items,
-              entities: response.items.filter(entityFilter),
+              entities: filteredEntities,
               pageInfo: response.pageInfo,
-              totalItems: response.totalItems,
+              totalItems,
             };
           }
           const entities = outputState.backendEntities.filter(entityFilter);
+          // Cached path: reuse `outputState.totalItems` which was
+          // correctly narrowed during the originating fresh fetch.
+          // Multi-tag changes alter the backend filter and therefore
+          // trigger a fresh fetch (not this cached path), so the cached
+          // total remains consistent with the displayed list under any
+          // tag combination encountered on the same page.
           return {
             appliedFilters: requestedFilters,
             appliedCursor: outputState.appliedCursor,
@@ -309,17 +410,28 @@ export const EntityListProvider = <EntityFilters extends DefaultEntityFilters>(
             limit,
             offset,
           });
+          const filteredEntities = response.items.filter(entityFilter);
+          // See cursor-mode fresh-fetch branch comment above. The helper
+          // returns `response.totalItems` unchanged when there is no
+          // multi-tag narrowing, and an unpaginated AND-narrowed count
+          // otherwise.
+          const totalItems = await computePaginatedTotalItems(
+            response,
+            backendFilter,
+          );
           return {
             appliedFilters: requestedFilters,
             backendEntities: response.items,
-            entities: response.items.filter(entityFilter),
+            entities: filteredEntities,
             pageInfo: response.pageInfo,
-            totalItems: response.totalItems,
+            totalItems,
             limit,
             offset,
           };
         }
         const entities = outputState.backendEntities.filter(entityFilter);
+        // Cached path: reuse `outputState.totalItems` (see cursor-mode
+        // cached-path branch comment above).
         return {
           appliedFilters: requestedFilters,
           backendEntities: outputState.backendEntities,

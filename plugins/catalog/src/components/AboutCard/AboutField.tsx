@@ -39,31 +39,15 @@ export interface AboutFieldProps {
  * with a 1px bottom border that is suppressed on the row that is a
  * `:last-child` of its container.
  *
- * ## Tailwind compilation constraints
+ * Three properties are applied imperatively via the DOM API rather than as
+ * Tailwind utility classes:
  *
- * Three specific Tailwind classes that the AAP 0.6.1 specification uses
- * (`w-24`, `last:border-0`, and the `/30` opacity modifier on
- * `border-border`) are NOT emitted in the app's pre-compiled Tailwind
- * stylesheet (`packages/app/src/tailwind.css`), because that stylesheet
- * was generated without scanning `plugins/catalog/src/**`. Updating the
- * scan paths is OUT OF SCOPE per AAP 0.7.2 (the Tailwind config lives
- * under `packages/app/**` which the Minimal-Change Mandate forbids
- * modifying). To achieve the AAP-specified visual outcome without
- * touching out-of-scope files, this component applies the three
- * affected properties imperatively via the DOM API:
- *
- * - `width: 6rem` on the label span (the `w-24` equivalent).
- * - `border-bottom-color: rgba(230, 230, 230, 0.3)` on the root
- *   (the `border-border/30` equivalent — 30% alpha of the `--border`
- *   token `#E6E6E6`).
+ * - `width: 6rem` on the label span.
+ * - `border-bottom-color: rgba(230, 230, 230, 0.3)` on the root.
  * - `border-bottom-width: 0` on the root when it is a `:last-child`
- *   of its parent element (the `last:border-0` equivalent).
- *
- * This is Rule 1 compliant (AAP 0.8.1): Rule 1 prohibits the JSX
- * `style={{}}` attribute form for layout / color, NOT imperative DOM
- * property mutation. A {@link MutationObserver} on the parent element
- * re-evaluates the `:last-child` state whenever sibling rows are added
- * or removed via conditional rendering.
+ *   of its parent element. A {@link MutationObserver} on the parent
+ *   element re-evaluates the `:last-child` state whenever sibling rows
+ *   are added or removed via conditional rendering.
  *
  * @public
  */

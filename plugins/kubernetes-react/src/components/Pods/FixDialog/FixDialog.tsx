@@ -186,11 +186,11 @@ export const FixDialog: FC<FixDialogProps> = ({
           {pf && pf.type === 'docs' && (
             <LinkButton
               to={pf.docsLink}
-              variant="outlined"
-              startIcon={<OpenInNewIcon />}
+              variant="outline"
               target="_blank"
               rel="noopener"
             >
+              <OpenInNewIcon />
               {t('fixDialog.openDocs')}
             </LinkButton>
           )}

@@ -58,8 +58,11 @@ describe('DefaultCatalogCollatorEntityTransformer', () => {
         namespace: entity.metadata.namespace,
         componentType: entity.spec.type,
         lifecycle: entity.spec.lifecycle,
-        owner: entity.spec.owner,
       });
+      // Owner intentionally not emitted by the default transformer
+      // (AAP §0.1.2 full removal mandate). Assert the field is absent so
+      // a regression that resurrects the field is caught at build time.
+      expect(document).not.toHaveProperty('owner');
     });
 
     it('maps a returned entity with default fallback', async () => {
@@ -86,8 +89,8 @@ describe('DefaultCatalogCollatorEntityTransformer', () => {
         namespace: 'default',
         componentType: 'other',
         lifecycle: '',
-        owner: '',
       });
+      expect(document).not.toHaveProperty('owner');
     });
 
     it('maps a returned user entity', async () => {
@@ -99,8 +102,8 @@ describe('DefaultCatalogCollatorEntityTransformer', () => {
         namespace: 'default',
         componentType: 'other',
         lifecycle: '',
-        owner: '',
       });
+      expect(document).not.toHaveProperty('owner');
     });
 
     it('maps a returned user entity without display name', async () => {
@@ -117,8 +120,8 @@ describe('DefaultCatalogCollatorEntityTransformer', () => {
         namespace: 'default',
         componentType: 'other',
         lifecycle: '',
-        owner: '',
       });
+      expect(document).not.toHaveProperty('owner');
     });
 
     it('maps a returned group entity', async () => {
@@ -144,8 +147,8 @@ describe('DefaultCatalogCollatorEntityTransformer', () => {
         namespace: 'default',
         componentType: 'other',
         lifecycle: '',
-        owner: '',
       });
+      expect(document).not.toHaveProperty('owner');
     });
 
     it('sets text correctly when description is not provided', async () => {
@@ -173,8 +176,8 @@ describe('DefaultCatalogCollatorEntityTransformer', () => {
         namespace: 'default',
         componentType: 'other',
         lifecycle: '',
-        owner: '',
       });
+      expect(document).not.toHaveProperty('owner');
     });
   });
 });

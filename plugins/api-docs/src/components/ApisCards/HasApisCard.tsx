@@ -49,7 +49,6 @@ export const HasApisCard = (props: {
   const presetColumns: TableColumn<ApiEntity>[] = useMemo(() => {
     return [
       EntityTable.columns.createEntityRefColumn({ defaultKind: 'API' }),
-      EntityTable.columns.createOwnerColumn(),
       createSpecApiTypeColumn(t),
       EntityTable.columns.createSpecLifecycleColumn(),
       EntityTable.columns.createMetadataDescriptionColumn(),

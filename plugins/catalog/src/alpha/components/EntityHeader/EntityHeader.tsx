@@ -46,7 +46,6 @@ import {
   InspectEntityDialog,
   UnregisterEntityDialog,
   EntityDisplayName,
-  FavoriteEntity,
 } from '@backstage/plugin-catalog-react';
 
 import { EntityLabels } from '../EntityLabels';
@@ -103,7 +102,6 @@ function EntityHeaderTitle() {
       <span className="overflow-hidden text-ellipsis whitespace-nowrap">
         {entity ? <EntityDisplayName entityRef={entity} hideIcon /> : title}
       </span>
-      {entity && <FavoriteEntity entity={entity} />}
     </div>
   );
 }

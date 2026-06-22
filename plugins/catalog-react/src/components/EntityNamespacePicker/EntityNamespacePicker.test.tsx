@@ -276,11 +276,13 @@ describe('<EntityNamespacePicker/>', () => {
       expect(screen.getByText('Namespace')).toBeInTheDocument(),
     );
 
-    const buttons = screen
-      .getAllByRole('button')
-      .map(o => o.textContent)
-      .filter(b => b);
-
-    expect(buttons).toEqual(['namespace-2', 'namespace-3']);
+    // After the radix-ui CatalogAutocomplete refactor the collapsed
+    // multi-select trigger renders a single "N selected" summary instead of
+    // one button per selected value. (See
+    // `plugins/catalog-react/src/components/CatalogAutocomplete/CatalogAutocomplete.tsx`
+    // — when `multiple` is true and `selectedCount > 1` the trigger shows
+    // `${selectedCount} selected`.) Confirm both initially selected
+    // namespaces are reflected.
+    expect(await screen.findByText('2 selected')).toBeInTheDocument();
   });
 });

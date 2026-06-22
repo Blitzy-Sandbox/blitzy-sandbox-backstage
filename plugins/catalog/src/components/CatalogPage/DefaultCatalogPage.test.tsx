@@ -24,14 +24,13 @@ import {
   MockStarredEntitiesApi,
   starredEntitiesApiRef,
 } from '@backstage/plugin-catalog-react';
-import { mockBreakpoint } from '@backstage/core-components/testUtils';
 import {
   TestApiProvider,
   mockApis,
   renderInTestApp,
 } from '@backstage/test-utils';
 import { LayoutDashboard } from 'lucide-react';
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import { ReactNode } from 'react';
 import { createComponentRouteRef } from '../../routes';
 import { CatalogTableRow } from '../CatalogTable';
@@ -51,52 +50,77 @@ describe('DefaultCatalogPage', () => {
     jest.clearAllMocks();
   });
 
+  // The catalog page in the post-refactor codebase (after commit 0ca9c20d42
+  // "simplify catalog and docs filters with inline toolbar") no longer
+  // mounts the legacy UserListPicker / CatalogFilterLayout. The
+  // `EntityListProvider` issues a `queryEntities` request, and the
+  // resulting items are forwarded to the catalog table. The default-case
+  // mock now returns the two Component entities so the table actually
+  // renders rows and the action / column-function assertions have data to
+  // bind against.
+  // NB: each entity carries the `blitzy.io/has-project-history: 'true'`
+  // annotation because `BaseCatalogPage` installs the
+  // `EntityHasProjectHistoryPicker` filter (see
+  // `plugins/catalog/src/components/CatalogPage/DefaultCatalogPage.tsx`).
+  // Without that annotation, the frontend `filterEntity` predicate would
+  // hide every test row and the table would render as
+  // "All components (0)". Real-world entities receive this annotation
+  // from a backend processor — see
+  // `plugins/catalog-react/src/filters.ts` (`EntityHasProjectHistoryFilter`).
+  const defaultEntities = [
+    {
+      apiVersion: 'backstage.io/v1alpha1',
+      kind: 'Component',
+      metadata: {
+        name: 'Entity1',
+        namespace: 'default',
+        annotations: {
+          'blitzy.io/has-project-history': 'true',
+        },
+      },
+      spec: {
+        owner: 'tools',
+        type: 'service',
+      },
+      relations: [
+        {
+          type: RELATION_OWNED_BY,
+          targetRef: 'group:default/tools',
+        },
+      ],
+    },
+    {
+      apiVersion: 'backstage.io/v1alpha1',
+      kind: 'Component',
+      metadata: {
+        name: 'Entity2',
+        namespace: 'default',
+        annotations: {
+          'blitzy.io/has-project-history': 'true',
+        },
+      },
+      spec: {
+        owner: 'not-tools',
+        type: 'service',
+      },
+      relations: [
+        {
+          type: RELATION_OWNED_BY,
+          targetRef: 'group:default/not-tools',
+          target: {
+            kind: 'group',
+            name: 'not-tools',
+            namespace: 'default',
+          },
+        },
+      ],
+    },
+  ];
+
   const catalogApi = catalogApiMock.mock({
     getEntities: jest.fn().mockImplementation(() =>
       Promise.resolve({
-        items: [
-          {
-            apiVersion: 'backstage.io/v1alpha1',
-            kind: 'Component',
-            metadata: {
-              name: 'Entity1',
-              namespace: 'default',
-            },
-            spec: {
-              owner: 'tools',
-              type: 'service',
-            },
-            relations: [
-              {
-                type: RELATION_OWNED_BY,
-                targetRef: 'group:default/tools',
-              },
-            ],
-          },
-          {
-            apiVersion: 'backstage.io/v1alpha1',
-            kind: 'Component',
-            metadata: {
-              name: 'Entity2',
-              namespace: 'default',
-            },
-            spec: {
-              owner: 'not-tools',
-              type: 'service',
-            },
-            relations: [
-              {
-                type: RELATION_OWNED_BY,
-                targetRef: 'group:default/not-tools',
-                target: {
-                  kind: 'group',
-                  name: 'not-tools',
-                  namespace: 'default',
-                },
-              },
-            ],
-          },
-        ],
+        items: defaultEntities,
       }),
     ),
     getLocationByRef: jest
@@ -134,28 +158,33 @@ describe('DefaultCatalogPage', () => {
     })),
     queryEntities: jest
       .fn()
-      .mockImplementation(async (request: QueryEntitiesInitialRequest) => {
-        if ((request.filter as any)['relations.ownedBy']) {
-          // owned entities
-          return { items: [], totalItems: 3, pageInfo: {} };
-        }
-
-        if ((request.filter as any)['metadata.name']) {
-          // starred entities
+      .mockImplementation(async (request?: QueryEntitiesInitialRequest) => {
+        // After the inline-toolbar refactor, the default page issues a
+        // queryEntities request scoped to `kind: 'component'` (mounted via
+        // a hidden EntityKindPicker inside the EntityListProvider). The
+        // mock returns the two component entities for any non-narrowed
+        // request, and returns narrowed results for the historical
+        // owned/starred branches in case any future test re-enables them.
+        const filter = (request?.filter ?? {}) as Record<string, unknown>;
+        if (filter['relations.ownedBy']) {
           return {
-            items: [
-              {
-                apiVersion: '1',
-                kind: 'component',
-                metadata: { name: 'Entity1', namespace: 'default' },
-              },
-            ],
+            items: defaultEntities.slice(0, 1),
             totalItems: 1,
             pageInfo: {},
           };
         }
-        // all items
-        return { items: [], totalItems: 2, pageInfo: {} };
+        if (filter['metadata.name']) {
+          return {
+            items: [defaultEntities[0]],
+            totalItems: 1,
+            pageInfo: {},
+          };
+        }
+        return {
+          items: defaultEntities,
+          totalItems: defaultEntities.length,
+          pageInfo: {},
+        };
       }),
   });
 
@@ -198,12 +227,15 @@ describe('DefaultCatalogPage', () => {
       (c.textContent ?? '').trim(),
     );
 
+    // The default column set after the AAP refactor (sub-section 0.5.1.2):
+    // - 'System' column REMOVED (full removal of System link/element)
+    // - 'Owner' column REMOVED (full removal of Owner link/element)
+    // - 'Lifecycle' column REMOVED (not part of defaultCatalogTableColumnsFunc
+    //   after the simplification — see defaultCatalogTableColumnsFunc.tsx
+    //   which only emits Name, Type, Description, Tags for the default case).
     expect(columnHeaderLabels).toEqual([
       'Name',
-      'System',
-      'Owner',
       'Type',
-      'Lifecycle',
       'Description',
       'Tags',
       'Actions',
@@ -249,18 +281,32 @@ describe('DefaultCatalogPage', () => {
   }, 20_000);
 
   it('should render the default actions of an item in the grid', async () => {
+    // Post-refactor (AAP §0.5.1.2):
+    //   - View action REMOVED (View button deletion bullet)
+    //   - Star icon / "Add to favorites" REMOVED (FavoriteEntity star)
+    //   - Only the Edit action remains in the default actions array
+    //
+    // The legacy "user-picker-owned" affordance was removed in commit
+    // 0ca9c20d42 ("simplify catalog and docs filters with inline toolbar").
+    // The page renders without explicit pagination, which means
+    // EntityListProvider falls back to `getEntities` (see
+    // useEntityListProvider.tsx — paginationMode === 'none' branch). The
+    // assertion below therefore checks for `getEntities` having been
+    // called rather than `queryEntities`.
     await renderWrapped(<DefaultCatalogPage />);
-    await waitFor(() => expect(catalogApi.queryEntities).toHaveBeenCalled());
+    await waitFor(() => expect(catalogApi.getEntities).toHaveBeenCalled());
 
-    fireEvent.click(screen.getByTestId('user-picker-owned'));
-    await expect(
-      screen.findByText(/Owned components \(1\)/),
-    ).resolves.toBeInTheDocument();
-    await expect(screen.findByTitle(/View/)).resolves.toBeInTheDocument();
-    await expect(screen.findByTitle(/Edit/)).resolves.toBeInTheDocument();
-    await expect(
-      screen.findByTitle(/Add to favorites/),
-    ).resolves.toBeInTheDocument();
+    // Wait for the table rows to render so the action icons exist in DOM.
+    await expect(screen.findByText('Entity1')).resolves.toBeInTheDocument();
+
+    // Only Edit remains in the default actions array; the View and Star
+    // ("Add to favorites") actions are intentionally absent per AAP. Each
+    // table row renders one Edit icon, so we expect one Edit per loaded
+    // entity (defaultEntities.length === 2).
+    const editIcons = await screen.findAllByTitle(/Edit/);
+    expect(editIcons.length).toBe(defaultEntities.length);
+    expect(screen.queryByTitle(/View/)).not.toBeInTheDocument();
+    expect(screen.queryByTitle(/Add to favorites/)).not.toBeInTheDocument();
   }, 20_000);
 
   it('should render the custom actions of an item passed as prop', async () => {
@@ -284,88 +330,38 @@ describe('DefaultCatalogPage', () => {
     ];
 
     await renderWrapped(<DefaultCatalogPage actions={actions} />);
-    await waitFor(() => expect(catalogApi.queryEntities).toHaveBeenCalled());
+    await waitFor(() => expect(catalogApi.getEntities).toHaveBeenCalled());
 
-    fireEvent.click(screen.getByTestId('user-picker-owned'));
-    await expect(
-      screen.findByText(/Owned components \(1\)/),
-    ).resolves.toBeInTheDocument();
-    await expect(screen.findByTitle(/Foo Action/)).resolves.toBeInTheDocument();
-    await expect(screen.findByTitle(/Bar Action/)).resolves.toBeInTheDocument();
-    await expect(screen.findByTitle(/Bar Action/)).resolves.toBeDisabled();
+    // Wait for table rows to mount so the action icons exist in DOM.
+    await expect(screen.findByText('Entity1')).resolves.toBeInTheDocument();
+
+    // Each custom action is rendered once per entity row, so we expect
+    // `defaultEntities.length` instances of each.
+    const fooIcons = await screen.findAllByTitle(/Foo Action/);
+    expect(fooIcons.length).toBe(defaultEntities.length);
+
+    const barIcons = await screen.findAllByTitle(/Bar Action/);
+    expect(barIcons.length).toBe(defaultEntities.length);
+    barIcons.forEach(icon => expect(icon).toBeDisabled());
   }, 20_000);
 
-  // this test right now causes some red lines in the log output when running tests
-  // related to some theme issues in mui-table
-  // https://github.com/mbrn/material-table/issues/1293
-  it('should render', async () => {
-    await renderWrapped(<DefaultCatalogPage />);
-    await waitFor(() => expect(catalogApi.queryEntities).toHaveBeenCalled());
-
-    fireEvent.click(screen.getByTestId('user-picker-owned'));
-
-    await expect(
-      screen.findByText(/Owned components \(1\)/),
-    ).resolves.toBeInTheDocument();
-    fireEvent.click(screen.getByTestId('user-picker-all'));
-    await expect(
-      screen.findByText(/All components \(2\)/),
-    ).resolves.toBeInTheDocument();
-  }, 20_000);
-
-  it('should set initial filter correctly', async () => {
-    await renderWrapped(<DefaultCatalogPage initiallySelectedFilter="all" />);
-    await expect(
-      screen.findByText(/All components \(2\)/),
-    ).resolves.toBeInTheDocument();
-  }, 20_000);
-
-  // this test is for fixing the bug after favoriting an entity, the matching
-  // entities defaulting to "owned" filter and not based on the selected filter
-  it('should render the correct entities filtered on the selected filter', async () => {
-    await renderWrapped(<DefaultCatalogPage />);
-    await waitFor(() => expect(catalogApi.queryEntities).toHaveBeenCalled());
-
-    fireEvent.click(screen.getByTestId('user-picker-owned'));
-    await expect(
-      screen.findByText(/Owned components \(1\)/),
-    ).resolves.toBeInTheDocument();
-    // The "Starred" menu option should initially be disabled, since there
-    // aren't any starred entities.
-    expect(screen.getByTestId('user-picker-starred')).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    );
-    fireEvent.click(screen.getByTestId('user-picker-all'));
-    await expect(
-      screen.findByText(/All components \(2\)/),
-    ).resolves.toBeInTheDocument();
-
-    const starredIcons = await screen.findAllByTitle('Add to favorites');
-    fireEvent.click(starredIcons[0]);
-    await expect(
-      screen.findByText(/All components \(2\)/),
-    ).resolves.toBeInTheDocument();
-
-    // Now that we've starred an entity, the "Starred" menu option should be
-    // enabled.
-    expect(
-      await screen.findByTestId('user-picker-starred'),
-    ).not.toHaveAttribute('aria-disabled', 'true');
-    fireEvent.click(screen.getByTestId('user-picker-starred'));
-    await expect(
-      screen.findByText(/Starred components \(1\)/),
-    ).resolves.toBeInTheDocument();
-  }, 20_000);
-
-  it('should wrap filter in drawer on smaller screens', async () => {
-    mockBreakpoint({ matches: true });
-    await renderWrapped(<DefaultCatalogPage />);
-    const button = screen.getByRole('button', { name: 'Filters' });
-    // shadcn Sheet (Radix Dialog) does not render content when closed
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    fireEvent.click(button);
-    // After opening, the Sheet renders with role="dialog"
-    expect(screen.getByRole('dialog')).toBeVisible();
-  }, 20_000);
+  // The legacy `user-picker-{owned,all,starred}` affordance and the
+  // `initiallySelectedFilter` prop were removed in commit 0ca9c20d42
+  // ("simplify catalog and docs filters with inline toolbar"). The tests
+  // that exercised those mechanisms — "should render",
+  // "should set initial filter correctly", and
+  // "should render the correct entities filtered on the selected filter"
+  // — are no longer applicable because the production surface they
+  // probed has been deleted. They were left as dead tests prior to this
+  // refactor and are removed here so the suite reflects current behavior.
+  //
+  // The "should wrap filter in drawer on smaller screens" test exercised
+  // the legacy sidebar Filters drawer (also removed by commit
+  // 0ca9c20d42). With no Filters drawer in the new DefaultCatalogPage,
+  // that test is also removed.
+  //
+  // The mobile responsive layout is still verified by the
+  // `CatalogTableToolbar`'s own responsive class strategy and by the
+  // Playwright E2E coverage in `packages/app/e2e-tests/refactor.test.ts`
+  // ("Mobile layout") so the regression surface remains covered end-to-end.
 });

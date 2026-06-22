@@ -82,6 +82,17 @@ export const EntityTypePicker = (props: EntityTypePickerProps) => {
       }
     >
       <SelectTrigger
+        /*
+         * CP9 QA fix — Issue #16 (MINOR, WCAG 4.1.2 Name/Role/Value):
+         *
+         * The Radix Select trigger renders a `<button role="combobox">`
+         * whose visible label "Type" lives inside an internal span that
+         * axe-core does not always associate as the button's accessible
+         * name. An explicit `aria-label` ensures every assistive
+         * technology announces the trigger consistently and removes
+         * the false-positive Lighthouse `button-name` finding.
+         */
+        aria-label={t('entityTypePicker.title')}
         className={cn(
           inline ? 'w-36' : 'w-full',
           'text-muted-foreground font-normal',

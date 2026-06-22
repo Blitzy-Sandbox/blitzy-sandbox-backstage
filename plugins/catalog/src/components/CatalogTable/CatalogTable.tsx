@@ -15,7 +15,6 @@
  */
 import {
   ANNOTATION_EDIT_URL,
-  ANNOTATION_VIEW_URL,
   Entity,
   RELATION_OWNED_BY,
   RELATION_PART_OF,
@@ -32,9 +31,8 @@ import {
   getEntityRelations,
   humanizeEntityRef,
   useEntityList,
-  useStarredEntities,
 } from '@backstage/plugin-catalog-react';
-import { Pencil, ExternalLink } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import { capitalize } from 'lodash';
 import pluralize from 'pluralize';
 import { ReactNode, useMemo } from 'react';
@@ -46,7 +44,6 @@ import { defaultCatalogTableColumnsFunc } from './defaultCatalogTableColumnsFunc
 import { CatalogTableToolbar } from './CatalogTableToolbar';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { catalogTranslationRef } from '../../alpha';
-import { FavoriteToggleIcon } from '@backstage/core-components';
 
 /**
  * Props for {@link CatalogTable}.
@@ -93,7 +90,6 @@ export const CatalogTable = (props: CatalogTableProps) => {
     subtitle,
     emptyContent,
   } = props;
-  const { isStarredEntity, toggleStarredEntity } = useStarredEntities();
   const entityListContext = useEntityList();
 
   const {
@@ -128,20 +124,6 @@ export const CatalogTable = (props: CatalogTableProps) => {
 
   const defaultActions: TableProps<CatalogTableRow>['actions'] = [
     ({ entity }) => {
-      const url = entity.metadata.annotations?.[ANNOTATION_VIEW_URL];
-      const title = t('catalogTable.viewActionTitle');
-
-      return {
-        icon: () => <ExternalLink />,
-        tooltip: title,
-        disabled: !url,
-        onClick: () => {
-          if (!url) return;
-          window.open(url, '_blank');
-        },
-      };
-    },
-    ({ entity }) => {
       const url = entity.metadata.annotations?.[ANNOTATION_EDIT_URL];
       const title = t('catalogTable.editActionTitle');
 
@@ -153,19 +135,6 @@ export const CatalogTable = (props: CatalogTableProps) => {
           if (!url) return;
           window.open(url, '_blank');
         },
-      };
-    },
-    ({ entity }) => {
-      const isStarred = isStarredEntity(entity);
-      const title = isStarred
-        ? t('catalogTable.unStarActionTitle')
-        : t('catalogTable.starActionTitle');
-
-      return {
-        icon: () => <FavoriteToggleIcon isFavorite={isStarred} />,
-        tooltip: title,
-        onClick: () => toggleStarredEntity(entity),
-        active: isStarred,
       };
     },
   ];

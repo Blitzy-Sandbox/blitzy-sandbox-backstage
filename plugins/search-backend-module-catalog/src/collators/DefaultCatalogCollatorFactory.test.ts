@@ -82,6 +82,9 @@ describe('DefaultCatalogCollatorFactory', () => {
       const pipeline = TestPipeline.fromCollator(collator);
       const { documents } = await pipeline.execute();
 
+      // Note: `owner` field is intentionally absent from the default
+      // transformer output per AAP §0.1.2 — owner is fully removed from
+      // every user-facing surface, including search documents.
       expect(documents[0]).toEqual({
         title: expectedEntities[0].metadata.name,
         location: '/catalog/default/component/test-entity',
@@ -91,7 +94,6 @@ describe('DefaultCatalogCollatorFactory', () => {
         kind: expectedEntities[0]!.kind,
         type: expectedEntities[0]!.spec!.type,
         lifecycle: expectedEntities[0]!.spec!.lifecycle,
-        owner: expectedEntities[0]!.spec!.owner,
         authorization: {
           resourceRef: 'component:default/test-entity',
         },
@@ -105,7 +107,6 @@ describe('DefaultCatalogCollatorFactory', () => {
         kind: expectedEntities[1]!.kind,
         type: expectedEntities[1]!.spec!.type,
         lifecycle: expectedEntities[1]!.spec!.lifecycle,
-        owner: expectedEntities[1]!.spec!.owner,
         authorization: {
           resourceRef: 'component:default/test-entity-2',
         },

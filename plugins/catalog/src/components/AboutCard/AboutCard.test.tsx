@@ -102,9 +102,16 @@ describe('<AboutCard />', () => {
     );
 
     expect(screen.getByText('service')).toBeInTheDocument();
-    expect(screen.getByText('user:guest')).toBeInTheDocument();
     expect(screen.getByText('production')).toBeInTheDocument();
     expect(screen.getByText('This is the description')).toBeInTheDocument();
+    // Per AAP §0.5.1.2 / §0.7.2 (CRITICAL): the Owner and System fields are
+    // removed from the AboutContent. Despite this entity having an
+    // RELATION_OWNED_BY relation pointing at 'user:default/guest', the
+    // resulting 'user:guest' text and the 'Owner' / 'System' labels must
+    // NOT be rendered anywhere on the AboutCard.
+    expect(screen.queryByText('user:guest')).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Owner$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^System$/i)).not.toBeInTheDocument();
   });
 
   it('renders "edit metadata" button', async () => {

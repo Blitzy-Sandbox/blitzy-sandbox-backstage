@@ -190,3 +190,6 @@ dist-storybook/
 
 # Personal allow patterns etc
 .claude/settings.local.json
+
+# LocalGCP emulator data directory (created at runtime by 'localgcp up --data-dir=./.localgcp')
+.localgcp/

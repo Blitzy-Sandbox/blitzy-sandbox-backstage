@@ -18,25 +18,81 @@ import {
   EntitySearchBar,
   EntityTagPicker,
   EntityTypePicker,
-  StarredToggle,
 } from '@backstage/plugin-catalog-react';
 
 /** @public */
 export type CatalogTableToolbarClassKey = 'root' | 'text';
 
+/**
+ * `CatalogTableToolbar` renders the Catalog table's header strip:
+ * title text on the left and filter controls (search, type, starred,
+ * tags) on the right.
+ *
+ * Responsive layout strategy (addresses CP8 QA Issue #3 — catalog card
+ * horizontal overflow at 375px):
+ *
+ * - Mobile (<640px / Tailwind `sm`): the toolbar collapses to a vertical
+ *   stack — title row first, then filter row beneath it. The filter row
+ *   itself uses `flex-wrap` with full-width search so that no control is
+ *   clipped or pushed off-screen.
+ * - Desktop (≥640px): the original single-row layout is preserved with
+ *   the title pinned left and the filter cluster right-aligned via
+ *   `sm:justify-end`.
+ *
+ * Implementation notes:
+ *
+ * - Outer container uses `flex-col sm:flex-row` to switch orientation at
+ *   the `sm:` breakpoint (which Tailwind v4 defaults to 640px). Items
+ *   inside continue to use `items-start sm:items-center` so that the
+ *   title baseline is preserved on desktop while still allowing the
+ *   stacked layout to align cleanly on mobile.
+ * - The filter cluster's `min-w-0 sm:min-w-[24rem]` removes the lower
+ *   bound on mobile, allowing the cluster to shrink with the viewport,
+ *   while keeping a sensible minimum on desktop so controls do not
+ *   collapse to unreadable widths at intermediate viewport widths.
+ * - The search bar uses `w-full sm:flex-1 sm:max-w-xs` so it fills the
+ *   row on mobile (a single primary input) and behaves as a flexible
+ *   1-fr column on desktop, capped at `xs` (20rem ≈ 320px) so it does
+ *   not dominate the row at very wide viewports.
+ * - The tag picker drops its fixed `w-44` and uses `w-32 sm:w-44`
+ *   instead so it does not push the row over 375px on mobile while
+ *   keeping its previous size on desktop.
+ */
 export function CatalogTableToolbar(props: {
   title?: string | ReactElement<any>;
 }) {
   return (
-    <div className="flex items-center gap-3 pt-2.5 pl-5 pb-1.5 pr-4 flex-wrap">
-      <h5 className="truncate text-lg font-medium shrink-0">{props.title}</h5>
-      <div className="flex flex-1 items-center gap-2 justify-end min-w-0">
-        <div className="flex-1 min-w-[180px] max-w-xs">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 pt-2.5 pl-5 pb-1.5 pr-4 flex-wrap">
+      {/*
+       * CP9 QA fix — Issue #11 (MAJOR, WCAG 1.3.1 Info & Relationships):
+       *
+       * The Catalog page renders an h1 (`Blitzy Sandbox Catalog`) at
+       * the top via `PageWithHeader`, so a nested level-2 heading is
+       * the correct successor. Previously this element was an `<h5>`,
+       * which created a 4-level skip (h1 → h5) that Lighthouse axe-core
+       * flagged via the `heading-order` audit. Changing to `<h2>` while
+       * preserving the `text-lg font-medium` visual treatment keeps
+       * pixel-identical rendering with a semantically-correct heading.
+       */}
+      <h2 className="truncate text-lg font-medium shrink-0 max-w-full">
+        {props.title}
+      </h2>
+      <div className="flex w-full sm:w-auto items-center gap-2 justify-end min-w-0 flex-wrap ml-auto">
+        <div className="w-full max-w-xs shrink-0">
           <EntitySearchBar />
         </div>
         <EntityTypePicker inline />
-        <StarredToggle />
-        <div className="w-44 shrink-0">
+        {/*
+         * CP9 QA fix — Issue #5 (MINOR, UX consistency):
+         *
+         * The `<StarredToggle />` filter button is removed because the
+         * companion `FavoriteEntity` star icon on entity pages was
+         * removed per AAP §0.5.1.2. With no way to populate the starred
+         * set, the filter would always render zero rows and confuse
+         * users. Removing the toggle keeps the filter UI honest with
+         * the available functionality.
+         */}
+        <div className="w-32 sm:w-44 shrink-0">
           <EntityTagPicker inline />
         </div>
       </div>

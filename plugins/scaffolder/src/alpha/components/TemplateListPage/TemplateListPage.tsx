@@ -34,7 +34,18 @@ import {
   EntityTagPicker,
   CatalogFilterLayout,
   UserListPicker,
-  EntityOwnerPicker,
+  /*
+   * CP9 QA fix — Issue #7 (MINOR, Owner removal scope gap):
+   *
+   * The Owner picker is removed from the Scaffolder template browser
+   * to extend the AAP §0.5.1.2 directive ("perform a full removal of
+   * Owner functionality across the application") to this additional
+   * UI surface. The originating import is preserved as a comment
+   * marker so future contributors understand the deliberate
+   * omission rather than rediscovering the picker.
+   *
+   * EntityOwnerPicker,
+   */
 } from '@backstage/plugin-catalog-react';
 import {
   ScaffolderPageContextMenu,
@@ -218,7 +229,13 @@ export const TemplateListPage = (props: TemplateListPageProps) => {
               />
               <TemplateCategoryPicker />
               <EntityTagPicker />
-              <EntityOwnerPicker />
+              {/*
+               * CP9 QA fix — Issue #7 (MINOR):
+               * The `<EntityOwnerPicker />` was removed from the
+               * Scaffolder template browser filter rail. See AAP
+               * §0.5.1.2 — "Perform a full removal of Owner
+               * functionality across the application."
+               */}
             </CatalogFilterLayout.Filters>
             <CatalogFilterLayout.Content>
               <TemplateGroups

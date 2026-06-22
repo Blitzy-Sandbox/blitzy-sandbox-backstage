@@ -1,0 +1,236 @@
+# Playwright E2E workflow for the Blitzy Sandbox Backstage refactor.
+#
+# This workflow invokes `yarn test:e2e` (which expands to
+# `NODE_OPTIONS=--no-node-snapshot playwright test`) so the 47 Playwright tests
+# under packages/app/e2e-tests/* are exercised on every pull request and push
+# to master. The tests cover the UI/UX modifications, feature removals, and
+# read-only/audit enforcement assertions delivered by this refactor.
+#
+# Closes QA Checkpoint 13 Issue #2 ("New Playwright E2E tests not invoked by
+# any GitHub workflow"). See docs/refactor/decision-log.md row 17 for the
+# alternatives considered and the rationale for this workflow shape.
+#
+# Pre-existing E2E workflow `verify_e2e-linux.yml` invokes `yarn e2e-test run`
+# against the upstream Backstage `packages/e2e-test/` framework — that is a
+# different test suite from these Playwright tests and must continue to run
+# independently.
+
+name: Playwright E2E
+
+on:
+  # NOTE: If you change these you must update verify_playwright-e2e-noop.yml as well
+  pull_request:
+    paths-ignore:
+      - '.changeset/**'
+      - 'contrib/**'
+      - 'docs/**'
+      - 'microsite/**'
+      - 'beps/**'
+      - 'blitzy-deck/**'
+      - 'README*.md'
+  push:
+    branches: [master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  playwright:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432/tcp
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [22.x, 24.x]
+
+    env:
+      CI: true
+      # NODE_OPTIONS must include --no-node-snapshot for Playwright on Node 22+
+      # because @playwright/test relies on dynamic require resolution that the
+      # default Node startup snapshot precludes. The other flags match the
+      # canonical CI env used by the rest of the test workflows in this repo.
+      NODE_OPTIONS: --max-old-space-size=8192 --no-node-snapshot --experimental-vm-modules
+      # BLITZY_E2E_TEST_MODE registers the test-only `blitzy-e2e` auth provider
+      # (packages/backend/src/authModuleBlitzyE2E.ts) and the audit-events
+      # endpoint (packages/backend/src/blitzyE2EAuditCapture.ts). Both are
+      # required by packages/app/e2e-tests/authorization.test.ts and
+      # auditing.test.ts. The flag is asserted FALSE in production code paths
+      # (packages/backend/src/index.ts:80).
+      BLITZY_E2E_TEST_MODE: 'true'
+      # Point Playwright at the dev frontend on port 3000 so we exercise the
+      # same code path developers run locally. The frontend proxies API calls
+      # to the backend on port 7007. Without this override, the CI branch of
+      # the playwright.config.ts baseURL ternary would target localhost:7007
+      # (the backend), which serves the API but not the dev-mode HMR-driven
+      # React app.
+      PLAYWRIGHT_URL: 'http://localhost:3000'
+
+    name: Playwright E2E ${{ matrix.node-version }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Configure Git
+        run: |
+          git config --global user.email noreply@backstage.io
+          git config --global user.name 'GitHub Playwright E2E user'
+
+      - name: use node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: ${{ matrix.node-version }}
+          registry-url: https://registry.npmjs.org/ # Needed for auth
+
+      - name: yarn install
+        uses: backstage/actions/yarn-install@c4dd040f963edd226462b5f32efd319ffca12ac5 # v0.7.7
+        with:
+          cache-prefix: ${{ runner.os }}-v${{ matrix.node-version }}-playwright
+
+      - name: install Playwright browsers
+        # --with-deps installs the OS-level libraries (libnss3, libatk1.0-0, etc.)
+        # required by chromium/firefox/webkit on Ubuntu. The browser binaries
+        # themselves are pinned to the @playwright/test version declared in
+        # packages/app/package.json.
+        run: yarn workspace example-app exec playwright install --with-deps
+
+      - name: bump inotify watch limit
+        # Backstage dev mode + chokidar opens a large number of file watches;
+        # the default Ubuntu runner limit (8192) is insufficient and causes
+        # spurious "EMFILE: too many open files" errors during yarn start.
+        # Matches the same step in verify_e2e-linux.yml.
+        run: sudo sysctl fs.inotify.max_user_watches=524288
+
+      - name: start backend (background)
+        # The CI branch of playwright.config.ts sets webServer: [] so the
+        # workflow is responsible for starting the backend and frontend
+        # before invoking `yarn test:e2e`. We start each in a detached
+        # subshell with output redirected to a log file so the workflow can
+        # surface logs as artifacts if the bring-up fails.
+        run: |
+          nohup yarn start example-backend > /tmp/backend.log 2>&1 &
+          echo "BACKEND_PID=$!" >> $GITHUB_ENV
+        env:
+          BLITZY_E2E_TEST_MODE: 'true'
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
+
+      - name: start frontend (background)
+        run: |
+          nohup yarn start example-app > /tmp/frontend.log 2>&1 &
+          echo "FRONTEND_PID=$!" >> $GITHUB_ENV
+
+      - name: wait for backend health
+        # The /healthcheck endpoint is mounted by coreServices.rootHealthService
+        # and returns 200 when the backend is ready to serve requests. We poll
+        # for up to 5 minutes (60 attempts x 5s) to accommodate cold-start
+        # variance on shared runners. If the wait times out, the backend log
+        # is dumped so the failure is diagnosable from the workflow run page.
+        run: |
+          for i in $(seq 1 60); do
+            if curl --silent --fail http://localhost:7007/healthcheck > /dev/null; then
+              echo "Backend healthy after ${i} attempts"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Backend failed to become healthy after 5 minutes"
+          echo "--- backend.log (last 200 lines) ---"
+          tail -n 200 /tmp/backend.log || true
+          exit 1
+
+      - name: wait for frontend
+        # The dev frontend is ready when the root path returns a 200 with the
+        # HTML shell. We poll for up to 5 minutes (60 attempts x 5s); the
+        # webpack-dev-server initial compile is the slowest step.
+        run: |
+          for i in $(seq 1 60); do
+            if curl --silent --fail http://localhost:3000/ > /dev/null; then
+              echo "Frontend ready after ${i} attempts"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Frontend failed to become ready after 5 minutes"
+          echo "--- frontend.log (last 200 lines) ---"
+          tail -n 200 /tmp/frontend.log || true
+          exit 1
+
+      - name: run Playwright E2E tests
+        run: yarn test:e2e
+
+      - name: stop backend and frontend
+        # Always-run cleanup so the runner is left in a known state even when
+        # tests fail. We kill the background PIDs we captured at start; the
+        # `|| true` swallows the "no such process" error if a server crashed
+        # earlier in the workflow.
+        if: always()
+        run: |
+          if [[ -n "${BACKEND_PID:-}" ]]; then kill "${BACKEND_PID}" 2>/dev/null || true; fi
+          if [[ -n "${FRONTEND_PID:-}" ]]; then kill "${FRONTEND_PID}" 2>/dev/null || true; fi
+
+      - name: upload Playwright HTML report
+        # Always upload (even on success) so reviewers have the visual report
+        # for inspection. The HTML report is the canonical Playwright output
+        # for triaging test failures; the JSON report is for machine readers.
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: playwright-report-${{ matrix.node-version }}
+          path: e2e-test-report/
+          retention-days: 14
+
+      - name: upload Playwright test results
+        # The output directory holds traces, screenshots, and videos for each
+        # failing test (see playwright.config.ts: trace: 'on-first-retry' and
+        # video: 'retain-on-failure'). Upload only on failure to keep
+        # artifact volume bounded for green runs.
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: playwright-test-results-${{ matrix.node-version }}
+          path: node_modules/.cache/e2e-test-results/
+          retention-days: 14
+
+      - name: upload backend log on failure
+        # Surface backend startup or runtime errors so reviewers don't need to
+        # re-run the workflow to inspect them. The log captures everything
+        # printed by `yarn start example-backend` from process start through
+        # the post-test kill.
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: backend-log-${{ matrix.node-version }}
+          path: /tmp/backend.log
+          retention-days: 14
+          if-no-files-found: ignore
+
+      - name: upload frontend log on failure
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: frontend-log-${{ matrix.node-version }}
+          path: /tmp/frontend.log
+          retention-days: 14
+          if-no-files-found: ignore

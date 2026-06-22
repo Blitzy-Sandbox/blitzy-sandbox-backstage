@@ -1,0 +1,44 @@
+# NO-OP placeholder that always passes for paths that do not affect the
+# Playwright E2E test surface. This file is here so that we can set the
+# "Playwright E2E ${{ matrix.node-version }}" status check as required on the
+# master branch — required checks must run on every PR, and docs-only PRs
+# should not waste runner minutes spinning up Postgres + backend + frontend.
+#
+# Keep the paths in sync with verify_playwright-e2e.yml's paths-ignore.
+
+name: Playwright E2E Void
+
+on:
+  pull_request:
+    paths:
+      - '.changeset/**'
+      - 'contrib/**'
+      - 'docs/**'
+      - 'microsite/**'
+      - 'beps/**'
+      - 'blitzy-deck/**'
+      - 'README*.md'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  playwright:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [22.x, 24.x]
+
+    name: Playwright E2E ${{ matrix.node-version }}
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        with:
+          egress-policy: audit
+
+      - run: echo NOOP

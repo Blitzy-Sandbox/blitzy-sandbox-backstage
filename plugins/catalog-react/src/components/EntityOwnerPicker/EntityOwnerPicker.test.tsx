@@ -240,12 +240,16 @@ describe('<EntityOwnerPicker mode="all" />', () => {
       </ApiProvider>,
     );
 
+    // After the Radix-style CatalogAutocomplete refactor the collapsed
+    // multi-select trigger no longer renders one `<button>` per selected
+    // chip. Instead it renders the label of the single selected option
+    // (or `${selectedCount} selected` for multi-selection) inside the
+    // trigger element — see
+    // `plugins/catalog-react/src/components/CatalogAutocomplete/CatalogAutocomplete.tsx`.
+    // The user-facing observable is the humanized text content, which
+    // we assert via `findByText`.
     await waitFor(() =>
-      expect(
-        screen.getByRole('button', {
-          name: 'Beautiful display name',
-        }),
-      ).toBeInTheDocument(),
+      expect(screen.getByText('Beautiful display name')).toBeInTheDocument(),
     );
 
     expect(mockCatalogApi.getEntitiesByRefs).toHaveBeenCalledWith({
@@ -258,13 +262,21 @@ describe('<EntityOwnerPicker mode="all" />', () => {
 
     expect(mockCatalogApi.getEntitiesByRefs).toHaveBeenCalledTimes(1);
 
-    await waitFor(() =>
-      expect(
-        screen.getByRole('button', {
-          name: 'Some Owner 2',
-        }),
-      ).toBeInTheDocument(),
-    );
+    // Adding "Some Owner 2" to the selection should result in two
+    // selected entries (the initially loaded `another-owner` plus the
+    // newly-selected option). The picker uses `disableCloseOnSelect` so
+    // it stays open; the canonical observable for the selection update
+    // is that `updateFilters` has been called with both ownership refs.
+    await waitFor(() => {
+      const lastCall =
+        updateFilters.mock.calls[updateFilters.mock.calls.length - 1]?.[0];
+      expect(lastCall?.owners?.values).toEqual(
+        expect.arrayContaining([
+          'group:default/another-owner',
+          'group:default/some-owner-2',
+        ]),
+      );
+    });
   });
 
   it('adds owners to filters', async () => {
@@ -413,7 +425,24 @@ describe('<EntityOwnerPicker mode="all" />', () => {
       owners: undefined,
     });
 
-    const input = screen.getByRole('combobox');
+    // After the Radix-style refactor the picker's input element is only
+    // rendered while the picker is open — the collapsed trigger is a
+    // non-input `<div role="combobox">` and cannot accept text input
+    // (jsdom's `fireEvent.change` reports "The given element does not
+    // have a value setter"). Open the picker first so the real
+    // `<input>` mounts.
+    fireEvent.click(screen.getByTestId('owner-picker-trigger'));
+    await waitFor(() => {
+      const inputs = screen
+        .getAllByRole('combobox')
+        .filter(el => (el as HTMLElement).tagName.toLowerCase() === 'input');
+      expect(inputs.length).toBeGreaterThan(0);
+    });
+    const input = screen
+      .getAllByRole('combobox')
+      .find(
+        el => (el as HTMLElement).tagName.toLowerCase() === 'input',
+      ) as HTMLInputElement;
     fireEvent.change(input, { target: { value: 'Some-Owner' } });
 
     await waitFor(() =>

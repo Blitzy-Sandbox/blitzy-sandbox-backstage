@@ -66,8 +66,31 @@ export const EntityRefLink = forwardRef<any, EntityRefLinkProps>(
       />
     );
 
+    /*
+     * CP9 QA fix — Issue #15 (MAJOR, WCAG 2.1 AA SC 2.5.8 Target Size):
+     *
+     * Previously the rendered `<a>` element measured 16px tall (the
+     * underline-styled text content), failing both the AA threshold of
+     * 24×24 CSS pixels and the AAA threshold of 44×44 for mobile touch
+     * targets. The fix expands the vertical hit area to ≥24px by
+     * applying a small block of vertical padding without changing the
+     * visual rendering of the text. `inline-block` is required for
+     * top/bottom padding to take effect on an `<a>`.
+     *
+     * The padding is layered onto any `className` the caller passes via
+     * `linkProps` so this fix does not regress consumer styling.
+     */
+    const baseTouchTargetClass = 'inline-block py-1';
+    const mergedClassName = linkProps.className
+      ? `${baseTouchTargetClass} ${linkProps.className}`
+      : baseTouchTargetClass;
     return (
-      <Link {...linkProps} ref={ref} to={entityRoute}>
+      <Link
+        {...linkProps}
+        className={mergedClassName}
+        ref={ref}
+        to={entityRoute}
+      >
         {content}
       </Link>
     );

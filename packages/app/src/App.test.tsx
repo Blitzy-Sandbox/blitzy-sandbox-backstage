@@ -20,6 +20,13 @@ import { renderWithEffects } from '@backstage/test-utils';
 // default five seconds
 jest.setTimeout(15_000);
 
+/**
+ * Smoke test for the refactored Backstage chrome (top-bar replacing sidebar)
+ * and routing (`/` redirects to `/catalog`). Verifies that `App.tsx` mounts
+ * successfully under JSDOM without throwing — UI-level assertions (sidebar
+ * absent, top-bar positions, library badge border, catalog AND-count, etc.)
+ * are covered by Playwright e2e tests in `packages/app/e2e-tests/`.
+ */
 describe('App', () => {
   it('should render', async () => {
     process.env = {

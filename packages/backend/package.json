@@ -33,6 +33,8 @@
     "@backstage/backend-defaults": "workspace:^",
     "@backstage/backend-plugin-api": "workspace:^",
     "@backstage/catalog-model": "workspace:^",
+    "@backstage/config": "workspace:^",
+    "@backstage/errors": "workspace:^",
     "@backstage/plugin-app-backend": "workspace:^",
     "@backstage/plugin-auth-backend": "workspace:^",
     "@backstage/plugin-auth-backend-module-github-provider": "workspace:^",
@@ -50,7 +52,6 @@
     "@backstage/plugin-events-backend": "workspace:^",
     "@backstage/plugin-notifications-backend": "workspace:^",
     "@backstage/plugin-permission-backend": "workspace:^",
-    "@backstage/plugin-permission-backend-module-allow-all-policy": "workspace:^",
     "@backstage/plugin-permission-common": "workspace:^",
     "@backstage/plugin-permission-node": "workspace:^",
     "@backstage/plugin-proxy-backend": "workspace:^",
@@ -63,13 +64,20 @@
     "@backstage/plugin-search-backend-node": "workspace:^",
     "@backstage/plugin-signals-backend": "workspace:^",
     "@backstage/plugin-techdocs-backend": "workspace:^",
-    "@opentelemetry/auto-instrumentations-node": "^0.67.0",
-    "@opentelemetry/exporter-prometheus": "^0.211.0",
-    "@opentelemetry/sdk-node": "^0.211.0",
+    "@internal/plugin-catalog-backend-module-access-audit": "workspace:^",
+    "@internal/plugin-permission-backend-module-blitzy-policy": "workspace:^",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.76.0",
+    "@opentelemetry/exporter-prometheus": "^0.218.0",
+    "@opentelemetry/sdk-node": "^0.218.0",
     "better-sqlite3": "^11.0.0",
-    "example-app": "link:../app"
+    "example-app": "link:../app",
+    "express": "^4.22.0",
+    "jose": "^5.0.0"
   },
   "devDependencies": {
-    "@backstage/cli": "workspace:^"
+    "@backstage/backend-test-utils": "workspace:^",
+    "@backstage/cli": "workspace:^",
+    "@backstage/types": "workspace:^"
   }
 }

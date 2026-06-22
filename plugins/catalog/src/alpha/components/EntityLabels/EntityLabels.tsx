@@ -15,11 +15,7 @@
  */
 
 import { HeaderLabel } from '@backstage/core-components';
-import { Entity, RELATION_OWNED_BY } from '@backstage/catalog-model';
-import {
-  EntityRefLinks,
-  getEntityRelations,
-} from '@backstage/plugin-catalog-react';
+import { Entity } from '@backstage/catalog-model';
 import { useTranslationRef } from '@backstage/core-plugin-api/alpha';
 import { catalogTranslationRef } from '../../translation';
 
@@ -29,23 +25,9 @@ type EntityLabelsProps = {
 
 export function EntityLabels(props: EntityLabelsProps) {
   const { entity } = props;
-  const ownedByRelations = getEntityRelations(entity, RELATION_OWNED_BY);
   const { t } = useTranslationRef(catalogTranslationRef);
   return (
     <>
-      {ownedByRelations.length > 0 && (
-        <HeaderLabel
-          label={t('entityLabels.ownerLabel')}
-          contentTypograpyRootComponent="p"
-          value={
-            <EntityRefLinks
-              entityRefs={ownedByRelations}
-              defaultKind="Group"
-              color="inherit"
-            />
-          }
-        />
-      )}
       {entity.spec?.lifecycle && (
         <HeaderLabel
           label={t('entityLabels.lifecycleLabel')}

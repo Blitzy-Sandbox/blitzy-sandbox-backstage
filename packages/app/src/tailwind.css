@@ -4509,7 +4509,10 @@
     --muted-foreground: #5F5B76;
     --accent: #F5F5F5;
     --accent-foreground: #2D1C77;
-    --destructive: #E22134;
+    /* CP8 Issue #8: darkened from #E22134 (4.39:1 — FAILS WCAG AA 4.5:1) to
+     * #B71C1C (~7.4:1) for text-destructive readability. Kept in sync with
+     * packages/app/src/globals.css and packages/theme/src/tokens/shadcn-tokens.css. */
+    --destructive: #B71C1C;
     --destructive-foreground: #FFFFFF;
     --border: #E5E5E5;
     --input: #E5E5E5;

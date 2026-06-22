@@ -16,16 +16,46 @@ app:
         ownerEntityRefs: [cubic-belugas]
 
   extensions:
-    # Route the home page to / so it serves as the landing page
-    - page:home:
-        config:
-          path: /
+    # CP9 QA fix — Issue #6 (CRITICAL) / Issue #8:
+    #
+    # The home page extension is fully DISABLED in the Blitzy Sandbox per
+    # AAP §0.5.1.4. The dashboard has been removed and the bare URL `/`
+    # is handled by `rootRedirectModule` in `packages/app/src/App.tsx`
+    # which mounts a `<Navigate to="/catalog" replace />` redirect at
+    # path `/`. Previously this `page:home` block overrode the home plugin's
+    # default path from `/home` to `/`, causing the home plugin's
+    # empty-widget-customizer page to take precedence over the redirect
+    # module (auto-discovered via `app.packages: all`). Setting the
+    # extension to `false` disables it so `rootRedirectModule` becomes
+    # the sole owner of `/` and the user lands on `/catalog`.
+    - page:home: false
 
-    # set availableLanguages example
+    # CP9 QA fix — Issue #8:
+    #
+    # Register the `api:app/app-language` extension here with the
+    # authoritative locale list `['en', 'fr', 'ko', 'zh-Hans']` that
+    # matches the four README locale variants per AAP §0.6.1.7.
+    #
+    # CRITICAL: Backstage config arrays do NOT merge across config
+    # files — they REPLACE. Since this package-level config defines its
+    # own `app.extensions` array (page:home: false, entity-card overrides,
+    # nav-item filters, etc.), any extension defined in the root
+    # `app-config.yaml`'s `app.extensions` is entirely shadowed. The root
+    # config's `api:app/app-language` block IS present but is never
+    # applied at runtime because this file's `app.extensions` array
+    # supersedes it. The previous CP9 fix dropped the override but did
+    # not re-add the entry here, causing the AppLanguageSelector to fall
+    # back to `[DEFAULT_LANGUAGE]` (just `['en']`), which made
+    # `UserSettingsLanguageToggle` return null since
+    # `languages.length <= 1` (see
+    # plugins/user-settings/src/components/General/UserSettingsLanguageToggle.tsx
+    # L43-L45). Re-adding the entry here restores the Language combobox
+    # in Settings with the correct locale options.
     - api:app/app-language:
         config:
-          availableLanguages: ['en', 'es', 'fr', 'de', 'ja']
+          availableLanguages: ['en', 'fr', 'ko', 'zh-Hans']
           defaultLanguage: 'en'
+
     - entity-card:org/members-list:
         config:
           showAggregateMembersToggle: true

@@ -41,6 +41,16 @@ const getDocumentText = (entity: Entity): string => {
 /** @public */
 export const defaultCatalogCollatorEntityTransformer: CatalogCollatorEntityTransformer =
   (entity: Entity) => {
+    // The `owner` field is intentionally NOT included in the serialized
+    // catalog search document. Owner functionality has been fully removed
+    // across the application per AAP §0.1.2 ("CRITICAL: Perform a full
+    // removal of this functionality across the application" for Owner).
+    // Suppressing this field at the backend ensures the catalog search
+    // surface never receives the owner data — even if a stale frontend
+    // build is deployed against an updated backend — so the Owner badge
+    // can never render in CatalogSearchResultListItem regardless of UI
+    // rendering logic. The corresponding `owner` field on
+    // `CatalogEntityDocument` is now optional to accommodate this change.
     return {
       title: entity.metadata.title ?? entity.metadata.name,
       text: getDocumentText(entity),
@@ -49,6 +59,5 @@ export const defaultCatalogCollatorEntityTransformer: CatalogCollatorEntityTrans
       namespace: entity.metadata.namespace || 'default',
       kind: entity.kind,
       lifecycle: (entity.spec?.lifecycle as string) || '',
-      owner: (entity.spec?.owner as string) || '',
     };
   };

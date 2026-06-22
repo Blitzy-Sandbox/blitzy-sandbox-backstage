@@ -73,8 +73,6 @@ export const getApiEntityColumns = (
 ): TableColumn<ApiEntity>[] => {
   return [
     EntityTable.columns.createEntityRefColumn({ defaultKind: 'API' }),
-    EntityTable.columns.createSystemColumn(),
-    EntityTable.columns.createOwnerColumn(),
     createSpecApiTypeColumn(t),
     EntityTable.columns.createSpecLifecycleColumn(),
     EntityTable.columns.createMetadataDescriptionColumn(),

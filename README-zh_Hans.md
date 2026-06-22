@@ -48,6 +48,27 @@ Backstage 的文档包括：
 - [Backstage 设计](https://backstage.io/docs/dls/design)
 - [Storybook - UI 组件](https://backstage.io/storybook)
 
+### Blitzy Sandbox 分支说明（重构已交付）
+
+本仓库是 Backstage 的 Blitzy 定制分支，多 Checkpoint 重构已在源码层面交付。与上游 Backstage 的主要差异如下：
+
+- **应用 Chrome**：原左侧边栏已被移除，所有页面右上角放置 Blitzy 徽标（不可点击）、设置按钮和支持按钮。支持按钮通过 `app-config.yaml` 中的 `app.support.items` 显示官方支持邮箱 `support@blitzy.com`。该集群在 `packages/app/src/modules/appModuleTopBar.tsx` 中通过 `NavContentBlueprint` 和 `app/layout` 扩展覆盖挂载（实际使用的 blueprint 选择见 `blitzy/documentation/Technical Specifications.md` _Implementation Reality Addendum_ 条目 IR-3）。
+- **着陆页**：`/catalog` 是应用的着陆页；裸路径 `/` 重定向到 `/catalog`，原 Dashboard 页面已被移除。
+- **权限策略**：`BlitzyPermissionPolicy` 已在 `plugins/permission-backend-module-blitzy-policy/` 中实现，并注册到 `packages/backend/src/index.ts`，替代了上游的 `AllowAllPermissionPolicy`。已验证邮箱域名为 `@blitzy.com` 的用户保留完整访问权限；其他所有已认证用户和 Guest 会话被限制为后端权限层强制执行的**只读**访问。该策略从 GitHub `signInResolver`（`packages/backend/src/authModuleGithubProvider.ts`）通过 `ctx.issueToken({ claims: { email } })` 填充的自定义 JWT `email` 声明中提取用户邮箱，并通过 `jose.decodeJwt(user.credentials.token)` 解码（实际传播路径见 Technical Specifications IR-2）。
+- **审计日志**：GitHub 登录尝试和目录实体读取通过 Backstage `AuditorService` 记录（每次登录尝试发出 `user-login` 事件，每次实体读取发出 `entity-access` 事件）。`entity-access` 事件携带规范的 HTTP 请求关联 ID；`user-login` 事件携带在解析器中生成的合成 `correlationId`（UUID），这是因为 `SignInResolver` 回调不暴露 HTTP 请求。
+
+分支专属文档（已交付）：
+
+- [`docs/refactor/onboarding-addendum.md`](docs/refactor/onboarding-addendum.md) — 入职指南补充（清洁机器配置、LocalGCP）
+- [`docs/refactor/decision-log.md`](docs/refactor/decision-log.md) — 决策日志、替代方案与风险
+- [`docs/refactor/traceability-matrix.md`](docs/refactor/traceability-matrix.md) — 需求-实现双向追溯矩阵
+- [`docs/refactor/architecture-before-after.md`](docs/refactor/architecture-before-after.md) — 重构前后 Mermaid 架构图
+- [`docs/refactor/next-tasks.md`](docs/refactor/next-tasks.md) — 当前范围之外的后续改进项
+- [`docs/observability/dashboards.md`](docs/observability/dashboards.md) — 可观测性文档与 Grafana 仪表板
+- [`docs/observability/dashboard-template.json`](docs/observability/dashboard-template.json) — 可导入的 Grafana 仪表板 JSON
+
+**可观测性状态**：可观测性文档中引用的自定义 Prometheus 计数器（`user_login_total`、`entity_access_total`、`blitzy_permission_decisions_total`）已通过统一的指标 API `@opentelemetry/api` 由源模块（`packages/backend/src/metrics.ts`、`plugins/catalog-backend-module-access-audit/src/metrics.ts`、`plugins/permission-backend-module-blitzy-policy/src/metrics.ts`）**实现并发出**；由 `@opentelemetry/auto-instrumentations-node` 自动检测的 HTTP/运行时指标与自定义计数器同时可用。单元测试 `plugins/catalog-backend-module-access-audit/src/module.test.ts` 已**创建并包含 25 个通过的测试用例**（与 Playwright `auditing.test.ts` E2E 套件互为补充）。CI 工作流**尚未**在集成测试之前调用 `docker compose -f docker-compose.localgcp.yml up -d`，尽管 compose 文件已提交到仓库——这一剩余事项在 `docs/refactor/next-tasks.md` 第 7 项中跟踪。综合状态见 `blitzy/documentation/Project Guide.md` §0 _Verification Status (Implementation Reality)_。
+
 ## 社区
 
 要参与我们的社区，您可以使用以下资源：

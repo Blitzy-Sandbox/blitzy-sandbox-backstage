@@ -18,7 +18,6 @@ import {
   DEFAULT_NAMESPACE,
   Entity,
   EntityRelation,
-  RELATION_OWNED_BY,
 } from '@backstage/catalog-model';
 import {
   Alert,
@@ -47,10 +46,7 @@ import {
   catalogApiRef,
   EntityDisplayName,
   EntityRefLink,
-  EntityRefLinks,
   entityRouteRef,
-  FavoriteEntity,
-  getEntityRelations,
   InspectEntityDialog,
   UnregisterEntityDialog,
   useAsyncEntity,
@@ -93,7 +89,6 @@ function EntityLayoutTitle(props: {
       <span className="overflow-hidden text-ellipsis whitespace-nowrap">
         {entity ? <EntityDisplayName entityRef={entity} hideIcon /> : title}
       </span>
-      {entity && <FavoriteEntity entity={entity} />}
     </div>
   );
 }
@@ -126,23 +121,9 @@ function headerProps(
 
 function EntityLabels(props: { entity: Entity }) {
   const { entity } = props;
-  const ownedByRelations = getEntityRelations(entity, RELATION_OWNED_BY);
   const { t } = useTranslationRef(catalogTranslationRef);
   return (
     <>
-      {ownedByRelations.length > 0 && (
-        <HeaderLabel
-          label={t('entityLabels.ownerLabel')}
-          contentTypograpyRootComponent="p"
-          value={
-            <EntityRefLinks
-              entityRefs={ownedByRelations}
-              defaultKind="Group"
-              color="inherit"
-            />
-          }
-        />
-      )}
       {entity.spec?.lifecycle && (
         <HeaderLabel
           label={t('entityLabels.lifecycleLabel')}

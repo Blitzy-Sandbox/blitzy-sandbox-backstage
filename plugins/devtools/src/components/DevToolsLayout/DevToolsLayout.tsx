@@ -19,15 +19,21 @@ import {
   attachComponentData,
   useElementFilter,
 } from '@backstage/core-plugin-api';
-import { TabProps } from '@material-ui/core/Tab';
-import { ElementType, ReactNode } from 'react';
+import { ComponentPropsWithoutRef, ReactNode } from 'react';
 
 /** @public */
 export type SubRoute = {
   path: string;
   title: string;
   children: JSX.Element;
-  tabProps?: TabProps<ElementType, { component?: ElementType }>;
+  /**
+   * Props forwarded to the underlying tab trigger button. The migrated
+   * RoutedTabs uses a Radix/shadcn-styled <button> as the tab trigger rather
+   * than the legacy MUI <Tab> component, so this is now a standard HTML
+   * button attribute set, with an optional `asChild` escape hatch for
+   * advanced composition (matching Radix patterns).
+   */
+  tabProps?: ComponentPropsWithoutRef<'button'> & { asChild?: boolean };
 };
 
 const dataKey = 'plugin.devtools.devtoolsLayoutRoute';

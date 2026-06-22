@@ -50,11 +50,7 @@ const SidebarLogo = () => {
 
   return (
     <div className={classes.root}>
-      <Link
-        to="/docs/default/component/local/"
-        underline="none"
-        className={classes.link}
-      >
+      <Link to="/docs/default/component/local/" className={classes.link}>
         {isOpen ? <LogoFull /> : <LogoIcon />}
       </Link>
     </div>

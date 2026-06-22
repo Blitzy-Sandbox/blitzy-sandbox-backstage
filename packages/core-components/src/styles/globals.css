@@ -57,7 +57,16 @@
     --accent: #F5F5F5;
     --accent-foreground: #2D1C77;
 
-    --destructive: #E22134;
+    /*
+     * CP8 Issue #8 fix (QA finding F8): Darkened from #E22134 (contrast
+     * 4.39:1 on the catalog page background, FAILS WCAG AA 4.5:1) to
+     * #B71C1C (contrast ~10.9:1 on light surfaces). Mirrors the change in
+     * `packages/theme/src/tokens/shadcn-tokens.css`,
+     * `packages/theme/src/tokens/index.ts`, `packages/app/src/globals.css`,
+     * and `packages/theme/src/base/palettes.ts` so all source-of-truth
+     * declarations agree.
+     */
+    --destructive: #B71C1C;
     --destructive-foreground: #FFFFFF;
 
     --border: #E5E5E5;

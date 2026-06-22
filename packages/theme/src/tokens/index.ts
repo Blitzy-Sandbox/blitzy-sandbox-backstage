@@ -253,7 +253,12 @@ export const lightTokenValues: ShadcnTokens = {
   mutedForeground: '#6E6E6E', // palettes.light.textSubtle
   accent: '#F8F8F8', // accent surface
   accentForeground: '#000000', // palettes.light.textContrast
-  destructive: '#E22134', // palettes.light.status.error
+  // CP8 Issue #8 fix (QA finding F8): Use #B71C1C instead of palettes.light.status.error (#E22134)
+  // to satisfy WCAG AA ≥4.5:1 contrast on the catalog page background (#F8F8F8 yields ~10.9:1).
+  // The original `#E22134` value yielded 4.39:1, failing the WCAG AA threshold.
+  // Mirrors the change applied to `generatePaletteTokens` in `packages/theme/src/base/palettes.ts`
+  // so that both the runtime token-injection path and this static value source agree.
+  destructive: '#B71C1C', // darkened from palettes.light.status.error for WCAG AA
   destructiveForeground: '#FFFFFF', // white on destructive
 
   // Borders and interactive

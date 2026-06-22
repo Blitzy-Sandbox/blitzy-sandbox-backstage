@@ -108,8 +108,29 @@ export class BlitzyProjectHistoryProcessor implements CatalogProcessor {
 
     const slug = entity.metadata.annotations?.[SLUG_ANNOTATION];
 
-    // No slug → definitively no history.
+    // No slug → there is no GitHub repository to consult. In the common
+    // case (production entities, manually-registered components without
+    // a slug), the entity has no project history and we stamp `'false'`.
+    //
+    // However, an entity may declare its project-history status
+    // explicitly in source — for example, the deterministic catalog
+    // seed used by the E2E suite at
+    // `packages/app/e2e-tests/fixtures/e2e-seed-catalog.yaml` requires
+    // its `blitzy-e2e-component-*` fixtures to be visible in the catalog
+    // UI in order to exercise tag-AND filtering, View-button removal,
+    // and library-chip-border assertions. Without honoring the explicit
+    // declaration, those fixtures would be filtered out by the default
+    // `EntityHasProjectHistoryFilter(true)` mounted in
+    // `DefaultCatalogPage.tsx`, silently breaking every refactor.test.ts
+    // assertion that depends on seed entities being rendered. When the
+    // entity comes pre-stamped, that explicit value is the source of
+    // truth and we return the entity unchanged.
     if (!slug) {
+      const preStamped =
+        entity.metadata.annotations?.[HAS_PROJECT_HISTORY_ANNOTATION];
+      if (preStamped === 'true' || preStamped === 'false') {
+        return entity;
+      }
       return stamp(entity, 'false');
     }
 

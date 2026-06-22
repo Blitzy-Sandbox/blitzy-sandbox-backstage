@@ -73,7 +73,10 @@ describe('systemEntityColumns', () => {
     await waitFor(() => {
       expect(screen.getByText('my-namespace/my-system')).toBeInTheDocument();
       expect(screen.getByText('my-namespace/my-domain')).toBeInTheDocument();
-      expect(screen.getByText('test')).toBeInTheDocument();
+      // Owner column was removed from systemEntityColumns per AAP §0.1.3
+      // CRITICAL: "Perform a full removal of this functionality across the
+      // application." No Owner link should surface in this table.
+      expect(screen.queryByText('test')).not.toBeInTheDocument();
       expect(screen.queryAllByText(/Some/)).not.toHaveLength(0);
     });
   });
@@ -126,8 +129,15 @@ describe('componentEntityColumns', () => {
 
     await waitFor(() => {
       expect(screen.getByText('my-namespace/my-component')).toBeInTheDocument();
-      expect(screen.getByText('my-namespace/my-system')).toBeInTheDocument();
-      expect(screen.getByText('test')).toBeInTheDocument();
+      // System and Owner columns were removed from componentEntityColumns
+      // per AAP §0.1.3 CRITICAL: "Perform a full removal of this
+      // functionality across the application." Neither the System link
+      // (my-namespace/my-system) nor the Owner link (group 'test') should
+      // surface anywhere in this table.
+      expect(
+        screen.queryByText('my-namespace/my-system'),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByText('test')).not.toBeInTheDocument();
       expect(screen.getByText('production')).toBeInTheDocument();
       expect(screen.getByText('service')).toBeInTheDocument();
       expect(screen.queryAllByText(/Some/)).not.toHaveLength(0);

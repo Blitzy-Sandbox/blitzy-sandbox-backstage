@@ -48,6 +48,27 @@ La documentation de Backstage inclut:
 - [Designing for Backstage](https://backstage.io/docs/dls/design)
 - [Storybook - UI components](https://backstage.io/storybook)
 
+### Spécificités Blitzy Sandbox (refactor livré)
+
+Ce dépôt est le fork Blitzy de Backstage. Le refactor multi-checkpoints est livré côté code source. Les principales différences avec le Backstage d'origine sont :
+
+- **Chrome de l'application** : la barre latérale d'origine a été remplacée par une **barre supérieure** en haut à droite, contenant un logo Blitzy non cliquable, un bouton Réglages liant `/settings`, et un bouton Support affichant `support@blitzy.com`. Le cluster est monté dans `packages/app/src/modules/appModuleTopBar.tsx` via `NavContentBlueprint` et un override de l'extension `app/layout` (voir `blitzy/documentation/Technical Specifications.md` _Implementation Reality Addendum_, entrée IR-3, pour le choix de blueprint réellement utilisé).
+- **Page d'accueil** : `/catalog` est la page d'accueil de l'application ; `/` redirige vers `/catalog` et l'ancien Dashboard a été supprimé.
+- **Politique d'autorisation** : `BlitzyPermissionPolicy` est implémentée dans `plugins/permission-backend-module-blitzy-policy/` et enregistrée dans `packages/backend/src/index.ts`, remplaçant la politique `AllowAllPermissionPolicy` d'amont. Les utilisateurs dont le domaine d'e-mail vérifié est `@blitzy.com` conservent l'accès complet ; tous les autres utilisateurs authentifiés et les sessions Guest sont contraints à un accès **en lecture seule**, appliqué par la couche d'autorisation du backend. La politique lit l'e-mail depuis la _claim_ JWT personnalisée `email` que le `signInResolver` GitHub (`packages/backend/src/authModuleGithubProvider.ts`) émet via `ctx.issueToken({ claims: { email } })` et que la politique décode avec `jose.decodeJwt(user.credentials.token)` — voir IR-2 dans Technical Specifications pour le chemin de propagation tel qu'implémenté.
+- **Audit** : les connexions GitHub et les lectures d'entités du catalogue sont enregistrées via `AuditorService` (`user-login` à chaque tentative de connexion, `entity-access` à chaque lecture d'entité). Les événements `entity-access` portent l'identifiant de corrélation HTTP canonique ; les événements `user-login` portent un `correlationId` synthétique (UUID) généré dans le résolveur, car le rappel `SignInResolver` n'expose pas la requête HTTP.
+
+Documentation spécifique au fork (livrée) :
+
+- [`docs/refactor/onboarding-addendum.md`](docs/refactor/onboarding-addendum.md) — addendum d'intégration (machine neuve, LocalGCP)
+- [`docs/refactor/decision-log.md`](docs/refactor/decision-log.md) — journal des décisions, alternatives et risques
+- [`docs/refactor/traceability-matrix.md`](docs/refactor/traceability-matrix.md) — matrice de traçabilité bidirectionnelle
+- [`docs/refactor/architecture-before-after.md`](docs/refactor/architecture-before-after.md) — diagrammes Mermaid avant/après
+- [`docs/refactor/next-tasks.md`](docs/refactor/next-tasks.md) — prochaines tâches hors périmètre actuel
+- [`docs/observability/dashboards.md`](docs/observability/dashboards.md) — observabilité, dashboards Grafana
+- [`docs/observability/dashboard-template.json`](docs/observability/dashboard-template.json) — modèle de dashboard Grafana importable
+
+**Statut d'observabilité** : les compteurs Prometheus personnalisés (`user_login_total`, `entity_access_total`, `blitzy_permission_decisions_total`) référencés dans la documentation d'observabilité sont **implémentés et émis** par les modules sources (`packages/backend/src/metrics.ts`, `plugins/catalog-backend-module-access-audit/src/metrics.ts`, `plugins/permission-backend-module-blitzy-policy/src/metrics.ts`) via l'API métriques unifiée `@opentelemetry/api` ; les métriques HTTP/runtime auto-instrumentées par `@opentelemetry/auto-instrumentations-node` sont disponibles aux côtés des compteurs personnalisés. Le test unitaire `plugins/catalog-backend-module-access-audit/src/module.test.ts` est **créé avec 25 cas exécutés** qui passent, en complément de la suite Playwright `auditing.test.ts`. Le workflow CI **n'invoque pas encore** `docker compose -f docker-compose.localgcp.yml up -d` avant les tests d'intégration, bien que le fichier compose soit présent dans le dépôt — cet élément restant est suivi dans `docs/refactor/next-tasks.md` entrée 7. Le statut consolidé est disponible dans `blitzy/documentation/Project Guide.md` §0 _Verification Status (Implementation Reality)_.
+
 ## Communauté
 
 Si vous voulez contribuer et vous impliquer dans notre communauté, voici les ressources à votre disposition :

@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import { fireEvent, waitFor, screen } from '@testing-library/react';
+import { waitFor, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Entity } from '@backstage/catalog-model';
 import { EntityTypePicker } from './EntityTypePicker';
 import { MockEntityListContextProvider } from '@backstage/plugin-catalog-react/testUtils';
@@ -103,17 +104,28 @@ describe('<EntityTypePicker/>', () => {
         </MockEntityListContextProvider>
       </ApiProvider>,
     );
-    // shadcn Select renders a combobox trigger; the label "Type" is the placeholder
-    // which is hidden when a value ('all') is selected by default
+    // After the shadcn/ui migration the picker uses Radix Select. The
+    // collapsed trigger renders with `role="combobox"` and the option
+    // listbox is portalled into the document only after a real pointer
+    // event toggles it open — `fireEvent.click` does not trigger Radix
+    // Select's internal pointerdown handler in jsdom (the polyfills
+    // installed in `beforeAll` ensure userEvent does). Using
+    // `userEvent.click` reliably opens the listbox and surfaces the
+    // option labels.
     const trigger = screen.getByRole('combobox');
     expect(trigger).toBeInTheDocument();
 
-    fireEvent.click(trigger);
+    await userEvent.click(trigger);
 
-    await waitFor(() => screen.getByText('service'));
+    // Radix Select renders option labels with the capitalization the
+    // picker applies (see EntityTypePicker.tsx —
+    // `type.charAt(0).toUpperCase() + type.slice(1)`).
+    await waitFor(() => screen.getByText('Service'));
 
     entities.forEach(entity => {
-      expect(screen.getByText(entity.spec!.type as string)).toBeInTheDocument();
+      const raw = entity.spec!.type as string;
+      const label = raw.charAt(0).toUpperCase() + raw.slice(1);
+      expect(screen.getByText(label)).toBeInTheDocument();
     });
   });
 
@@ -132,17 +144,19 @@ describe('<EntityTypePicker/>', () => {
       </ApiProvider>,
     );
     const trigger = screen.getByRole('combobox');
-    fireEvent.click(trigger);
+    await userEvent.click(trigger);
 
-    await waitFor(() => screen.getByText('service'));
-    fireEvent.click(screen.getByText('service'));
+    await waitFor(() => screen.getByText('Service'));
+    await userEvent.click(screen.getByText('Service'));
 
     expect(updateFilters).toHaveBeenLastCalledWith({
       type: new EntityTypeFilter(['service']),
     });
 
-    fireEvent.click(trigger);
-    fireEvent.click(screen.getByText('all'));
+    await userEvent.click(trigger);
+    // The "All" option is rendered with title casing
+    // (`t('entityTypePicker.optionAllTitle')` → "All").
+    await userEvent.click(screen.getByText('All'));
 
     expect(updateFilters).toHaveBeenLastCalledWith({ type: undefined });
   });

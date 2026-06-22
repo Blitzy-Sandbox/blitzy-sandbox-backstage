@@ -27,5 +27,20 @@ export interface CatalogEntityDocument extends IndexableDocument {
   namespace: string;
   kind: string;
   lifecycle: string;
-  owner: string;
+  /**
+   * Owner reference for the indexed entity.
+   *
+   * Optional per AAP §0.1.2 ("CRITICAL: Perform a full removal of this
+   * functionality across the application" for Owner). The default
+   * collator transformer
+   * (`@backstage/plugin-search-backend-module-catalog`'s
+   * `defaultCatalogCollatorEntityTransformer`) no longer emits this
+   * field. The property remains in the interface as `string | undefined`
+   * so that any downstream consumer that defines a custom
+   * `CatalogCollatorEntityTransformer` and still chooses to surface an
+   * owner value continues to type-check. UI surfaces that render search
+   * results MUST NOT display owner regardless of whether the document
+   * carries it (see `CatalogSearchResultListItem.tsx`).
+   */
+  owner?: string;
 }

@@ -77,8 +77,6 @@ export const Content = (props: QuickStartCardProps): JSX.Element => {
           <Link
             to={props.docsLink || 'https://backstage.io/docs/getting-started/'}
             data-testid="quick-start-link-to-docs"
-            underline="none"
-            variant="h6"
             className={styles.link}
           >
             {props.docsLinkTitle || t('quickStart.learnMoreLinkTitle')}

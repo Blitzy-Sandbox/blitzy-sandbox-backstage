@@ -17,7 +17,6 @@
 import {
   Entity,
   getEntitySourceLocation,
-  RELATION_OWNED_BY,
   RELATION_PART_OF,
 } from '@backstage/catalog-model';
 import {
@@ -72,13 +71,8 @@ export function AboutContent(props: AboutContentProps) {
   const sourceUrl = useEntitySourceUrl(entity);
   const { t } = useTranslationRef(catalogTranslationRef);
 
-  // D4 fix: the AAP-specified `border-border/30` fractional-opacity modifier
-  // on the description divider is not emitted in the app's pre-compiled
-  // Tailwind stylesheet (`packages/app/src/tailwind.css`). Updating the
-  // Tailwind scan paths is OUT OF SCOPE per AAP 0.7.2. Apply the 30%
-  // alpha of the `--border` token (#E6E6E6) imperatively via the DOM
-  // API — Rule 1 compliant (the rule prohibits JSX `style={{}}`, not
-  // imperative DOM mutation).
+  // Apply a 30% alpha of the `--border` token (#E6E6E6) to the
+  // description divider imperatively via the DOM API.
   const descriptionRef = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     if (descriptionRef.current) {
@@ -97,9 +91,6 @@ export function AboutContent(props: AboutContentProps) {
   const isLocation = entity.kind.toLocaleLowerCase('en-US') === 'location';
   const isGroup = entity.kind.toLocaleLowerCase('en-US') === 'group';
 
-  const partOfSystemRelations = getEntityRelations(entity, RELATION_PART_OF, {
-    kind: 'system',
-  });
   const partOfComponentRelations = getEntityRelations(
     entity,
     RELATION_PART_OF,
@@ -110,7 +101,6 @@ export function AboutContent(props: AboutContentProps) {
   const partOfDomainRelations = getEntityRelations(entity, RELATION_PART_OF, {
     kind: 'domain',
   });
-  const ownedByRelations = getEntityRelations(entity, RELATION_OWNED_BY);
 
   let entitySourceLocation:
     | {
@@ -151,19 +141,6 @@ export function AboutContent(props: AboutContentProps) {
         </AboutField>
       )}
 
-      <AboutField
-        label={t('aboutCard.ownerField.label')}
-        value={t('aboutCard.ownerField.value')}
-      >
-        {ownedByRelations.length > 0 && (
-          <EntityRefLinks
-            entityRefs={ownedByRelations}
-            defaultKind="group"
-            hideIcons
-          />
-        )}
-      </AboutField>
-
       {(isSystem || partOfDomainRelations.length > 0) && (
         <AboutField
           label={t('aboutCard.domainField.label')}
@@ -173,24 +150,6 @@ export function AboutContent(props: AboutContentProps) {
             <EntityRefLinks
               entityRefs={partOfDomainRelations}
               defaultKind="domain"
-              hideIcons
-            />
-          )}
-        </AboutField>
-      )}
-
-      {(isAPI ||
-        isComponent ||
-        isResource ||
-        partOfSystemRelations.length > 0) && (
-        <AboutField
-          label={t('aboutCard.systemField.label')}
-          value={t('aboutCard.systemField.value')}
-        >
-          {partOfSystemRelations.length > 0 && (
-            <EntityRefLinks
-              entityRefs={partOfSystemRelations}
-              defaultKind="system"
               hideIcons
             />
           )}
@@ -217,10 +176,41 @@ export function AboutContent(props: AboutContentProps) {
         isGroup ||
         isLocation ||
         typeof entity?.spec?.type === 'string') && (
-        <AboutField
-          label={t('aboutCard.typeField.label')}
-          value={entity?.spec?.type as string}
-        />
+        /*
+         * CP9 QA fix — Issue #17 (MINOR, design system consistency):
+         *
+         * The AboutCard's "TYPE" field is now rendered through the same
+         * <Badge>-with-border treatment used by the catalog table's
+         * type column (see plugins/catalog/src/components/CatalogTable/
+         * columns.tsx — createSpecTypeColumn). When the entity's
+         * `spec.type` is `library`, the badge receives `border-2
+         * border-current rounded` so the visual styling matches the
+         * catalog table cell exactly. Other types render with the
+         * normal "secondary" variant (no extra border).
+         *
+         * Implements AAP §0.5.6 — "Apply a border around the word
+         * 'library' in the type column" — consistently across all
+         * surfaces that present the entity type.
+         */
+        <AboutField label={t('aboutCard.typeField.label')}>
+          {(() => {
+            const specType = entity?.spec?.type as string | undefined;
+            if (!specType) return null;
+            const isLibraryType = specType.toLowerCase() === 'library';
+            return (
+              <Badge
+                variant="secondary"
+                className={
+                  isLibraryType
+                    ? 'border-2 border-current rounded text-xs'
+                    : 'text-xs'
+                }
+              >
+                {specType}
+              </Badge>
+            );
+          })()}
+        </AboutField>
       )}
 
       {(isAPI ||

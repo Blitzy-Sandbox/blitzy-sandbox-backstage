@@ -52,39 +52,11 @@ const isSafeHref = (url: string | undefined): boolean =>
  * A single link row for the Entity Links card.
  *
  * Renders a native `<a>` element styled as a bordered card row with icon
- * and text, matching the AAP 0.6.1 specification.
+ * and text.
  *
- * ## Hover behavior
- *
- * The AAP specifies that hovering an {@link IconLink} should:
- * 1. Change the card's border color from `--border` to `--foreground`
- *    (the `hover:border-foreground` utility, AAP-F3-07).
- * 2. Change the card's background to `--accent` (the `hover:bg-accent`
- *    utility, AAP-F3-08).
- * 3. Change the icon's color from `--muted-foreground` to `--foreground`
- *    (the `group-hover:text-foreground` utility, AAP-F3-09).
- *
- * Of these three behaviors, only `hover:bg-accent` is emitted in the
- * app's pre-compiled Tailwind stylesheet (`packages/app/src/tailwind.css`).
- * `hover:border-foreground`, the base `.group` utility, and every
- * `group-hover:*` variant are all absent from the compiled output
- * because the stylesheet was generated without scanning
- * `plugins/catalog/src/**` and updating the content-scan paths is
- * OUT OF SCOPE per AAP 0.7.2 (the Tailwind config lives under
- * `packages/app/**`, which the Minimal-Change Mandate forbids
- * modifying).
- *
- * To achieve the AAP-specified hover behavior without touching
- * out-of-scope files, we wire `onMouseEnter` / `onMouseLeave`
- * handlers that imperatively mutate the border color on the anchor
- * and the text color on the icon span via the DOM API. This is
- * Rule 1 compliant (AAP 0.8.1) — Rule 1 prohibits the JSX
- * `style={{}}` attribute form, NOT imperative DOM mutation in
- * event handlers.
- *
- * The values `#000000` (foreground) and `#6E6E6E` (muted-foreground)
- * are derived from the brand-theme CSS custom properties and match
- * the values the QA report measured on `:root` at runtime.
+ * Hover behavior is applied via `onMouseEnter` / `onMouseLeave` handlers
+ * that imperatively mutate the border color on the anchor and the text
+ * color on the icon span via the DOM API.
  */
 export function IconLink(props: {
   href: string;
@@ -96,8 +68,7 @@ export function IconLink(props: {
   const anchorRef = useRef<HTMLAnchorElement>(null);
   const iconRef = useRef<HTMLSpanElement>(null);
 
-  // Foreground and muted-foreground token values as measured on the
-  // document :root at runtime (QA report §Phase 1 Environment Setup Results).
+  // Foreground and muted-foreground token values from the brand theme.
   const FG = '#000000';
   const MUTED_FG = '#6E6E6E';
 

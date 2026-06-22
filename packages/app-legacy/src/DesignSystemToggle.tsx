@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import React from 'react';
-
 function isProxied(): boolean {
   return window.location.port === '8080' || window.location.port === '';
 }

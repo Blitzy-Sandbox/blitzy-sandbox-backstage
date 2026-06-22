@@ -48,6 +48,29 @@ Backstage의 문서는 다음을 포함합니다:
 - [Designing for Backstage](https://backstage.io/docs/dls/design)
 - [Storybook - UI components](https://backstage.io/storybook)
 
+## Blitzy Sandbox 안내 (리팩토링 완료)
+
+이 저장소는 Blitzy의 Backstage 포크이며, 다중 체크포인트 리팩토링이 소스 코드 측면에서 완료되었습니다. 표준 Backstage와의 주요 차이점은 다음과 같습니다.
+
+- **크롬(Chrome) UI**: 좌측 사이드바가 제거되었고, 모든 페이지 상단 우측에 Blitzy 로고(클릭 불가), 설정 아이콘, 지원 버튼이 배치됩니다. 지원 버튼은 `app-config.yaml`의 `app.support.items`를 통해 공식 지원 이메일 `support@blitzy.com`을 표시합니다. 이 클러스터는 `packages/app/src/modules/appModuleTopBar.tsx`에 `NavContentBlueprint`와 `app/layout` 익스텐션 오버라이드를 통해 마운트됩니다(실제로 사용된 블루프린트 선택은 `blitzy/documentation/Technical Specifications.md` _Implementation Reality Addendum_ IR-3 참조).
+- **랜딩 페이지**: `/catalog`가 애플리케이션 랜딩 페이지이며, 루트 URL `/`는 `/catalog`로 리다이렉트됩니다. 기존 대시보드 페이지는 제거되었습니다.
+- **권한 정책**: `BlitzyPermissionPolicy`가 `plugins/permission-backend-module-blitzy-policy/`에 구현되어 `packages/backend/src/index.ts`에 등록되어 있으며, 업스트림의 `AllowAllPermissionPolicy`를 대체합니다. 확인된 이메일 도메인이 `@blitzy.com`인 사용자는 전체 액세스 권한을 유지하며, 그 외 모든 인증된 사용자와 Guest 세션은 백엔드 권한 계층에서 강제되는 **읽기 전용** 액세스로 제한됩니다. 이 정책은 GitHub `signInResolver`(`packages/backend/src/authModuleGithubProvider.ts`)가 `ctx.issueToken({ claims: { email } })`로 발급한 커스텀 JWT `email` 클레임에서 이메일을 추출하며, `jose.decodeJwt(user.credentials.token)`로 디코딩합니다(실제 전파 경로는 Technical Specifications IR-2 참조).
+- **감사(audit) 로그**: GitHub 로그인 시도와 카탈로그 엔티티 읽기가 Backstage `AuditorService`를 통해 기록됩니다(`user-login`은 모든 로그인 시도에 대해, `entity-access`는 모든 엔티티 읽기에 대해 발행됩니다). `entity-access` 이벤트는 HTTP 요청의 정식 상관관계 ID를 포함하며, `user-login` 이벤트는 `SignInResolver` 콜백이 HTTP 요청을 노출하지 않기 때문에 리졸버에서 생성한 합성 `correlationId`(UUID)를 포함합니다.
+
+### 리팩토링 문서 (제공됨)
+
+다음 산출물이 리포지토리에 포함되어 있습니다:
+
+- [`docs/refactor/decision-log.md`](docs/refactor/decision-log.md) — 주요 결정 사항, 대안, 위험 요소
+- [`docs/refactor/traceability-matrix.md`](docs/refactor/traceability-matrix.md) — 요구사항-구현 양방향 매핑
+- [`docs/refactor/architecture-before-after.md`](docs/refactor/architecture-before-after.md) — 크롬 및 권한 흐름 Mermaid 다이어그램
+- [`docs/refactor/onboarding-addendum.md`](docs/refactor/onboarding-addendum.md) — 클린 머신 설정, LocalGCP 설정, 커스터마이즈 가이드
+- [`docs/refactor/next-tasks.md`](docs/refactor/next-tasks.md) — 현재 범위에서 제외된 후속 개선 사항
+- [`docs/observability/dashboards.md`](docs/observability/dashboards.md) — 가관측성 문서, Grafana 대시보드
+- [`docs/observability/dashboard-template.json`](docs/observability/dashboard-template.json) — 가져올 수 있는 Grafana 대시보드 JSON
+
+**가관측성 상태**: 가관측성 문서에서 참조된 커스텀 Prometheus 카운터(`user_login_total`, `entity_access_total`, `blitzy_permission_decisions_total`)는 통합 메트릭 API `@opentelemetry/api`를 통해 소스 모듈(`packages/backend/src/metrics.ts`, `plugins/catalog-backend-module-access-audit/src/metrics.ts`, `plugins/permission-backend-module-blitzy-policy/src/metrics.ts`)에서 **구현되어 방출되고 있습니다**. `@opentelemetry/auto-instrumentations-node`로 자동 계측된 HTTP/런타임 메트릭은 커스텀 카운터와 함께 사용 가능합니다. 단위 테스트 `plugins/catalog-backend-module-access-audit/src/module.test.ts`는 **25개의 실행 케이스가 통과하도록 생성되었습니다**(Playwright `auditing.test.ts` E2E 스위트의 보완). CI 워크플로는 통합 테스트 전에 `docker compose -f docker-compose.localgcp.yml up -d`를 **아직 호출하지 않습니다**(compose 파일은 리포지토리에 커밋되어 있음) — 이 남은 항목은 `docs/refactor/next-tasks.md` 항목 7에서 추적됩니다. 통합된 상태는 `blitzy/documentation/Project Guide.md` §0 _Verification Status (Implementation Reality)_ 참조.
+
 ## 커뮤니티
 
 커뮤니티에 참여하려면 다음 리소스를 사용하세요:
@@ -55,7 +78,7 @@ Backstage의 문서는 다음을 포함합니다:
 - [Discord chatroom](https://discord.gg/backstage-687207715902193673) - 지원 및 프로젝트 토론
 - [Contributing to Backstage](https://github.com/backstage/backstage/blob/master/CONTRIBUTING.md) - 프로젝트 기여
 - [RFCs](https://github.com/backstage/backstage/labels/rfc) - 기술 방향을 정하는 데 도움을 주세요.
-- [FAQ](https://backstage.io/docs/FAQ) - 자주 묻는 질문들
+- [FAQ](https://backstage.io/docs/faq) - 자주 묻는 질문들
 - [Code of Conduct](CODE_OF_CONDUCT.md) - 커뮤니티 운영 방식
 - [Adopters](ADOPTERS.md) - Backstage를 사용하고 있는 기업
 - [Blog](https://backstage.io/blog/) - 공지사항 및 업데이트
