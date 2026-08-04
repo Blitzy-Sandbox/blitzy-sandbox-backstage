@@ -77,6 +77,7 @@ RUN mkdir -p /tmp/sqlite3 && cd /tmp/sqlite3 && npm init -y && npm install bette
 COPY --from=build /app/packages/backend/dist/bundle.tar.gz ./
 COPY app-config.yaml app-config.railway.yaml ./
 COPY catalog-blitzy-sandbox.yaml ./
+COPY catalog-blitzy-public-samples.yaml ./
 COPY packages/app/app-config.yaml ./packages/app/app-config.yaml
 RUN tar xzf bundle.tar.gz && rm bundle.tar.gz
 
