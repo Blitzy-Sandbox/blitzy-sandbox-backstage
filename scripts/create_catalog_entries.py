@@ -149,6 +149,18 @@ def has_catalog_yaml(org: str, repo: str, branch: str, token: str) -> bool:
         raise
 
 
+def get_top_language(org: str, repo: str, token: str) -> str | None:
+    # GitHub's `repo.language` is often null for forks until linguist runs.
+    # `/languages` returns a byte-count breakdown that's populated regardless.
+    try:
+        langs = gh(f"/repos/{org}/{repo}/languages", token)
+    except urllib.error.HTTPError:
+        return None
+    if not langs:
+        return None
+    return max(langs, key=langs.get)
+
+
 def get_blitzy_branch(org: str, repo: str, token: str) -> str | None:
     try:
         branches = gh(f"/repos/{org}/{repo}/branches?per_page=100", token)
@@ -268,7 +280,7 @@ def main():
     for repo in candidates:
         name = repo["name"]
         default_branch = repo["default_branch"]
-        github_lang = repo.get("language")
+        github_lang = repo.get("language") or get_top_language(org, name, token)
         description = (repo.get("description") or "").strip()
 
         # Strip "Blitzy fork of/- " prefix from descriptions
