@@ -25,6 +25,10 @@ catalog:
       target: https://github.com/Blitzy-Sandbox/blitzy-sandbox-backstage/blob/master/catalog-blitzy-sandbox.yaml
       rules:
         - allow: [Component, Group, System, User]
+    - type: url
+      target: https://github.com/Blitzy-Sandbox/blitzy-sandbox-backstage/blob/master/catalog-blitzy-public-samples.yaml
+      rules:
+        - allow: [Component, Group, System]
 
 auth:
   environment: production
