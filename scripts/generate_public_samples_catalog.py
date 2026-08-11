@@ -55,10 +55,6 @@ GITHUB_LANG_TO_TAG: dict[str, str] = {
 }
 
 ENTITY_NAME_RE = re.compile(r"[^a-zA-Z0-9_.\-]")
-BLITZY_BRANCH_RE = re.compile(
-    r"^blitzy-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$"
-)
-PLATFORM_URL_TEMPLATE = "https://platform.blitzy.com/workspace/project/{project_id}/status"
 
 
 def gh(path: str, token: str):
@@ -97,41 +93,6 @@ def get_top_language(org: str, repo: str, token: str) -> str | None:
     return max(langs, key=langs.get)
 
 
-def get_blitzy_project_id(org: str, repo: str, token: str) -> str | None:
-    # Blitzy Platform project IDs are embedded in branch names as
-    # `blitzy-<uuid>`. When a repo has multiple such branches (a repo
-    # that's been worked on by more than one Platform project), the
-    # one with the most recent commit is the active project.
-    try:
-        branches = gh(f"/repos/{org}/{repo}/branches?per_page=100", token)
-    except urllib.error.HTTPError:
-        return None
-    candidates: list[tuple[str, str]] = []
-    for b in branches:
-        m = BLITZY_BRANCH_RE.match(b["name"])
-        if m:
-            candidates.append((m.group(1), b.get("commit", {}).get("sha", "")))
-    if not candidates:
-        return None
-    if len(candidates) == 1:
-        return candidates[0][0]
-    # Fetch commit dates to pick the most recent branch.
-    dated: list[tuple[str, str]] = []
-    for project_id, sha in candidates:
-        if not sha:
-            continue
-        try:
-            commit = gh(f"/repos/{org}/{repo}/commits/{sha}", token)
-            date = commit.get("commit", {}).get("committer", {}).get("date", "")
-            dated.append((date, project_id))
-        except urllib.error.HTTPError:
-            continue
-    if not dated:
-        return candidates[0][0]
-    dated.sort(reverse=True)
-    return dated[0][1]
-
-
 def safe_entity_name(name: str) -> str:
     normalized = ENTITY_NAME_RE.sub("-", name).lower()
     normalized = re.sub(r"-+", "-", normalized).strip("-.")
@@ -156,15 +117,6 @@ def build_component(repo: dict, token: str, org: str) -> dict:
     topics = repo.get("topics") or []
     tags = sorted({t for t in topics if re.fullmatch(r"[a-z0-9+#\-]+", t)} | ({language_tag} if language_tag else set()))
 
-    project_id = get_blitzy_project_id(org, name, token)
-    links = []
-    if project_id:
-        links.append({
-            "url": PLATFORM_URL_TEMPLATE.format(project_id=project_id),
-            "title": "Blitzy Platform",
-            "icon": "dashboard",
-        })
-
     entity: dict = {
         "apiVersion": "backstage.io/v1alpha1",
         "kind": "Component",
@@ -173,7 +125,6 @@ def build_component(repo: dict, token: str, org: str) -> dict:
             "title": name,
             "description": description or f"Blitzy public sample: {name}",
             "tags": tags,
-            "links": links,
             "annotations": {
                 "github.com/project-slug": f"{org}/{name}",
                 "backstage.io/source-location": f"url:https://github.com/{org}/{name}/tree/{default_branch}/",
@@ -243,18 +194,12 @@ def main():
 
     langs_resolved = 0
     langs_missing = 0
-    links_resolved = 0
-    links_missing = 0
     for i, repo in enumerate(repos, 1):
         entity = build_component(repo, token, args.org)
         if entity["metadata"].get("labels", {}).get("blitzy.com/language"):
             langs_resolved += 1
         else:
             langs_missing += 1
-        if entity["metadata"].get("links"):
-            links_resolved += 1
-        else:
-            links_missing += 1
         documents.append(entity)
         if i % 25 == 0:
             print(f"  processed {i}/{len(repos)}")
@@ -265,10 +210,8 @@ def main():
     print(f"Group:      1 ({GROUP})")
     print(f"System:     1 ({SYSTEM})")
     print(f"Components: {len(repos)}")
-    print(f"  with language tag:     {langs_resolved}")
-    print(f"  without language:      {langs_missing}")
-    print(f"  with Platform link:    {links_resolved}")
-    print(f"  without Platform link: {links_missing}")
+    print(f"  with language tag: {langs_resolved}")
+    print(f"  without language:  {langs_missing}")
     print("=" * 60)
 
     if args.dry_run:
