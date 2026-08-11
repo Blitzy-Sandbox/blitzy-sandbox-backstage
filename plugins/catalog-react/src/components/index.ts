@@ -27,6 +27,7 @@ export * from './EntitySearchBar';
 export * from './EntityTable';
 export * from './EntityTagPicker';
 export * from './EntityTypePicker';
+export * from './EntityVerticalPicker';
 export * from './FavoriteEntity';
 export * from './InspectEntityDialog';
 export * from './UnregisterEntityDialog';

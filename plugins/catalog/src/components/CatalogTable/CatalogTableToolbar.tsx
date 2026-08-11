@@ -18,6 +18,7 @@ import {
   EntitySearchBar,
   EntityTagPicker,
   EntityTypePicker,
+  EntityVerticalPicker,
 } from '@backstage/plugin-catalog-react';
 
 /** @public */
@@ -82,6 +83,9 @@ export function CatalogTableToolbar(props: {
           <EntitySearchBar />
         </div>
         <EntityTypePicker inline />
+        <div className="w-32 sm:w-44 shrink-0">
+          <EntityVerticalPicker inline />
+        </div>
         {/*
          * CP9 QA fix — Issue #5 (MINOR, UX consistency):
          *

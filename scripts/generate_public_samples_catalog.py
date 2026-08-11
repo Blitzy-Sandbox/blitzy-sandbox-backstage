@@ -94,6 +94,20 @@ def get_top_language(org: str, repo: str, token: str) -> str | None:
     return max(langs, key=langs.get)
 
 
+def infer_spec_type(name: str, description: str) -> str:
+    text = (name + " " + description).lower()
+    if any(w in text for w in ["library", "framework", "sdk", "package", "interpreter", "libprov"]):
+        return "library"
+    if any(w in text for w in ["dashboard", "frontend", "web app", "portal", "website", "storefront", "reveal.js"]):
+        return "website"
+    if any(w in text for w in ["tool", "cli", "compiler", "editor", "terminal", "emulator",
+                                 "fuzzer", "monitor", "notepad", "iterm", "openroad", "eda", "linter", "scanner"]):
+        return "tool"
+    if any(w in text for w in ["documentation", "tutorial", "guide", "docs"]):
+        return "documentation"
+    return "service"
+
+
 def safe_entity_name(name: str) -> str:
     normalized = ENTITY_NAME_RE.sub("-", name).lower()
     normalized = re.sub(r"-+", "-", normalized).strip("-.")
@@ -139,7 +153,7 @@ def build_component(repo: dict, token: str, org: str, verticals: dict) -> dict:
             },
         },
         "spec": {
-            "type": "sample",
+            "type": infer_spec_type(name, description),
             "lifecycle": "experimental",
             "owner": GROUP,
             "system": SYSTEM,
@@ -150,8 +164,11 @@ def build_component(repo: dict, token: str, org: str, verticals: dict) -> dict:
     if language_tag:
         labels["blitzy.com/language"] = language_tag
     vertical_entry = verticals.get(name)
-    if vertical_entry and vertical_entry.get("vertical"):
-        labels["blitzy.com/vertical"] = vertical_entry["vertical"]
+    vertical_value = (vertical_entry or {}).get("vertical")
+    # Only label real verticals — leave "no-fit" samples unlabeled so the
+    # picker/column omits them entirely.
+    if vertical_value and vertical_value != "no-fit":
+        labels["blitzy.com/vertical"] = vertical_value
     if labels:
         entity["metadata"]["labels"] = labels
 
@@ -212,8 +229,11 @@ def main():
     langs_resolved = 0
     langs_missing = 0
     vertical_counts: dict[str, int] = {}
+    type_counts: dict[str, int] = {}
     for i, repo in enumerate(repos, 1):
         entity = build_component(repo, token, args.org, verticals)
+        spec_type = entity["spec"]["type"]
+        type_counts[spec_type] = type_counts.get(spec_type, 0) + 1
         labels = entity["metadata"].get("labels", {})
         if labels.get("blitzy.com/language"):
             langs_resolved += 1
@@ -236,6 +256,9 @@ def main():
     print("  by vertical:")
     for v, n in sorted(vertical_counts.items(), key=lambda kv: -kv[1]):
         print(f"    {n:>4}  {v}")
+    print("  by spec.type:")
+    for t, n in sorted(type_counts.items(), key=lambda kv: -kv[1]):
+        print(f"    {n:>4}  {t}")
     print("=" * 60)
 
     if args.dry_run:

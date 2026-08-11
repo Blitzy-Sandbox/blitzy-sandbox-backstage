@@ -51,6 +51,7 @@ import {
   EntityTextFilter,
   EntityTypeFilter,
   EntityUserFilter,
+  EntityVerticalFilter,
   UserListFilter,
 } from '../filters';
 import { EntityFilter, EntityListPagination } from '../types';
@@ -74,6 +75,7 @@ export type DefaultEntityFilters = {
   hasProjectHistory?: EntityHasProjectHistoryFilter;
   namespace?: EntityNamespaceFilter;
   order?: EntityOrderFilter;
+  vertical?: EntityVerticalFilter;
 };
 
 /** @public */

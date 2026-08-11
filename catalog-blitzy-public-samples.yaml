@@ -35,9 +35,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/llqnavdk-eepfoe/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -55,9 +54,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/zdmfhlxu-7u0yyf/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -75,9 +73,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/code-skeptic-scanner-kbqssv/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -96,7 +93,7 @@ metadata:
   labels:
     blitzy.com/language: python
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -115,7 +112,7 @@ metadata:
   labels:
     blitzy.com/language: typescript
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -133,9 +130,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/code-skeptic-scanner-s78xkz/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -155,7 +151,7 @@ metadata:
     blitzy.com/language: python
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -174,7 +170,7 @@ metadata:
   labels:
     blitzy.com/language: python
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -193,7 +189,7 @@ metadata:
   labels:
     blitzy.com/language: python
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -213,7 +209,7 @@ metadata:
     blitzy.com/language: python
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -232,7 +228,7 @@ metadata:
   labels:
     blitzy.com/language: typescript
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -250,9 +246,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/AI-Powered-Salesperson-396qll/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -270,9 +265,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/AI-Powered-Salesperson-irqt6h/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -292,7 +286,7 @@ metadata:
     blitzy.com/language: typescript
     blitzy.com/vertical: retail
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -310,9 +304,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/company-domain-r9mgxk/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -331,7 +324,7 @@ metadata:
   labels:
     blitzy.com/language: python
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -350,7 +343,7 @@ metadata:
   labels:
     blitzy.com/language: typescript
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -370,7 +363,7 @@ metadata:
     blitzy.com/language: python
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -388,9 +381,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/code-skeptic-scanner-v2-ytglbh/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -408,9 +400,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/microsoft-word-v2-ufxvsn/tree/main/
   labels:
     blitzy.com/language: csharp
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -428,9 +419,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/AI-Powered-Salesperson-v2-m55gs1/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -450,7 +440,7 @@ metadata:
     blitzy.com/language: go
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -468,9 +458,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/create-excel-v2-xxmi1n/tree/main/
   labels:
     blitzy.com/language: cpp
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -488,9 +477,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/boston-startup-tracker-t28nax/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -508,9 +496,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/boston-startup-tracker-b1cpv9/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -528,9 +515,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/create-excel-v2-dru9yl/tree/main/
   labels:
     blitzy.com/language: cpp
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -548,9 +534,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/microsoft-excel-v3b-sxq8yq/tree/main/
   labels:
     blitzy.com/language: cpp
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -568,9 +553,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/swan-z-it9zr5/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -588,9 +572,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/pollen8-platform-0xiv1j/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -608,9 +591,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/microsoft-excel-v3-62h70x/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -628,9 +610,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/hao-test2-8q2xuv/tree/main/
   labels:
     blitzy.com/language: javascript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -650,7 +631,7 @@ metadata:
     blitzy.com/language: typescript
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -668,9 +649,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/microsoft-excel-v3-5qih2l/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -690,7 +670,7 @@ metadata:
     blitzy.com/language: swift
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -708,9 +688,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/pollen8-platform-i4951e/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -728,9 +707,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/microsoft-excel-v3-m8wgg1/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -748,9 +726,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/hao-test3-be2wra/tree/main/
   labels:
     blitzy.com/language: javascript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -768,9 +745,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/podcast-marketing-automation-saas-ykrln3/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -790,7 +766,7 @@ metadata:
     blitzy.com/language: typescript
     blitzy.com/vertical: retail
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -810,7 +786,7 @@ metadata:
     blitzy.com/language: typescript
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -828,9 +804,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/microsoft-excel-v3-pin2pc/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -849,7 +824,7 @@ metadata:
   labels:
     blitzy.com/language: typescript
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -867,9 +842,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/podcast-marketing-automation-saas-zqmsmg/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -887,9 +861,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/microsoft-excel-replica-v4-bsmqvm/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -907,9 +880,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/pollen8-platform-45u0jm/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -927,9 +899,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/pollen8-platform-268ixb/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -949,7 +920,7 @@ metadata:
     blitzy.com/language: javascript
     blitzy.com/vertical: healthcare
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -969,7 +940,7 @@ metadata:
     blitzy.com/language: python
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -988,7 +959,7 @@ metadata:
   labels:
     blitzy.com/language: python
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1006,7 +977,7 @@ metadata:
   labels:
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1026,7 +997,7 @@ metadata:
     blitzy.com/language: typescript
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1046,7 +1017,7 @@ metadata:
     blitzy.com/language: typescript
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1064,9 +1035,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/ai-security-platform-prd-47o3qp/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1084,9 +1054,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/toddler-puzzle-app-aguvbd/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1106,7 +1075,7 @@ metadata:
     blitzy.com/language: typescript
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1126,7 +1095,7 @@ metadata:
     blitzy.com/language: swift
     blitzy.com/vertical: retail
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1144,9 +1113,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/pantry-chef-ytpsw8/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1166,7 +1134,7 @@ metadata:
     blitzy.com/language: typescript
     blitzy.com/vertical: manufacturing
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1181,10 +1149,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/pantry-chef-traditional
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/pantry-chef-traditional/tree/main/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1204,7 +1170,7 @@ metadata:
     blitzy.com/language: typescript
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1224,7 +1190,7 @@ metadata:
     blitzy.com/language: swift
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1244,7 +1210,7 @@ metadata:
     blitzy.com/language: typescript
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1264,7 +1230,7 @@ metadata:
     blitzy.com/language: swift
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1284,7 +1250,7 @@ metadata:
     blitzy.com/language: swift
     blitzy.com/vertical: retail
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1302,9 +1268,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/java-spring-boot-upgrade-sample/tree/main/
   labels:
     blitzy.com/language: java
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1322,9 +1287,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/case-mentor-4sx1t8/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1342,9 +1306,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/case-mentor/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1362,9 +1325,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/podcast-marketing-saas-it6tbi/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1382,9 +1344,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/task-manager-evqpaf/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1402,9 +1363,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/test-zz67zj/tree/main/
   labels:
     blitzy.com/language: swift
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1422,9 +1382,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/zapier-clone-h0cxjr/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1442,9 +1401,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/trace3-z175cd/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1462,9 +1420,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/hao-test-gx06nf/tree/main/
   labels:
     blitzy.com/language: javascript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1482,9 +1439,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/arkimedes-web-scrape-ggqkgy/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1502,9 +1458,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/abcd-to3w5c/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1522,9 +1477,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/ai-sales-voice-agent-d10cto/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1542,9 +1496,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/hello-world2-0r6b4x/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1562,9 +1515,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/brian-16dec-zpcir1/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1582,9 +1534,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/test1-k81ftt/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1600,7 +1551,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/test
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/test/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1618,9 +1569,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/test-94ilr1/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1638,9 +1588,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/linkedin-recruiter-zfmk15/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1658,9 +1607,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/trial-project-2-2ggkey/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1678,9 +1626,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/trail-project-1-n75ia4/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1698,9 +1645,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/test-v1-bzho0m/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1718,9 +1664,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/whatsappbot-sx1cxc/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1738,9 +1683,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/baby-nkwdip/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1758,9 +1702,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/startup-metrics-hizlkn/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1778,9 +1721,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/markdown-testing-2-sw8tf6/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1800,7 +1742,7 @@ metadata:
     blitzy.com/language: python
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1819,7 +1761,7 @@ metadata:
   labels:
     blitzy.com/language: javascript
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1838,7 +1780,7 @@ metadata:
   labels:
     blitzy.com/language: typescript
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1857,7 +1799,7 @@ metadata:
   labels:
     blitzy.com/language: javascript
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1876,7 +1818,7 @@ metadata:
   labels:
     blitzy.com/language: typescript
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1894,9 +1836,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/nexus-public/tree/main/
   labels:
     blitzy.com/language: java
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1915,7 +1856,7 @@ metadata:
   labels:
     blitzy.com/language: java
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1931,7 +1872,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/cobol-casualty-claims
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/cobol-casualty-claims/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1950,7 +1891,7 @@ metadata:
   labels:
     blitzy.com/language: java
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1969,7 +1910,7 @@ metadata:
   labels:
     blitzy.com/language: java
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -1985,7 +1926,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/lambdazen-upgrade
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/lambdazen-upgrade/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2004,7 +1945,7 @@ metadata:
   labels:
     blitzy.com/language: python
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2023,7 +1964,7 @@ metadata:
   labels:
     blitzy.com/language: python
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2041,9 +1982,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/django/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2059,7 +1999,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/scikit-learn
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/scikit-learn/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2078,7 +2018,7 @@ metadata:
   labels:
     blitzy.com/language: python
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2096,9 +2036,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/cudf/tree/branch-25.08/
   labels:
     blitzy.com/language: cpp
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2116,9 +2055,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/logging-log4j2-blitzy/tree/release-2.14.1/
   labels:
     blitzy.com/language: java
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2136,9 +2074,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/pip-blitzy/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2156,9 +2093,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/ardupilot-blitzy/tree/main/
   labels:
     blitzy.com/language: cpp
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2176,9 +2112,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/mlflow-blitzy/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2196,7 +2131,7 @@ metadata:
   labels:
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2215,7 +2150,7 @@ metadata:
   labels:
     blitzy.com/language: java
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2230,10 +2165,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-spark
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-spark/tree/master/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2251,9 +2184,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/waf/tree/master/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2271,9 +2203,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/benchmark/tree/main/
   labels:
     blitzy.com/language: cpp
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2288,10 +2219,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/mavlink
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/mavlink/tree/master/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2309,9 +2238,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/googletest/tree/master/
   labels:
     blitzy.com/language: cpp
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2329,9 +2257,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/ChibiOS/tree/master/
   labels:
     blitzy.com/language: c
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2349,9 +2276,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/gSOAP/tree/master/
   labels:
     blitzy.com/language: html
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2369,9 +2295,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/DSDL/tree/master/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2389,9 +2314,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/CrashDebug/tree/master/
   labels:
     blitzy.com/language: cpp
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2409,9 +2333,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/pydronecan/tree/master/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2426,10 +2349,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/dronecan_dsdlc
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/dronecan_dsdlc/tree/master/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2447,9 +2368,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/libcanard/tree/master/
   labels:
     blitzy.com/language: cpp
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2467,9 +2387,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/Micro-XRCE-DDS-Client/tree/master/
   labels:
     blitzy.com/language: c
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2487,9 +2406,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/Micro-CDR/tree/master/
   labels:
     blitzy.com/language: cpp
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2507,9 +2425,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/lwip/tree/master/
   labels:
     blitzy.com/language: c
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2527,9 +2444,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/littlefs/tree/master/
   labels:
     blitzy.com/language: c
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2547,9 +2463,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/benchmark-1/tree/main/
   labels:
     blitzy.com/language: cpp
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2567,9 +2482,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/googletest-1/tree/master/
   labels:
     blitzy.com/language: cpp
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2587,9 +2501,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/DSDL-1/tree/master/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2607,9 +2520,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/pydronecan-1/tree/master/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2624,10 +2536,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/dronecan_dsdlc-1
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/dronecan_dsdlc-1/tree/master/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2645,9 +2555,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/libcanard-1/tree/master/
   labels:
     blitzy.com/language: cpp
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2665,9 +2574,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-langchain/tree/master/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2685,9 +2593,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-nginx/tree/master/
   labels:
     blitzy.com/language: c
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2705,9 +2612,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-rubygems/tree/master/
   labels:
     blitzy.com/language: ruby
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2727,7 +2633,7 @@ metadata:
   labels:
     blitzy.com/language: php
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2749,7 +2655,7 @@ metadata:
     blitzy.com/language: csharp
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2767,9 +2673,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-moodle/tree/main/
   labels:
     blitzy.com/language: php
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2788,9 +2693,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-Cataclysm-DDA/tree/master/
   labels:
     blitzy.com/language: cpp
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2810,7 +2714,7 @@ metadata:
     blitzy.com/language: python
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2828,9 +2732,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-vscode/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2849,9 +2752,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-WebKit/tree/main/
   labels:
     blitzy.com/language: javascript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2869,9 +2771,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-open-cobol/tree/master/
   labels:
     blitzy.com/language: c
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2888,7 +2789,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/blitzy-assistant
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-assistant/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2907,9 +2808,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-assistant-core/tree/dev/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2927,9 +2827,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-assistant-iOS/tree/master/
   labels:
     blitzy.com/language: swift
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2947,9 +2846,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-assistant-os/tree/dev/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2967,9 +2865,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-assistant-android/tree/main/
   labels:
     blitzy.com/language: kotlin
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -2987,9 +2884,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-hadoop/tree/trunk/
   labels:
     blitzy.com/language: java
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3008,9 +2904,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-aspnetcore/tree/main/
   labels:
     blitzy.com/language: csharp
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3028,9 +2923,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-linux/tree/master/
   labels:
     blitzy.com/language: c
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3045,10 +2939,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-db-regression
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-db-regression/tree/debug/paas/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3066,9 +2958,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-dnsmasq/tree/master/
   labels:
     blitzy.com/language: c
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3084,7 +2975,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/blitzy-debian-dnsmasq
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-debian-dnsmasq/tree/master/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3102,9 +2993,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-googletest/tree/main/
   labels:
     blitzy.com/language: cpp
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3123,9 +3013,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-MessagePack-CSharp/tree/master/
   labels:
     blitzy.com/language: csharp
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3143,9 +3032,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-dnsmasq-mirror/tree/master/
   labels:
     blitzy.com/language: rust
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3161,10 +3049,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-Apollo-11
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-Apollo-11/tree/master/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3182,9 +3068,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-git/tree/master/
   labels:
     blitzy.com/language: c
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3199,10 +3084,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-smalltalk
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-smalltalk/tree/master/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3220,9 +3103,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-tgr-dnsmasq-rust/tree/main/
   labels:
     blitzy.com/language: rust
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3240,9 +3122,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-kubernetes/tree/master/
   labels:
     blitzy.com/language: go
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3260,9 +3141,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-git-secured/tree/master/
   labels:
     blitzy.com/language: c
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3280,9 +3160,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/Blitzy-VibeVoice/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3297,10 +3176,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-prompt-eng-interactive-tutorial
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-prompt-eng-interactive-tutorial/tree/master/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: documentation
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3320,7 +3197,7 @@ metadata:
     blitzy.com/language: php
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3341,9 +3218,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-terraform/tree/main/
   labels:
     blitzy.com/language: go
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3362,9 +3238,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-PyMuPDF/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3382,9 +3257,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-weekend-planner-ai-agent/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3402,9 +3276,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-vibe/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3425,9 +3298,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-Open-Web-Analytics/tree/master/
   labels:
     blitzy.com/language: php
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: website
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3442,10 +3314,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-kubeflow
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-kubeflow/tree/master/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3463,9 +3333,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-langgraph-search-agent/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3483,9 +3352,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-lxd/tree/main/
   labels:
     blitzy.com/language: go
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3500,10 +3368,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-delcos
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-delcos/tree/master/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3520,10 +3386,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-log4delphi
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-log4delphi/tree/master/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3539,7 +3403,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/dotnetnuke
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/dotnetnuke/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3554,10 +3418,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/Blitzy-SalExtension
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/Blitzy-SalExtension/tree/main/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3575,9 +3437,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-x-algorithm/tree/main/
   labels:
     blitzy.com/language: rust
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3593,7 +3454,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/EmptyRepoBiswa
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/EmptyRepoBiswa/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3613,9 +3474,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-code/tree/main/
   labels:
     blitzy.com/language: shell
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3635,9 +3495,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-grafana/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3656,9 +3515,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/shadcn-ui/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3677,9 +3535,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-swagger-ui/tree/master/
   labels:
     blitzy.com/language: javascript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: documentation
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3697,9 +3554,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-solidity/tree/develop/
   labels:
     blitzy.com/language: cpp
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3719,7 +3575,7 @@ metadata:
     blitzy.com/language: solidity
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3735,7 +3591,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/figma-demo
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/figma-demo/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3755,9 +3611,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-claudes-c-compiler/tree/main/
   labels:
     blitzy.com/language: rust
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3772,10 +3627,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-triton
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-triton/tree/main/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3793,9 +3646,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-hapipy/tree/master/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3810,10 +3662,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-c-compiler
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-c-compiler/tree/main/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3829,7 +3679,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/User-Stories
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/User-Stories/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3848,9 +3698,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-n8n/tree/master/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3866,7 +3715,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/blitzy-figma-demo
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-figma-demo/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3881,10 +3730,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/.github
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/.github/tree/main/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3903,9 +3750,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-localstack/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3924,7 +3770,7 @@ metadata:
   labels:
     blitzy.com/vertical: manufacturing
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3942,7 +3788,7 @@ metadata:
   labels:
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3957,10 +3803,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/figma-sandbox
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/figma-sandbox/tree/main/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3976,10 +3820,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-cobol
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-cobol/tree/master/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -3998,7 +3840,7 @@ metadata:
   labels:
     blitzy.com/language: python
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4017,9 +3859,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-airflow/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4038,9 +3879,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-conductor/tree/main/
   labels:
     blitzy.com/language: java
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4055,10 +3895,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-Pier3
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-Pier3/tree/main/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4077,7 +3915,7 @@ metadata:
   labels:
     blitzy.com/vertical: healthcare
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4095,9 +3933,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-langsmith-sdk/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4117,7 +3954,7 @@ metadata:
     blitzy.com/language: java
     blitzy.com/vertical: retail
 spec:
-  type: sample
+  type: website
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4133,7 +3970,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/GTMResearch
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/GTMResearch/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4151,9 +3988,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-grafana-mirror/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4173,7 +4009,7 @@ metadata:
     blitzy.com/language: csharp
     blitzy.com/vertical: retail
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4190,10 +4026,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-delta-format
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-delta-format/tree/master/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4211,9 +4045,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-iceberg/tree/main/
   labels:
     blitzy.com/language: java
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4231,9 +4064,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-db2-samples/tree/master/
   labels:
     blitzy.com/language: html
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4249,10 +4081,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-gem-gnu-DB2
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-gem-gnu-DB2/tree/trunk/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4270,9 +4100,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/MikeRepo/tree/main/
   labels:
     blitzy.com/language: swift
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4288,7 +4117,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/Mendix-App
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/Mendix-App/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4304,7 +4133,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/blitzy-rwasa
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-rwasa/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4319,10 +4148,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/Blitzy-HeavyThing
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/Blitzy-HeavyThing/tree/master/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4337,10 +4164,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-rdk-halif-aidl
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-rdk-halif-aidl/tree/develop/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4358,9 +4183,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-rdkservices/tree/sprint/26Q1/
   labels:
     blitzy.com/language: cpp
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4378,9 +4202,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-budibase/tree/master/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4398,9 +4221,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-paperclip/tree/master/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4419,9 +4241,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/windows-calculator/tree/main/
   labels:
     blitzy.com/language: cpp
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4437,7 +4258,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/GT-Sandbox
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/GT-Sandbox/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4455,9 +4276,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-cal.diy/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4475,9 +4295,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-ant/tree/master/
   labels:
     blitzy.com/language: java
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4496,7 +4315,7 @@ metadata:
   labels:
     blitzy.com/vertical: manufacturing
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4515,7 +4334,7 @@ metadata:
   labels:
     blitzy.com/vertical: manufacturing
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4533,7 +4352,7 @@ metadata:
   labels:
     blitzy.com/vertical: manufacturing
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4553,7 +4372,7 @@ metadata:
     blitzy.com/language: c
     blitzy.com/vertical: manufacturing
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4569,7 +4388,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/RFP
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/RFP/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4587,7 +4406,7 @@ metadata:
   labels:
     blitzy.com/vertical: manufacturing
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4605,7 +4424,7 @@ metadata:
   labels:
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4625,7 +4444,7 @@ metadata:
     blitzy.com/language: java
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4640,10 +4459,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-bank-system
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-bank-system/tree/master/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4661,9 +4478,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/kubernetes/tree/master/
   labels:
     blitzy.com/language: go
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4681,9 +4497,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/opentelemetry-collector/tree/main/
   labels:
     blitzy.com/language: go
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4702,9 +4517,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/vault/tree/main/
   labels:
     blitzy.com/language: go
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4722,9 +4536,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/celery/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4742,9 +4555,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/rivet/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4764,7 +4576,7 @@ metadata:
     blitzy.com/language: csharp
     blitzy.com/vertical: manufacturing
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4783,7 +4595,7 @@ metadata:
   labels:
     blitzy.com/language: c
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4801,9 +4613,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/sqlite-amalgamation/tree/master/
   labels:
     blitzy.com/language: c
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4823,7 +4634,7 @@ metadata:
     blitzy.com/language: html
     blitzy.com/vertical: healthcare
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4839,7 +4650,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/blitzy-emr
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-emr/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4855,7 +4666,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/blitzy-fhirOpenEmr
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-fhirOpenEmr/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4873,7 +4684,7 @@ metadata:
   labels:
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4893,7 +4704,7 @@ metadata:
     blitzy.com/language: java
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4913,7 +4724,7 @@ metadata:
     blitzy.com/language: java
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4931,9 +4742,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-civicrm-core/tree/master/
   labels:
     blitzy.com/language: php
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4951,7 +4761,7 @@ metadata:
   labels:
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: website
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4970,7 +4780,7 @@ metadata:
   labels:
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -4991,7 +4801,7 @@ metadata:
     blitzy.com/language: typescript
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: website
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5010,9 +4820,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/CrashCatcher/tree/master/
   labels:
     blitzy.com/language: cpp
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5031,9 +4840,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/mri/tree/master/
   labels:
     blitzy.com/language: c
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5052,9 +4860,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/CppUTest/tree/master/
   labels:
     blitzy.com/language: cpp
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5072,9 +4879,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/mike/tree/main/
   labels:
     blitzy.com/language: typescript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5092,9 +4898,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/mastodon/tree/main/
   labels:
     blitzy.com/language: ruby
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5113,9 +4918,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/ejb-sproc-migration-demo/tree/main/
   labels:
     blitzy.com/language: java
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5131,7 +4935,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/Cohort_Repo
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/Cohort_Repo/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5149,9 +4953,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/w5base/tree/master/
   labels:
     blitzy.com/language: javascript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5167,7 +4970,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/Moltiply-AS400-Cobol
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/Moltiply-AS400-Cobol/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5183,7 +4986,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/jde-apac-salesorder-orchestration-demo
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/jde-apac-salesorder-orchestration-demo/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5204,7 +5007,7 @@ metadata:
     blitzy.com/language: typescript
     blitzy.com/vertical: retail
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5219,10 +5022,8 @@ metadata:
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-greenfields
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-greenfields/tree/main/
-  labels:
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5238,7 +5039,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/taiga-front
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/taiga-front/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5256,9 +5057,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/taiga-back/tree/main/
   labels:
     blitzy.com/language: python
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5276,9 +5076,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/taiga-docker/tree/main/
   labels:
     blitzy.com/language: shell
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5294,7 +5093,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/taiga-migration-poc
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/taiga-migration-poc/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5314,7 +5113,7 @@ metadata:
     blitzy.com/language: go
     blitzy.com/vertical: healthcare
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5333,9 +5132,8 @@ metadata:
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/reversa-blitzy/tree/main/
   labels:
     blitzy.com/language: javascript
-    blitzy.com/vertical: no-fit
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5355,7 +5153,7 @@ metadata:
     blitzy.com/language: go
     blitzy.com/vertical: healthcare
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5374,7 +5172,7 @@ metadata:
   labels:
     blitzy.com/language: python
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5394,7 +5192,7 @@ metadata:
   labels:
     blitzy.com/language: cpp
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5413,7 +5211,7 @@ metadata:
   labels:
     blitzy.com/language: cpp
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5436,7 +5234,7 @@ metadata:
   labels:
     blitzy.com/language: python
 spec:
-  type: sample
+  type: website
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5457,7 +5255,7 @@ metadata:
     blitzy.com/language: csharp
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5478,7 +5276,7 @@ metadata:
     blitzy.com/language: csharp
     blitzy.com/vertical: banking
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5497,7 +5295,7 @@ metadata:
   labels:
     blitzy.com/language: python
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5514,7 +5312,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/blitzy-LIFE400
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-LIFE400/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5534,7 +5332,7 @@ metadata:
   labels:
     blitzy.com/language: ruby
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5554,7 +5352,7 @@ metadata:
   labels:
     blitzy.com/language: go
 spec:
-  type: sample
+  type: tool
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5570,7 +5368,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/figma-test-7
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/figma-test-7/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5590,7 +5388,7 @@ metadata:
   labels:
     blitzy.com/language: go
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5613,7 +5411,7 @@ metadata:
   labels:
     blitzy.com/language: java
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5636,7 +5434,7 @@ metadata:
   labels:
     blitzy.com/language: java
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5653,7 +5451,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/erpnext-frappe-sample
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/erpnext-frappe-sample/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5669,7 +5467,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/slatwall-coldfusion-sample
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/slatwall-coldfusion-sample/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5685,7 +5483,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/slatwall-coldfusion
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/slatwall-coldfusion/tree/master/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5705,7 +5503,7 @@ metadata:
   labels:
     blitzy.com/language: php
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5727,7 +5525,7 @@ metadata:
   labels:
     blitzy.com/language: c
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5746,7 +5544,7 @@ metadata:
   labels:
     blitzy.com/language: python
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5765,7 +5563,7 @@ metadata:
   labels:
     blitzy.com/language: python
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5781,7 +5579,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/Atlas
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/Atlas/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5797,7 +5595,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/blitzy-pfw
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-pfw/tree/master/
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5816,7 +5614,7 @@ metadata:
   labels:
     blitzy.com/language: javascript
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5835,7 +5633,7 @@ metadata:
   labels:
     blitzy.com/language: ruby
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5851,7 +5649,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/T2Ti_ERP_Delphi
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/T2Ti_ERP_Delphi/tree/master/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5867,7 +5665,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/openimis-legacy-webapp
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/openimis-legacy-webapp/tree/main/
 spec:
-  type: sample
+  type: website
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5883,7 +5681,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/openimis-legacy-webservice
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/openimis-legacy-webservice/tree/master/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5899,7 +5697,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/openimis-legacy-database
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/openimis-legacy-database/tree/develop/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5919,7 +5717,7 @@ metadata:
   labels:
     blitzy.com/language: java
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5940,7 +5738,7 @@ metadata:
   labels:
     blitzy.com/language: java
 spec:
-  type: sample
+  type: library
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5960,7 +5758,7 @@ metadata:
   labels:
     blitzy.com/language: typescript
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -5980,7 +5778,7 @@ metadata:
   labels:
     blitzy.com/language: php
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -6000,7 +5798,7 @@ metadata:
   labels:
     blitzy.com/language: php
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -6019,7 +5817,7 @@ metadata:
   labels:
     blitzy.com/language: php
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -6035,7 +5833,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/wiki
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/wiki/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -6056,7 +5854,7 @@ metadata:
   labels:
     blitzy.com/language: csharp
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples
@@ -6072,7 +5870,7 @@ metadata:
     github.com/project-slug: blitzy-public-samples/cics-genapp-cobrix
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/cics-genapp-cobrix/tree/main/
 spec:
-  type: sample
+  type: service
   lifecycle: experimental
   owner: blitzy-samples
   system: blitzy-public-samples

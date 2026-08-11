@@ -17,6 +17,7 @@
 import { UserListFilterKind } from '../../types';
 import { EntityTagPicker } from '../EntityTagPicker';
 import { EntityTypePicker } from '../EntityTypePicker';
+import { EntityVerticalPicker } from '../EntityVerticalPicker';
 import { UserListPicker } from '../UserListPicker';
 
 /**
@@ -34,6 +35,7 @@ export const DefaultFilters = (props: DefaultFiltersProps) => {
   return (
     <>
       <EntityTypePicker />
+      <EntityVerticalPicker />
       <UserListPicker
         initialFilter={initiallySelectedFilter}
         availableFilters={['starred']}

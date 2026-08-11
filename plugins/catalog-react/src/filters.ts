@@ -437,6 +437,36 @@ export class EntityHasProjectHistoryFilter implements EntityFilter {
 }
 
 /**
+ * Filters entities by the `blitzy.com/vertical` label. Multi-select is OR:
+ * selecting `banking` and `retail` returns entities in either. When no
+ * values are selected the filter is inactive and returned by the picker
+ * as `undefined`.
+ * @public
+ */
+export class EntityVerticalFilter implements EntityFilter {
+  readonly values: string[];
+
+  constructor(values: string[]) {
+    this.values = values;
+  }
+
+  getCatalogFilters(): Record<string, string | string[]> {
+    if (!this.values.length) return {};
+    return { 'metadata.labels.blitzy.com/vertical': this.values };
+  }
+
+  filterEntity(entity: Entity): boolean {
+    if (!this.values.length) return true;
+    const v = entity.metadata.labels?.['blitzy.com/vertical'];
+    return v !== undefined && this.values.includes(v);
+  }
+
+  toQueryValue(): string[] {
+    return this.values;
+  }
+}
+
+/**
  * Filters entities based on if it has errors or not.
  * @public
  */
