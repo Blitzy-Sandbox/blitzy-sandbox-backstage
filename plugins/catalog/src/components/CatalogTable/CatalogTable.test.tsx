@@ -362,6 +362,7 @@ describe('CatalogTable component', () => {
       expectedColumns: [
         'Name',
         'Type',
+        'Vertical',
         'Namespace',
         'Description',
         'Tags',
@@ -373,6 +374,7 @@ describe('CatalogTable component', () => {
       expectedColumns: [
         'Name',
         'Type',
+        'Vertical',
         'Namespace',
         'Description',
         'Tags',
@@ -396,6 +398,7 @@ describe('CatalogTable component', () => {
       expectedColumns: [
         'Name',
         'Type',
+        'Vertical',
         'Namespace',
         'Description',
         'Tags',
@@ -419,6 +422,7 @@ describe('CatalogTable component', () => {
       expectedColumns: [
         'Name',
         'Type',
+        'Vertical',
         'Namespace',
         'Description',
         'Tags',
@@ -430,6 +434,7 @@ describe('CatalogTable component', () => {
       expectedColumns: [
         'Name',
         'Type',
+        'Vertical',
         'Namespace',
         'Description',
         'Tags',

@@ -33,6 +33,7 @@ ORG = "blitzy-public-samples"
 SYSTEM = "blitzy-public-samples"
 GROUP = "blitzy-samples"
 OUTPUT_FILE = "catalog-blitzy-public-samples.yaml"
+VERTICALS_FILE = os.path.join(os.path.dirname(__file__), "blitzy-verticals.json")
 
 GITHUB_LANG_TO_TAG: dict[str, str] = {
     "TypeScript": "typescript",
@@ -106,7 +107,14 @@ def strip_fork_prefix(description: str) -> str:
     return description
 
 
-def build_component(repo: dict, token: str, org: str) -> dict:
+def load_verticals() -> dict:
+    if not os.path.exists(VERTICALS_FILE):
+        return {}
+    with open(VERTICALS_FILE) as f:
+        return json.load(f)
+
+
+def build_component(repo: dict, token: str, org: str, verticals: dict) -> dict:
     name = repo["name"]
     default_branch = repo["default_branch"]
     description = strip_fork_prefix((repo.get("description") or "").strip())
@@ -138,8 +146,14 @@ def build_component(repo: dict, token: str, org: str) -> dict:
         },
     }
 
+    labels: dict[str, str] = {}
     if language_tag:
-        entity["metadata"]["labels"] = {"blitzy.com/language": language_tag}
+        labels["blitzy.com/language"] = language_tag
+    vertical_entry = verticals.get(name)
+    if vertical_entry and vertical_entry.get("vertical"):
+        labels["blitzy.com/vertical"] = vertical_entry["vertical"]
+    if labels:
+        entity["metadata"]["labels"] = labels
 
     return entity
 
@@ -190,16 +204,23 @@ def main():
     repos = list_org_repos(args.org, token)
     print(f"  {len(repos)} repos discovered")
 
+    verticals = load_verticals()
+    print(f"  {len(verticals)} entries in vertical mapping ({VERTICALS_FILE})")
+
     documents = [build_group(), build_system()]
 
     langs_resolved = 0
     langs_missing = 0
+    vertical_counts: dict[str, int] = {}
     for i, repo in enumerate(repos, 1):
-        entity = build_component(repo, token, args.org)
-        if entity["metadata"].get("labels", {}).get("blitzy.com/language"):
+        entity = build_component(repo, token, args.org, verticals)
+        labels = entity["metadata"].get("labels", {})
+        if labels.get("blitzy.com/language"):
             langs_resolved += 1
         else:
             langs_missing += 1
+        vertical = labels.get("blitzy.com/vertical") or "(unset)"
+        vertical_counts[vertical] = vertical_counts.get(vertical, 0) + 1
         documents.append(entity)
         if i % 25 == 0:
             print(f"  processed {i}/{len(repos)}")
@@ -212,6 +233,9 @@ def main():
     print(f"Components: {len(repos)}")
     print(f"  with language tag: {langs_resolved}")
     print(f"  without language:  {langs_missing}")
+    print("  by vertical:")
+    for v, n in sorted(vertical_counts.items(), key=lambda kv: -kv[1]):
+        print(f"    {n:>4}  {v}")
     print("=" * 60)
 
     if args.dry_run:

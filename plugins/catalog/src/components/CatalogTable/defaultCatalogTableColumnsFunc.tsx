@@ -38,8 +38,13 @@ export const defaultCatalogTableColumnsFunc: CatalogTableColumnsFunc = ({
       columnFactories.createMetadataDescriptionColumn(),
       columnFactories.createTagsColumn(),
     ];
+    const verticalColumn = columnFactories.createLabelColumn(
+      'blitzy.com/vertical',
+      { title: 'Vertical' },
+    );
     const baseColumns = [
       columnFactories.createSpecTypeColumn({ hidden: !showTypeColumn }),
+      verticalColumn,
     ];
     switch (filters.kind?.value) {
       case 'user':

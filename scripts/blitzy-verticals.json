@@ -1,0 +1,922 @@
+{
+  ".github": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "AI-Powered-Salesperson-396qll": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "AI-Powered-Salesperson-irqt6h": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "AI-Powered-Salesperson-v2-m55gs1": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "AgOpenGPS": {
+    "tier": "Potential with tweaks",
+    "vertical": "manufacturing"
+  },
+  "Blitzy-HeavyThing": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "Blitzy-OpenROAD": {
+    "tier": "Could Work",
+    "vertical": "manufacturing"
+  },
+  "Blitzy-SalExtension": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "Blitzy-VibeVoice": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "ChibiOS": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "CppUTest": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "CrashCatcher": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "CrashDebug": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "DSDL": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "DSDL-1": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "Micro-CDR": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "Micro-XRCE-DDS-Client": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "MikeRepo": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "OpenROAD": {
+    "tier": "Could Work",
+    "vertical": "manufacturing"
+  },
+  "OpenSTA": {
+    "tier": "Could Work",
+    "vertical": "manufacturing"
+  },
+  "StockSharp": {
+    "tier": "Strong",
+    "vertical": "banking"
+  },
+  "abc": {
+    "tier": "Could Work",
+    "vertical": "manufacturing"
+  },
+  "abcd-to3w5c": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "ai-sales-voice-agent-d10cto": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "ai-security-platform-prd-47o3qp": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "akaunting": {
+    "tier": "Could Work",
+    "vertical": "banking"
+  },
+  "apache-fineract": {
+    "tier": "Strong",
+    "vertical": "banking"
+  },
+  "apt-finder-5kik7u": {
+    "tier": "Potential with tweaks",
+    "vertical": "retail"
+  },
+  "apt-finder-v2-oybclj": {
+    "tier": "Potential with tweaks",
+    "vertical": "retail"
+  },
+  "ardupilot-blitzy": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "arkimedes-web-scrape-ggqkgy": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "aws-carddemo-blitzy": {
+    "tier": "Strong",
+    "vertical": "banking"
+  },
+  "baby-nkwdip": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "benchmark": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "benchmark-1": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-Apollo-11": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-Cataclysm-DDA": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-MessagePack-CSharp": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-NASTRAN-95": {
+    "tier": "Could Work",
+    "vertical": "manufacturing"
+  },
+  "blitzy-Open-Web-Analytics": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-Pier3": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-PyMuPDF": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-WebKit": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-WebVella-ERP": {
+    "tier": "Could Work",
+    "vertical": "banking"
+  },
+  "blitzy-aave-v3-origin": {
+    "tier": "Could Work",
+    "vertical": "banking"
+  },
+  "blitzy-airflow": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-ant": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-aspnetcore": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-assistant-android": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-assistant-core": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-assistant-iOS": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-assistant-os": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-bank-system": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-budibase": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-c-compiler": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-cal.diy": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-civicrm-core": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-claudes-c-compiler": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-cobol": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-code": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-conductor": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-db-regression": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-db2-samples": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-delcos": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-delta-format": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-dnsmasq": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-dnsmasq-mirror": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-fhir": {
+    "tier": "Strong",
+    "vertical": "healthcare"
+  },
+  "blitzy-gem-gnu-DB2": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-git": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-git-secured": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-googletest": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-grafana": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-grafana-mirror": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-greenfields": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-hadoop": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-hapipy": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-iceberg": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-jpetstore-6": {
+    "tier": "Strong",
+    "vertical": "retail"
+  },
+  "blitzy-kubeflow": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-kubernetes": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-langchain": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-langgraph-search-agent": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-langsmith-sdk": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-linux": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-localstack": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-log4delphi": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-lxd": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-matpower": {
+    "tier": "Potential with tweaks",
+    "vertical": "manufacturing"
+  },
+  "blitzy-moodle": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-n8n": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-nginx": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-odoo": {
+    "tier": "Could Work",
+    "vertical": "banking"
+  },
+  "blitzy-open-cobol": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-paperclip": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-prompt-eng-interactive-tutorial": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-rdk-halif-aidl": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-rdkservices": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-rubygems": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-smalltalk": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-solidity": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-spark": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-swagger-ui": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-terraform": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-tgr-dnsmasq-rust": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-triton": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-vibe": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-vscode": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-weekend-planner-ai-agent": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blitzy-x-algorithm": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "blockchain-integration-v2-8xm754": {
+    "tier": "Potential with tweaks",
+    "vertical": "banking"
+  },
+  "bon-voyage-supplement-reminder-87b6qd": {
+    "tier": "Potential with tweaks",
+    "vertical": "healthcare"
+  },
+  "boston-startup-tracker-b1cpv9": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "boston-startup-tracker-t28nax": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "brian-16dec-zpcir1": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "case-mentor": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "case-mentor-4sx1t8": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "celery": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "cics-banking-sample-application-cbsa": {
+    "tier": "Strong",
+    "vertical": "banking"
+  },
+  "code-skeptic-scanner-kbqssv": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "code-skeptic-scanner-s78xkz": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "code-skeptic-scanner-v2-ytglbh": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "company-domain-r9mgxk": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "create-excel-v2-dru9yl": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "create-excel-v2-xxmi1n": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "cudf": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "django": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "dronecan_dsdlc": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "dronecan_dsdlc-1": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "ecommerce-shop": {
+    "tier": "Strong",
+    "vertical": "retail"
+  },
+  "ejb-sproc-migration-demo": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "erm-solution-9lhe7j": {
+    "tier": "Could Work",
+    "vertical": "banking"
+  },
+  "figma-sandbox": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "founditure-furniture-marketplace-9f3hat": {
+    "tier": "Could Work",
+    "vertical": "retail"
+  },
+  "founditure-furniture-marketplace-wvdy7r": {
+    "tier": "Could Work",
+    "vertical": "retail"
+  },
+  "gSOAP": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "googletest": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "googletest-1": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "goshare-fleet-tracking-y6kjv5": {
+    "tier": "Potential with tweaks",
+    "vertical": "manufacturing"
+  },
+  "hao-test-gx06nf": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "hao-test2-8q2xuv": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "hao-test3-be2wra": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "hello-world2-0r6b4x": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "hyperswitch-web": {
+    "tier": "Strong",
+    "vertical": "banking"
+  },
+  "hyperswitch-web-fork": {
+    "tier": "Strong",
+    "vertical": "banking"
+  },
+  "iso20022-swift-mt-mx-migration": {
+    "tier": "Strong",
+    "vertical": "banking"
+  },
+  "java-spring-boot-upgrade-sample": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "juice-shop": {
+    "tier": "Potential with tweaks",
+    "vertical": "banking"
+  },
+  "kubernetes": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "libcanard": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "libcanard-1": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "linkedin-recruiter-zfmk15": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "littlefs": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "llqnavdk-eepfoe": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "logging-log4j2-blitzy": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "lwip": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "markdown-testing-2-sw8tf6": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "mastodon": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "mavlink": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "mca-solution-74ly8u": {
+    "tier": "Strong",
+    "vertical": "banking"
+  },
+  "mca-solution-fku9fu": {
+    "tier": "Strong",
+    "vertical": "banking"
+  },
+  "mca-solution-jgdaun": {
+    "tier": "Strong",
+    "vertical": "banking"
+  },
+  "mca-solution-w99tje": {
+    "tier": "Strong",
+    "vertical": "banking"
+  },
+  "mca-solution-xooysa": {
+    "tier": "Strong",
+    "vertical": "banking"
+  },
+  "mca-solution-zmthzk": {
+    "tier": "Strong",
+    "vertical": "banking"
+  },
+  "mfe-toolbox": {
+    "tier": "Could Work",
+    "vertical": "banking"
+  },
+  "mfe-toolbox-python": {
+    "tier": "Could Work",
+    "vertical": "banking"
+  },
+  "microsoft-excel-replica-v4-bsmqvm": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "microsoft-excel-v3-5qih2l": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "microsoft-excel-v3-62h70x": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "microsoft-excel-v3-m8wgg1": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "microsoft-excel-v3-pin2pc": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "microsoft-excel-v3b-sxq8yq": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "microsoft-word-v2-ufxvsn": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "mike": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "mint-financial-mgmt-app-qw9x4b": {
+    "tier": "Could Work",
+    "vertical": "banking"
+  },
+  "mint-mobile-app-fq9nqt": {
+    "tier": "Could Work",
+    "vertical": "banking"
+  },
+  "mint-mobile-app-ncuwqw": {
+    "tier": "Could Work",
+    "vertical": "banking"
+  },
+  "mint-replica-ios": {
+    "tier": "Could Work",
+    "vertical": "banking"
+  },
+  "mlflow-blitzy": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "mri": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "nexus-public": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "omers-vc-reporting-platform-k7vglm": {
+    "tier": "Could Work",
+    "vertical": "banking"
+  },
+  "opentelemetry-collector": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "pantry-chef-traditional": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "pantry-chef-ytpsw8": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "phuse-scripts": {
+    "tier": "Strong",
+    "vertical": "healthcare"
+  },
+  "pip-blitzy": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "podcast-marketing-automation-saas-ykrln3": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "podcast-marketing-automation-saas-zqmsmg": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "podcast-marketing-saas-it6tbi": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "pollen8-platform-0xiv1j": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "pollen8-platform-268ixb": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "pollen8-platform-45u0jm": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "pollen8-platform-i4951e": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "prowide-core": {
+    "tier": "Strong",
+    "vertical": "banking"
+  },
+  "prowide-iso20022": {
+    "tier": "Strong",
+    "vertical": "banking"
+  },
+  "pydronecan": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "pydronecan-1": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "qarbine-expense-management-1g6p2x": {
+    "tier": "Potential with tweaks",
+    "vertical": "banking"
+  },
+  "qarbine-expense-management-txtsbs": {
+    "tier": "Potential with tweaks",
+    "vertical": "banking"
+  },
+  "reversa-blitzy": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "rivet": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "shadcn-ui": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "sqlite-amalgamation": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "startup-metrics-hizlkn": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "stocksharp-storedprocedures": {
+    "tier": "Strong",
+    "vertical": "banking"
+  },
+  "swan-z-it9zr5": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "taiga-back": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "taiga-docker": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "task-manager-evqpaf": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "test-94ilr1": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "test-v1-bzho0m": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "test-zz67zj": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "test1-k81ftt": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "tidepool": {
+    "tier": "Strong",
+    "vertical": "healthcare"
+  },
+  "tidepool-platform": {
+    "tier": "Strong",
+    "vertical": "healthcare"
+  },
+  "toddler-puzzle-app-aguvbd": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "trace3-z175cd": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "trail-project-1-n75ia4": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "trial-project-2-2ggkey": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "vault": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "vc-investment-discovery-0i9oem": {
+    "tier": "Potential with tweaks",
+    "vertical": "banking"
+  },
+  "vendure": {
+    "tier": "Strong",
+    "vertical": "retail"
+  },
+  "w5base": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "waf": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "whatsappbot-sx1cxc": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "windows-calculator": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "zapier-clone-h0cxjr": {
+    "tier": "",
+    "vertical": "no-fit"
+  },
+  "zdmfhlxu-7u0yyf": {
+    "tier": "",
+    "vertical": "no-fit"
+  }
+}
