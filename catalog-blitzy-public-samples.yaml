@@ -68,6 +68,7 @@ metadata:
   description: Repository created autonomously by BlitzCode
   tags:
   - python
+  - test-suite
   annotations:
     github.com/project-slug: blitzy-public-samples/code-skeptic-scanner-kbqssv
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/code-skeptic-scanner-kbqssv/tree/main/
@@ -86,7 +87,10 @@ metadata:
   title: code-skeptic-scanner-h3gv6b
   description: Repository created autonomously by BlitzCode
   tags:
+  - backend
+  - flask
   - python
+  - spring-boot
   annotations:
     github.com/project-slug: blitzy-public-samples/code-skeptic-scanner-h3gv6b
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/code-skeptic-scanner-h3gv6b/tree/main/
@@ -105,6 +109,9 @@ metadata:
   title: mca-solution-nzac9s
   description: Repository created autonomously by BlitzCode
   tags:
+  - banking
+  - document-processing
+  - refactor
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/mca-solution-nzac9s
@@ -143,6 +150,8 @@ metadata:
   title: mca-solution-74ly8u
   description: Repository created autonomously by BlitzCode
   tags:
+  - banking
+  - document-processing
   - python
   annotations:
     github.com/project-slug: blitzy-public-samples/mca-solution-74ly8u
@@ -163,6 +172,8 @@ metadata:
   title: microsoft-word-u33ko0
   description: Repository created autonomously by BlitzCode
   tags:
+  - documentation
+  - office
   - python
   annotations:
     github.com/project-slug: blitzy-public-samples/microsoft-word-u33ko0
@@ -182,7 +193,9 @@ metadata:
   title: create-excel-hks7n6
   description: Repository created autonomously by BlitzCode
   tags:
+  - office
   - python
+  - security
   annotations:
     github.com/project-slug: blitzy-public-samples/create-excel-hks7n6
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/create-excel-hks7n6/tree/main/
@@ -201,6 +214,8 @@ metadata:
   title: mca-solution-zmthzk
   description: Repository created autonomously by BlitzCode
   tags:
+  - banking
+  - document-processing
   - python
   annotations:
     github.com/project-slug: blitzy-public-samples/mca-solution-zmthzk
@@ -221,6 +236,9 @@ metadata:
   title: blockchain-integration-6edhrq
   description: Repository created autonomously by BlitzCode
   tags:
+  - blockchain
+  - documentation
+  - tutorial
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/blockchain-integration-6edhrq
@@ -240,6 +258,7 @@ metadata:
   title: AI-Powered-Salesperson-396qll
   description: Repository created autonomously by BlitzCode
   tags:
+  - ai
   - python
   annotations:
     github.com/project-slug: blitzy-public-samples/AI-Powered-Salesperson-396qll
@@ -259,6 +278,7 @@ metadata:
   title: AI-Powered-Salesperson-irqt6h
   description: Repository created autonomously by BlitzCode
   tags:
+  - ai
   - python
   annotations:
     github.com/project-slug: blitzy-public-samples/AI-Powered-Salesperson-irqt6h
@@ -317,7 +337,9 @@ metadata:
   title: apartment-finder-service-pqutw3
   description: Repository created autonomously by BlitzCode
   tags:
+  - bug-fix
   - python
+  - security
   annotations:
     github.com/project-slug: blitzy-public-samples/apartment-finder-service-pqutw3
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/apartment-finder-service-pqutw3/tree/main/
@@ -336,6 +358,10 @@ metadata:
   title: used-car-marketplace-u92dm2
   description: Repository created autonomously by BlitzCode
   tags:
+  - backend
+  - bug-fix
+  - marketplace
+  - security
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/used-car-marketplace-u92dm2
@@ -355,6 +381,8 @@ metadata:
   title: mca-solution-w99tje
   description: Repository created autonomously by BlitzCode
   tags:
+  - banking
+  - document-processing
   - python
   annotations:
     github.com/project-slug: blitzy-public-samples/mca-solution-w99tje
@@ -395,6 +423,7 @@ metadata:
   description: Repository created autonomously by BlitzCode
   tags:
   - csharp
+  - office
   annotations:
     github.com/project-slug: blitzy-public-samples/microsoft-word-v2-ufxvsn
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/microsoft-word-v2-ufxvsn/tree/main/
@@ -413,6 +442,7 @@ metadata:
   title: AI-Powered-Salesperson-v2-m55gs1
   description: Repository created autonomously by BlitzCode
   tags:
+  - ai
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/AI-Powered-Salesperson-v2-m55gs1
@@ -432,6 +462,7 @@ metadata:
   title: blockchain-integration-v2-8xm754
   description: Repository created autonomously by BlitzCode
   tags:
+  - blockchain
   - go
   annotations:
     github.com/project-slug: blitzy-public-samples/blockchain-integration-v2-8xm754
@@ -453,6 +484,7 @@ metadata:
   description: Repository created autonomously by BlitzCode
   tags:
   - cpp
+  - office
   annotations:
     github.com/project-slug: blitzy-public-samples/create-excel-v2-xxmi1n
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/create-excel-v2-xxmi1n/tree/main/
@@ -510,6 +542,7 @@ metadata:
   description: Repository created autonomously by BlitzCode
   tags:
   - cpp
+  - office
   annotations:
     github.com/project-slug: blitzy-public-samples/create-excel-v2-dru9yl
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/create-excel-v2-dru9yl/tree/main/
@@ -529,6 +562,7 @@ metadata:
   description: Repository created autonomously by BlitzCode
   tags:
   - cpp
+  - office
   annotations:
     github.com/project-slug: blitzy-public-samples/microsoft-excel-v3b-sxq8yq
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/microsoft-excel-v3b-sxq8yq/tree/main/
@@ -585,6 +619,7 @@ metadata:
   title: microsoft-excel-v3-62h70x
   description: Repository created autonomously by BlitzCode
   tags:
+  - office
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/microsoft-excel-v3-62h70x
@@ -643,6 +678,7 @@ metadata:
   title: microsoft-excel-v3-5qih2l
   description: Repository created autonomously by BlitzCode
   tags:
+  - office
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/microsoft-excel-v3-5qih2l
@@ -701,6 +737,7 @@ metadata:
   title: microsoft-excel-v3-m8wgg1
   description: Repository created autonomously by BlitzCode
   tags:
+  - office
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/microsoft-excel-v3-m8wgg1
@@ -739,6 +776,7 @@ metadata:
   title: podcast-marketing-automation-saas-ykrln3
   description: Repository created autonomously by BlitzCode
   tags:
+  - media
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/podcast-marketing-automation-saas-ykrln3
@@ -798,6 +836,7 @@ metadata:
   title: microsoft-excel-v3-pin2pc
   description: Repository created autonomously by BlitzCode
   tags:
+  - office
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/microsoft-excel-v3-pin2pc
@@ -836,6 +875,7 @@ metadata:
   title: podcast-marketing-automation-saas-zqmsmg
   description: Repository created autonomously by BlitzCode
   tags:
+  - media
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/podcast-marketing-automation-saas-zqmsmg
@@ -855,6 +895,7 @@ metadata:
   title: microsoft-excel-replica-v4-bsmqvm
   description: Repository created autonomously by BlitzCode
   tags:
+  - office
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/microsoft-excel-replica-v4-bsmqvm
@@ -952,7 +993,9 @@ metadata:
   title: omers-vc-reporting-platform-qj6e8j
   description: Repository created autonomously by BlitzCode
   tags:
+  - bug-fix
   - python
+  - security
   annotations:
     github.com/project-slug: blitzy-public-samples/omers-vc-reporting-platform-qj6e8j
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/omers-vc-reporting-platform-qj6e8j/tree/main/
@@ -970,7 +1013,9 @@ metadata:
   name: mca-solution-xooysa
   title: mca-solution-xooysa
   description: Repository created autonomously by BlitzCode
-  tags: []
+  tags:
+  - banking
+  - document-processing
   annotations:
     github.com/project-slug: blitzy-public-samples/mca-solution-xooysa
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/mca-solution-xooysa/tree/main/
@@ -989,6 +1034,7 @@ metadata:
   title: qarbine-expense-management-txtsbs
   description: Repository created autonomously by BlitzCode
   tags:
+  - finance
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/qarbine-expense-management-txtsbs
@@ -1009,6 +1055,7 @@ metadata:
   title: qarbine-expense-management-1g6p2x
   description: Repository created autonomously by BlitzCode
   tags:
+  - finance
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/qarbine-expense-management-1g6p2x
@@ -1029,7 +1076,9 @@ metadata:
   title: ai-security-platform-prd-47o3qp
   description: Repository created autonomously by BlitzCode
   tags:
+  - ai
   - python
+  - security
   annotations:
     github.com/project-slug: blitzy-public-samples/ai-security-platform-prd-47o3qp
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/ai-security-platform-prd-47o3qp/tree/main/
@@ -1067,6 +1116,8 @@ metadata:
   title: mca-solution-jgdaun
   description: Repository created autonomously by BlitzCode
   tags:
+  - banking
+  - document-processing
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/mca-solution-jgdaun
@@ -1087,6 +1138,7 @@ metadata:
   title: founditure-furniture-marketplace-wvdy7r
   description: Repository created autonomously by BlitzCode
   tags:
+  - marketplace
   - swift
   annotations:
     github.com/project-slug: blitzy-public-samples/founditure-furniture-marketplace-wvdy7r
@@ -1107,7 +1159,9 @@ metadata:
   title: pantry-chef-ytpsw8
   description: Repository created autonomously by BlitzCode
   tags:
+  - redis
   - typescript
+  - websocket
   annotations:
     github.com/project-slug: blitzy-public-samples/pantry-chef-ytpsw8
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/pantry-chef-ytpsw8/tree/main/
@@ -1145,7 +1199,8 @@ metadata:
   name: pantry-chef-traditional
   title: pantry-chef-traditional
   description: 'Blitzy public sample: pantry-chef-traditional'
-  tags: []
+  tags:
+  - documentation
   annotations:
     github.com/project-slug: blitzy-public-samples/pantry-chef-traditional
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/pantry-chef-traditional/tree/main/
@@ -1162,6 +1217,7 @@ metadata:
   title: mint-mobile-app-fq9nqt
   description: Repository created autonomously by BlitzCode
   tags:
+  - mobile
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/mint-mobile-app-fq9nqt
@@ -1182,6 +1238,7 @@ metadata:
   title: mint-mobile-app-ncuwqw
   description: Repository created autonomously by BlitzCode
   tags:
+  - mobile
   - swift
   annotations:
     github.com/project-slug: blitzy-public-samples/mint-mobile-app-ncuwqw
@@ -1202,6 +1259,8 @@ metadata:
   title: mca-solution-fku9fu
   description: Repository created autonomously by BlitzCode
   tags:
+  - banking
+  - document-processing
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/mca-solution-fku9fu
@@ -1242,6 +1301,7 @@ metadata:
   title: founditure-furniture-marketplace-9f3hat
   description: Repository created autonomously by BlitzCode
   tags:
+  - marketplace
   - swift
   annotations:
     github.com/project-slug: blitzy-public-samples/founditure-furniture-marketplace-9f3hat
@@ -1263,6 +1323,7 @@ metadata:
   description: Repository created autonomously by BlitzCode
   tags:
   - java
+  - spring-boot
   annotations:
     github.com/project-slug: blitzy-public-samples/java-spring-boot-upgrade-sample
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/java-spring-boot-upgrade-sample/tree/main/
@@ -1319,6 +1380,7 @@ metadata:
   title: podcast-marketing-saas-it6tbi
   description: Repository created autonomously by BlitzCode
   tags:
+  - media
   - python
   annotations:
     github.com/project-slug: blitzy-public-samples/podcast-marketing-saas-it6tbi
@@ -1471,6 +1533,7 @@ metadata:
   title: ai-sales-voice-agent-d10cto
   description: Repository created autonomously by BlitzCode
   tags:
+  - ai
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/ai-sales-voice-agent-d10cto
@@ -1755,6 +1818,11 @@ metadata:
   description: test project for backprop integration. Do not touch!
   tags:
   - javascript
+  - migration
+  - nestjs
+  - nodejs
+  - refactor
+  - tutorial
   annotations:
     github.com/project-slug: blitzy-public-samples/hao-backprop-test
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/hao-backprop-test/tree/main/
@@ -1867,7 +1935,9 @@ metadata:
   name: cobol-casualty-claims
   title: cobol-casualty-claims
   description: 'Blitzy public sample: cobol-casualty-claims'
-  tags: []
+  tags:
+  - cobol
+  - migration
   annotations:
     github.com/project-slug: blitzy-public-samples/cobol-casualty-claims
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/cobol-casualty-claims/tree/main/
@@ -1976,6 +2046,7 @@ metadata:
   title: django
   description: The Web framework for perfectionists with deadlines.
   tags:
+  - django
   - python
   annotations:
     github.com/project-slug: blitzy-public-samples/django
@@ -2030,6 +2101,7 @@ metadata:
   title: cudf
   description: cuDF - GPU DataFrame Library
   tags:
+  - bug-fix
   - cpp
   annotations:
     github.com/project-slug: blitzy-public-samples/cudf
@@ -2050,6 +2122,8 @@ metadata:
   description: 'Blitzy public sample: logging-log4j2-blitzy'
   tags:
   - java
+  - log4j
+  - security
   annotations:
     github.com/project-slug: blitzy-public-samples/logging-log4j2-blitzy
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/logging-log4j2-blitzy/tree/release-2.14.1/
@@ -2069,6 +2143,7 @@ metadata:
   description: 'Blitzy public sample: pip-blitzy'
   tags:
   - python
+  - test-suite
   annotations:
     github.com/project-slug: blitzy-public-samples/pip-blitzy
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/pip-blitzy/tree/main/
@@ -2087,6 +2162,7 @@ metadata:
   title: ardupilot-blitzy
   description: 'Blitzy public sample: ardupilot-blitzy'
   tags:
+  - audit
   - cpp
   annotations:
     github.com/project-slug: blitzy-public-samples/ardupilot-blitzy
@@ -2106,6 +2182,8 @@ metadata:
   title: mlflow-blitzy
   description: 'Blitzy public sample: mlflow-blitzy'
   tags:
+  - ml
+  - mlflow
   - python
   annotations:
     github.com/project-slug: blitzy-public-samples/mlflow-blitzy
@@ -2124,7 +2202,11 @@ metadata:
   name: aws-carddemo-blitzy
   title: aws-carddemo-blitzy
   description: 'Blitzy public sample: aws-carddemo-blitzy'
-  tags: []
+  tags:
+  - cobol
+  - microservices
+  - react
+  - spring-boot
   annotations:
     github.com/project-slug: blitzy-public-samples/aws-carddemo-blitzy
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/aws-carddemo-blitzy/tree/main/
@@ -2144,6 +2226,7 @@ metadata:
   description: Mirror of Apache Kafka
   tags:
   - java
+  - kafka
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-kafka
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-kafka/tree/trunk/
@@ -2161,7 +2244,8 @@ metadata:
   name: blitzy-spark
   title: blitzy-spark
   description: Apache Spark - A unified analytics engine for large-scale data processing
-  tags: []
+  tags:
+  - spark
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-spark
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-spark/tree/master/
@@ -2215,7 +2299,9 @@ metadata:
   name: mavlink
   title: mavlink
   description: MAVLink micro air vehicle marshalling / communication library
-  tags: []
+  tags:
+  - robotics
+  - test-suite
   annotations:
     github.com/project-slug: blitzy-public-samples/mavlink
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/mavlink/tree/master/
@@ -2568,6 +2654,9 @@ metadata:
   title: blitzy-langchain
   description: 🦜🔗 Build context-aware reasoning applications
   tags:
+  - ai
+  - documentation
+  - langchain
   - python
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-langchain
@@ -2588,6 +2677,8 @@ metadata:
   description: the official NGINX Open Source repository.
   tags:
   - c
+  - nginx
+  - refactor
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-nginx
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-nginx/tree/master/
@@ -2606,7 +2697,10 @@ metadata:
   title: blitzy-rubygems
   description: Library packaging and distribution for Ruby forked by Blitzy.
   tags:
+  - audit
+  - bug-fix
   - ruby
+  - security
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-rubygems
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-rubygems/tree/master/
@@ -2647,7 +2741,10 @@ metadata:
     based on ASP.NET Core 9, RazorPages and PostgreSQL . Targets Linux or Windows
     as host OS.
   tags:
+  - crm
   - csharp
+  - erp
+  - postgres
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-WebVella-ERP
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-WebVella-ERP/tree/master/
@@ -2706,6 +2803,8 @@ metadata:
   title: blitzy-odoo
   description: Odoo. Open Source Apps To Grow Your Business.
   tags:
+  - erp
+  - odoo
   - python
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-odoo
@@ -2746,7 +2845,9 @@ metadata:
   description: Home of the Blitzy fork of the WebKit project, the browser engine used
     by Safari, Mail, App Store and many other applications on macOS, iOS and Linux.
   tags:
+  - browser-engine
   - javascript
+  - webkit
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-WebKit
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-WebKit/tree/main/
@@ -2765,7 +2866,12 @@ metadata:
   title: blitzy-open-cobol
   description: GnuCOBOL (formerly OpenCOBOL) - A free COBOL compiler
   tags:
+  - backend
   - c
+  - cobol
+  - compiler
+  - migration
+  - refactor
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-open-cobol
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-open-cobol/tree/master/
@@ -2784,7 +2890,9 @@ metadata:
   title: blitzy-assistant
   description: the open source home automation that puts local control and privacy
     first. Powered by a worldwide community of tinkerers and DIY enthusiasts.
-  tags: []
+  tags:
+  - migration
+  - mobile
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-assistant
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-assistant/tree/main/
@@ -2878,6 +2986,8 @@ metadata:
   title: blitzy-hadoop
   description: Apache Hadoop
   tags:
+  - documentation
+  - hadoop
   - java
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-hadoop
@@ -2952,6 +3062,7 @@ metadata:
   title: blitzy-dnsmasq
   description: Dnsmasq
   tags:
+  - bug-fix
   - c
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-dnsmasq
@@ -3026,6 +3137,7 @@ metadata:
   title: blitzy-dnsmasq-mirror
   description: Blitzy mirror of the upstream dnsmasq repository
   tags:
+  - refactor
   - rust
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-dnsmasq-mirror
@@ -3117,6 +3229,8 @@ metadata:
   description: 'Kubernetes: The Production-Grade Container Scheduling and Management'
   tags:
   - go
+  - kubernetes
+  - security
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-kubernetes
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-kubernetes/tree/master/
@@ -3172,7 +3286,8 @@ metadata:
   name: blitzy-prompt-eng-interactive-tutorial
   title: blitzy-prompt-eng-interactive-tutorial
   description: Anthropic's Interactive Prompt Engineering Tutorial
-  tags: []
+  tags:
+  - tutorial
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-prompt-eng-interactive-tutorial
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-prompt-eng-interactive-tutorial/tree/master/
@@ -3189,6 +3304,7 @@ metadata:
   title: akaunting
   description: Online Accounting Software
   tags:
+  - documentation
   - php
   annotations:
     github.com/project-slug: blitzy-public-samples/akaunting
@@ -3212,7 +3328,9 @@ metadata:
     declarative configuration files that can be shared amongst team members, treated
     as code, edited, reviewed, and versioned.
   tags:
+  - bug-fix
   - go
+  - terraform
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-terraform
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-terraform/tree/main/
@@ -3232,6 +3350,7 @@ metadata:
   description: PyMuPDF is a high performance Python library for data extraction, analysis,
     conversion & manipulation of PDF (and other) documents.
   tags:
+  - documentation
   - python
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-PyMuPDF
@@ -3251,6 +3370,9 @@ metadata:
   title: blitzy-weekend-planner-ai-agent
   description: Kaggle 5-day Agents course
   tags:
+  - ai
+  - frontend
+  - test-suite
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-weekend-planner-ai-agent
@@ -3310,7 +3432,8 @@ metadata:
   name: blitzy-kubeflow
   title: blitzy-kubeflow
   description: Machine Learning Toolkit for Kubernetes
-  tags: []
+  tags:
+  - kubernetes
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-kubeflow
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-kubeflow/tree/master/
@@ -3327,7 +3450,10 @@ metadata:
   title: blitzy-langgraph-search-agent
   description: AI-powered search agent using LangGraph, deployed on AWS
   tags:
+  - ai
+  - langgraph
   - python
+  - terraform
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-langgraph-search-agent
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-langgraph-search-agent/tree/main/
@@ -3364,7 +3490,8 @@ metadata:
   name: blitzy-delcos
   title: blitzy-delcos
   description: Delphi source code analyzer
-  tags: []
+  tags:
+  - audit
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-delcos
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-delcos/tree/master/
@@ -3382,7 +3509,9 @@ metadata:
   description: Log4Delphi is an Open Source project that aims to produce a high quality
     and usable logging suite for Borland's Delphi based on the Log4J package from
     the Apache Software Foundation.
-  tags: []
+  tags:
+  - log4j
+  - security
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-log4delphi
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-log4delphi/tree/master/
@@ -3431,7 +3560,10 @@ metadata:
   title: blitzy-x-algorithm
   description: Algorithm powering the For You feed on X
   tags:
+  - audit
+  - bug-fix
   - rust
+  - security
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-x-algorithm
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-x-algorithm/tree/main/
@@ -3489,6 +3621,9 @@ metadata:
     Visualize metrics, logs, and traces from multiple sources like Prometheus, Loki,
     Elasticsearch, InfluxDB, Postgres and many more.
   tags:
+  - grafana
+  - observability
+  - postgres
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-grafana
@@ -3529,6 +3664,7 @@ metadata:
   description: 'Swagger UI: a collection of HTML, JavaScript, and CSS assets that
     dynamically generate beautiful documentation from a Swagger-compliant API.'
   tags:
+  - documentation
   - javascript
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-swagger-ui
@@ -3586,7 +3722,8 @@ metadata:
   name: figma-demo
   title: figma-demo
   description: 'Blitzy public sample: figma-demo'
-  tags: []
+  tags:
+  - react
   annotations:
     github.com/project-slug: blitzy-public-samples/figma-demo
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/figma-demo/tree/main/
@@ -3605,6 +3742,9 @@ metadata:
     targeting x86 (64- and 32-bit), ARM, and RISC-V, capable of compiling a booting
     Linux kernel.
   tags:
+  - audit
+  - compiler
+  - new-feature
   - rust
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-claudes-c-compiler
@@ -3623,7 +3763,9 @@ metadata:
   name: blitzy-triton
   title: blitzy-triton
   description: the development repository for the Triton language and compiler
-  tags: []
+  tags:
+  - compiler
+  - gpu
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-triton
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-triton/tree/main/
@@ -3640,6 +3782,7 @@ metadata:
   title: blitzy-hapipy
   description: 'a Python wrapper for the HubSpot APIs  #hubspot-open-source'
   tags:
+  - documentation
   - python
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-hapipy
@@ -3658,7 +3801,9 @@ metadata:
   name: blitzy-c-compiler
   title: blitzy-c-compiler
   description: Blitzy's greenfield C-compiler project
-  tags: []
+  tags:
+  - backend
+  - compiler
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-c-compiler
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-c-compiler/tree/main/
@@ -3692,6 +3837,7 @@ metadata:
   description: the fair-code workflow automation platform with native AI capabilities.
     Combine visual building with custom code, self-host or cloud, 400+ integrations.
   tags:
+  - ai
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-n8n
@@ -3781,7 +3927,8 @@ metadata:
   name: mfe-toolbox
   title: mfe-toolbox
   description: 'Blitzy public sample: mfe-toolbox'
-  tags: []
+  tags:
+  - refactor
   annotations:
     github.com/project-slug: blitzy-public-samples/mfe-toolbox
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/mfe-toolbox/tree/main/
@@ -3816,7 +3963,10 @@ metadata:
   title: blitzy-cobol
   description: Open library with source code for OpenCobol, GnuCobol AS 400 COBOL,
     CL, CLP, CLLE, CBLLE
-  tags: []
+  tags:
+  - cobol
+  - migration
+  - spring-boot
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-cobol
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-cobol/tree/master/
@@ -3873,6 +4023,7 @@ metadata:
   description: Conductor is an event driven agentic orchestration platform providing
     durable and highly resilient execution engine for applications and AI Agents
   tags:
+  - ai
   - java
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-conductor
@@ -3908,7 +4059,8 @@ metadata:
   title: phuse-scripts
   description: Delivery standard industry analyses, built upon CDISC standards for
     analysis data
-  tags: []
+  tags:
+  - migration
   annotations:
     github.com/project-slug: blitzy-public-samples/phuse-scripts
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/phuse-scripts/tree/master/
@@ -3947,6 +4099,9 @@ metadata:
   description: A web application built on top of MyBatis 3, Spring 3 and Stripes
   tags:
   - java
+  - microservices
+  - migration
+  - refactor
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-jpetstore-6
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-jpetstore-6/tree/master/
@@ -3982,6 +4137,10 @@ metadata:
   title: blitzy-grafana-mirror
   description: Blitzy mirror of the upstream grafana repository
   tags:
+  - frontend
+  - grafana
+  - migration
+  - modernization
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-grafana-mirror
@@ -4001,7 +4160,9 @@ metadata:
   title: ecommerce-shop
   description: Online web store application built with .NET 5.0 and Angular 11.
   tags:
+  - angular
   - csharp
+  - documentation
   annotations:
     github.com/project-slug: blitzy-public-samples/ecommerce-shop
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/ecommerce-shop/tree/main/
@@ -4022,7 +4183,9 @@ metadata:
   description: An open-source storage framework that enables building a Lakehouse
     architecture with compute engines including Spark, PrestoDB, Flink, Trino, and
     Hive and APIs
-  tags: []
+  tags:
+  - spark
+  - trino
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-delta-format
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-delta-format/tree/master/
@@ -4077,7 +4240,8 @@ metadata:
   title: blitzy-gem-gnu-DB2
   description: Examples of COBOL/DB2 programs compiled with GnuCOBOL from the Murach
     books.
-  tags: []
+  tags:
+  - cobol
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-gem-gnu-DB2
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-gem-gnu-DB2/tree/trunk/
@@ -4112,7 +4276,12 @@ metadata:
   name: mendix-app
   title: Mendix-App
   description: 'Blitzy public sample: Mendix-App'
-  tags: []
+  tags:
+  - mendix
+  - migration
+  - nextjs
+  - postgres
+  - temporal
   annotations:
     github.com/project-slug: blitzy-public-samples/Mendix-App
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/Mendix-App/tree/main/
@@ -4196,6 +4365,8 @@ metadata:
   title: blitzy-budibase
   description: AI agents, automations and apps that run your operations. Model agnostic.
   tags:
+  - ai
+  - security
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-budibase
@@ -4215,6 +4386,8 @@ metadata:
   title: blitzy-paperclip
   description: Open-source orchestration for zero-human companies
   tags:
+  - bug-fix
+  - security
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-paperclip
@@ -4308,7 +4481,8 @@ metadata:
   title: Blitzy-OpenROAD
   description: OpenROAD's unified application implementing an RTL-to-GDS Flow. Documentation
     at https://openroad.readthedocs.io/en/latest/
-  tags: []
+  tags:
+  - documentation
   annotations:
     github.com/project-slug: blitzy-public-samples/Blitzy-OpenROAD
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/Blitzy-OpenROAD/tree/master/
@@ -4327,7 +4501,8 @@ metadata:
   title: OpenROAD
   description: OpenROAD's unified application implementing an RTL-to-GDS Flow. Documentation
     at https://openroad.readthedocs.io/en/latest/
-  tags: []
+  tags:
+  - documentation
   annotations:
     github.com/project-slug: blitzy-public-samples/OpenROAD
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/OpenROAD/tree/master/
@@ -4365,6 +4540,9 @@ metadata:
   description: 'ABC: System for Sequential Logic Synthesis and Formal Verification'
   tags:
   - c
+  - express
+  - nodejs
+  - tutorial
   annotations:
     github.com/project-slug: blitzy-public-samples/abc
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/abc/tree/master/
@@ -4399,7 +4577,8 @@ metadata:
   name: blitzy-nastran-95
   title: blitzy-NASTRAN-95
   description: 'Blitzy public sample: blitzy-NASTRAN-95'
-  tags: []
+  tags:
+  - modernization
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-NASTRAN-95
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-NASTRAN-95/tree/master/
@@ -4417,7 +4596,9 @@ metadata:
   name: cics-banking-sample-application-cbsa
   title: cics-banking-sample-application-cbsa
   description: CICS® banking sample application
-  tags: []
+  tags:
+  - bug-fix
+  - security
   annotations:
     github.com/project-slug: blitzy-public-samples/cics-banking-sample-application-cbsa
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/cics-banking-sample-application-cbsa/tree/main/
@@ -4455,7 +4636,10 @@ metadata:
   name: blitzy-bank-system
   title: blitzy-bank-system
   description: 'Blitzy public sample: blitzy-bank-system'
-  tags: []
+  tags:
+  - kubernetes
+  - observability
+  - vault
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-bank-system
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-bank-system/tree/master/
@@ -4473,6 +4657,7 @@ metadata:
   description: Production-Grade Container Scheduling and Management
   tags:
   - go
+  - kubernetes
   annotations:
     github.com/project-slug: blitzy-public-samples/kubernetes
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/kubernetes/tree/master/
@@ -4492,6 +4677,7 @@ metadata:
   description: OpenTelemetry Collector
   tags:
   - go
+  - observability
   annotations:
     github.com/project-slug: blitzy-public-samples/opentelemetry-collector
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/opentelemetry-collector/tree/main/
@@ -4512,6 +4698,7 @@ metadata:
     access management
   tags:
   - go
+  - vault
   annotations:
     github.com/project-slug: blitzy-public-samples/vault
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/vault/tree/main/
@@ -4531,6 +4718,7 @@ metadata:
   description: Distributed Task Queue (development branch)
   tags:
   - python
+  - redis
   annotations:
     github.com/project-slug: blitzy-public-samples/celery
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/celery/tree/main/
@@ -4549,6 +4737,7 @@ metadata:
   title: rivet
   description: The open-source visual AI programming environment and TypeScript library
   tags:
+  - ai
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/rivet
@@ -4569,6 +4758,9 @@ metadata:
   description: Ag Precision Mapping, Section Control and Guidance Software
   tags:
   - csharp
+  - grpc
+  - migration
+  - refactor
   annotations:
     github.com/project-slug: blitzy-public-samples/AgOpenGPS
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/AgOpenGPS/tree/develop/
@@ -4677,7 +4869,8 @@ metadata:
   name: iso20022-swift-mt-mx-migration
   title: iso20022-swift-mt-mx-migration
   description: 'Blitzy public sample: iso20022-swift-mt-mx-migration'
-  tags: []
+  tags:
+  - migration
   annotations:
     github.com/project-slug: blitzy-public-samples/iso20022-swift-mt-mx-migration
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/iso20022-swift-mt-mx-migration/tree/main/
@@ -4717,6 +4910,7 @@ metadata:
   description: Comprehensive business model and parser for all ISO 20022 messages
   tags:
   - java
+  - migration
   annotations:
     github.com/project-slug: blitzy-public-samples/prowide-iso20022
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/prowide-iso20022/tree/main/
@@ -4736,7 +4930,9 @@ metadata:
   title: blitzy-civicrm-core
   description: CiviCRM (Core Application and Framework)
   tags:
+  - migration
   - php
+  - react
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-civicrm-core
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-civicrm-core/tree/master/
@@ -4754,7 +4950,8 @@ metadata:
   name: hyperswitch-web
   title: hyperswitch-web
   description: Hyperswitch Web - Open source payments frontend
-  tags: []
+  tags:
+  - frontend
   annotations:
     github.com/project-slug: blitzy-public-samples/hyperswitch-web
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/hyperswitch-web/tree/abhishek/dynamicfieldsSuperposition/
@@ -4773,7 +4970,8 @@ metadata:
   title: hyperswitch-web-fork
   description: 'Hyperswitch Web SDK: A Rescript powered React library for seamless
     payment integration and customization.'
-  tags: []
+  tags:
+  - react
   annotations:
     github.com/project-slug: blitzy-public-samples/hyperswitch-web-fork
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/hyperswitch-web-fork/tree/main/
@@ -4793,6 +4991,8 @@ metadata:
   description: 'OWASP Juice Shop: Probably the most modern and sophisticated insecure
     web application'
   tags:
+  - bug-fix
+  - security
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/juice-shop
@@ -4873,6 +5073,7 @@ metadata:
   title: mike
   description: OSS AI Legal Platform
   tags:
+  - ai
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/mike
@@ -4892,6 +5093,7 @@ metadata:
   title: mastodon
   description: Your self-hosted, globally interconnected microblogging community
   tags:
+  - migration
   - ruby
   annotations:
     github.com/project-slug: blitzy-public-samples/mastodon
@@ -4913,6 +5115,12 @@ metadata:
     demo — EJB services, CDI, JPA, JAX-RS migrating to Spring Boot 3.x
   tags:
   - java
+  - migration
+  - modernization
+  - module-federation
+  - postgres
+  - react
+  - spring-boot
   annotations:
     github.com/project-slug: blitzy-public-samples/ejb-sproc-migration-demo
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/ejb-sproc-migration-demo/tree/main/
@@ -4930,7 +5138,11 @@ metadata:
   name: cohort_repo
   title: Cohort_Repo
   description: 'Blitzy public sample: Cohort_Repo'
-  tags: []
+  tags:
+  - nestjs
+  - nodejs
+  - postgres
+  - react
   annotations:
     github.com/project-slug: blitzy-public-samples/Cohort_Repo
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/Cohort_Repo/tree/main/
@@ -4947,6 +5159,7 @@ metadata:
   title: w5base
   description: W5Base Database Framework
   tags:
+  - docker
   - javascript
   annotations:
     github.com/project-slug: blitzy-public-samples/w5base
@@ -4965,7 +5178,8 @@ metadata:
   name: moltiply-as400-cobol
   title: Moltiply-AS400-Cobol
   description: 'Blitzy public sample: Moltiply-AS400-Cobol'
-  tags: []
+  tags:
+  - cobol
   annotations:
     github.com/project-slug: blitzy-public-samples/Moltiply-AS400-Cobol
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/Moltiply-AS400-Cobol/tree/main/
@@ -4981,7 +5195,10 @@ metadata:
   name: jde-apac-salesorder-orchestration-demo
   title: jde-apac-salesorder-orchestration-demo
   description: 'Blitzy public sample: jde-apac-salesorder-orchestration-demo'
-  tags: []
+  tags:
+  - integration
+  - migration
+  - wso2
   annotations:
     github.com/project-slug: blitzy-public-samples/jde-apac-salesorder-orchestration-demo
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/jde-apac-salesorder-orchestration-demo/tree/main/
@@ -4999,6 +5216,11 @@ metadata:
   description: Open-source headless commerce platform built with TypeScript, NestJS,
     React, and GraphQL
   tags:
+  - graphql
+  - marketplace
+  - nestjs
+  - nodejs
+  - react
   - typescript
   annotations:
     github.com/project-slug: blitzy-public-samples/vendure
@@ -5034,7 +5256,8 @@ metadata:
   name: taiga-front
   title: taiga-front
   description: 'Blitzy public sample: taiga-front'
-  tags: []
+  tags:
+  - react
   annotations:
     github.com/project-slug: blitzy-public-samples/taiga-front
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/taiga-front/tree/main/
@@ -5070,6 +5293,7 @@ metadata:
   title: taiga-docker
   description: 'Blitzy public sample: taiga-docker'
   tags:
+  - docker
   - shell
   annotations:
     github.com/project-slug: blitzy-public-samples/taiga-docker
@@ -5088,7 +5312,9 @@ metadata:
   name: taiga-migration-poc
   title: taiga-migration-poc
   description: 'Blitzy public sample: taiga-migration-poc'
-  tags: []
+  tags:
+  - migration
+  - react
   annotations:
     github.com/project-slug: blitzy-public-samples/taiga-migration-poc
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/taiga-migration-poc/tree/main/
@@ -5126,6 +5352,8 @@ metadata:
   description: Transform legacy systems into executable specifications for AI coding
     agents
   tags:
+  - ai
+  - documentation
   - javascript
   annotations:
     github.com/project-slug: blitzy-public-samples/reversa-blitzy
@@ -5247,7 +5475,10 @@ metadata:
   description: Algorithmic trading and quantitative trading open source platform to
     develop trading robots (stock markets, forex, crypto, bitcoins, and options).
   tags:
+  - crypto
   - csharp
+  - documentation
+  - refactor
   annotations:
     github.com/project-slug: blitzy-public-samples/StockSharp
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/StockSharp/tree/master/
@@ -5268,7 +5499,10 @@ metadata:
   description: Algorithmic trading and quantitative trading open source platform to
     develop trading robots (stock markets, forex, crypto, bitcoins, and options).
   tags:
+  - crypto
   - csharp
+  - migration
+  - refactor
   annotations:
     github.com/project-slug: blitzy-public-samples/stocksharp-storedprocedures
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/stocksharp-storedprocedures/tree/master/
@@ -5288,6 +5522,9 @@ metadata:
   title: sql-dbt-migration-demo
   description: 'Blitzy public sample: sql-dbt-migration-demo'
   tags:
+  - dbt
+  - migration
+  - new-feature
   - python
   annotations:
     github.com/project-slug: blitzy-public-samples/sql-dbt-migration-demo
@@ -5307,7 +5544,8 @@ metadata:
   title: blitzy-LIFE400
   description: Sample IBM AS/400 term life insurance administration system in ILE
     COBOL/CL/DDS
-  tags: []
+  tags:
+  - cobol
   annotations:
     github.com/project-slug: blitzy-public-samples/blitzy-LIFE400
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blitzy-LIFE400/tree/main/
@@ -5325,6 +5563,7 @@ metadata:
   description: Mastodon v4.2.9 snapshot for bugfix exercise (permissions, ActivityPub
     authorship, timeline scope, and related bugs fixed upstream through v4.2.29)
   tags:
+  - backend
   - ruby
   annotations:
     github.com/project-slug: blitzy-public-samples/mastodon-bugfixes
@@ -5345,6 +5584,9 @@ metadata:
   description: Chaos Monkey is a resiliency tool that helps applications tolerate
     random instance failures.
   tags:
+  - argocd
+  - chaos-engineering
+  - gitops
   - go
   annotations:
     github.com/project-slug: blitzy-public-samples/chaosmonkey
@@ -5363,7 +5605,8 @@ metadata:
   name: figma-test-7
   title: figma-test-7
   description: 'Blitzy public sample: figma-test-7'
-  tags: []
+  tags:
+  - react
   annotations:
     github.com/project-slug: blitzy-public-samples/figma-test-7
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/figma-test-7/tree/main/
@@ -5381,7 +5624,9 @@ metadata:
   description: Blnk is an open-source ledger & financial core for shipping fintech
     products fast.
   tags:
+  - ai
   - go
+  - llm
   annotations:
     github.com/project-slug: blitzy-public-samples/blnk
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/blnk/tree/main/
@@ -5404,6 +5649,8 @@ metadata:
     Planning. OFBiz provides a foundation and starting point for reliable, secure
     and scalable enterprise solutions.
   tags:
+  - crm
+  - erp
   - java
   annotations:
     github.com/project-slug: blitzy-public-samples/ofbiz-framework
@@ -5427,6 +5674,8 @@ metadata:
     Planning. OFBiz provides a foundation and starting point for reliable, secure
     and scalable enterprise solutions.
   tags:
+  - crm
+  - erp
   - java
   annotations:
     github.com/project-slug: blitzy-public-samples/ofbiz-plugins
@@ -5446,7 +5695,8 @@ metadata:
   title: erpnext-frappe-sample
   description: ERPNext + Frappe fork, staged as submodules for a Bitzy platform demo
     scoped to DualEntry's tech stack.
-  tags: []
+  tags:
+  - test-suite
   annotations:
     github.com/project-slug: blitzy-public-samples/erpnext-frappe-sample
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/erpnext-frappe-sample/tree/main/
@@ -5537,7 +5787,9 @@ metadata:
   title: erpnext
   description: Free and Open Source Enterprise Resource Planning (ERP)
   tags:
+  - erp
   - python
+  - test-suite
   annotations:
     github.com/project-slug: blitzy-public-samples/erpnext
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/erpnext/tree/develop/
@@ -5644,7 +5896,8 @@ metadata:
   name: t2ti_erp_delphi
   title: T2Ti_ERP_Delphi
   description: T2Ti ERP 1.0 - Delphi
-  tags: []
+  tags:
+  - erp
   annotations:
     github.com/project-slug: blitzy-public-samples/T2Ti_ERP_Delphi
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/T2Ti_ERP_Delphi/tree/master/
@@ -5711,6 +5964,7 @@ metadata:
     https://github.com/debezium/dbz/issues.
   tags:
   - java
+  - refactor
   annotations:
     github.com/project-slug: blitzy-public-samples/debezium
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/debezium/tree/main/
@@ -5732,6 +5986,7 @@ metadata:
     Apache License 2.0.
   tags:
   - java
+  - spring-boot
   annotations:
     github.com/project-slug: blitzy-public-samples/camel
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/camel/tree/main/
@@ -5772,6 +6027,7 @@ metadata:
     Please see https://www.mediawiki.org/wiki/Developer_access for contributing.
   tags:
   - php
+  - wiki
   annotations:
     github.com/project-slug: blitzy-public-samples/mediawiki-skins-Vector
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/mediawiki-skins-Vector/tree/master/
@@ -5792,6 +6048,7 @@ metadata:
     See https://mediawiki.org/wiki/Developer_access for contributing.
   tags:
   - php
+  - wiki
   annotations:
     github.com/project-slug: blitzy-public-samples/mediawiki
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/mediawiki/tree/master/
@@ -5811,6 +6068,7 @@ metadata:
   description: Mirror of https://gerrit.wikimedia.org/g/mediawiki/vendor
   tags:
   - php
+  - wiki
   annotations:
     github.com/project-slug: blitzy-public-samples/mediawiki-vendor
     backstage.io/source-location: url:https://github.com/blitzy-public-samples/mediawiki-vendor/tree/master/

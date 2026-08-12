@@ -14,6 +14,7 @@ Usage:
 """
 
 import argparse
+import base64
 import json
 import os
 import re
@@ -56,6 +57,162 @@ GITHUB_LANG_TO_TAG: dict[str, str] = {
 }
 
 ENTITY_NAME_RE = re.compile(r"[^a-zA-Z0-9_.\-]")
+
+
+def _rx(*terms):
+    parts = []
+    for t in terms:
+        t = t.strip()
+        if re.match(r"^[a-z0-9]+$", t):
+            parts.append(rf"\b{re.escape(t)}\b")
+        else:
+            parts.append(re.escape(t))
+    return re.compile("|".join(parts), re.IGNORECASE)
+
+
+# (regex, tags) — matched against name + description + PR title + guide title.
+# The Blitzy use case ("what Blitzy did") comes from PR title / guide title;
+# the tech stack from any of the four; name-based patterns cover repos with no
+# PR/guide data (Platform runs that never produced a branch).
+TAG_RULES: list[tuple[re.Pattern[str], list[str]]] = [
+    (_rx("migration", "→", "monolith-to-microservices"),                       ["migration"]),
+    (_rx("refactor", "refactoring", "decomposition", "restructur",
+         "restoration", "consolidation"),                                       ["refactor"]),
+    (_rx("documentation", "inline doc", "retrofit"),                           ["documentation"]),
+    (_rx("security", "vulnerabilit", "ghsa", "owasp", "injection",
+         "authentication bypass", "sec-01"),                                    ["security"]),
+    (_rx("audit", "conformance", "code quality"),                              ["audit"]),
+    (_rx("test suite", "test coverage", "mutation testing", "in-repo test"),   ["test-suite"]),
+    (_rx("bug fix", "bug-fix", "remediation", "overflow fix", "patch"),        ["bug-fix"]),
+    (_rx("modernization", "modernize"),                                        ["modernization"]),
+    (_rx("tutorial", "hello world", "reveal.js"),                              ["tutorial"]),
+    (_rx("rewrite", "from scratch"),                                           ["rewrite"]),
+    (_rx("reverse-engineering", "reverse engineering"),                        ["reverse-engineering"]),
+    (_rx("add feature", "new feature", "enhancement"),                         ["new-feature"]),
+    (_rx("grafana"),         ["grafana"]),
+    (_rx("terraform"),       ["terraform"]),
+    (_rx("kafka"),           ["kafka"]),
+    (_rx("spark"),           ["spark"]),
+    (_rx("hadoop"),          ["hadoop"]),
+    (_rx("log4j"),           ["log4j", "security"]),
+    (_rx("webkit"),          ["webkit", "browser-engine"]),
+    (_rx("ffmpeg"),          ["ffmpeg", "video"]),
+    (_rx("nginx"),           ["nginx"]),
+    (_rx("langchain"),       ["langchain", "ai"]),
+    (_rx("mlflow"),          ["mlflow", "ml"]),
+    (_rx("langgraph"),       ["langgraph", "ai"]),
+    (_rx("react-native"),    ["react-native", "mobile"]),
+    (re.compile(r"\breact\b(?! native)", re.I), ["react"]),
+    (_rx("next.js", "nextjs"), ["nextjs"]),
+    (_rx("nuxt"),            ["nuxt"]),
+    (_rx("angular"),         ["angular"]),
+    (_rx("svelte"),          ["svelte"]),
+    (_rx("express.js", "express"), ["express", "nodejs"]),
+    (_rx("nestjs"),          ["nestjs", "nodejs"]),
+    (_rx("flask"),           ["flask"]),
+    (_rx("django"),          ["django"]),
+    (_rx("spring boot", "spring-boot"), ["spring-boot"]),
+    (_rx("kubernetes", "k8s"), ["kubernetes"]),
+    (_rx("docker", "containerized"), ["docker"]),
+    (_rx("helm"),            ["helm"]),
+    (_rx("argocd", "argo cd"), ["argocd", "gitops"]),
+    (_rx("gitops"),          ["gitops"]),
+    (_rx("postgres", "postgresql"), ["postgres"]),
+    (_rx("mysql"),           ["mysql"]),
+    (_rx("mongodb"),         ["mongodb"]),
+    (_rx("redis"),           ["redis"]),
+    (_rx("graphql"),         ["graphql"]),
+    (_rx("grpc"),            ["grpc"]),
+    (_rx("websocket"),       ["websocket"]),
+    (_rx("chaos monkey", "chaos engineering"), ["chaos-engineering"]),
+    (_rx("cobol"),           ["cobol"]),
+    (_rx("mainframe"),       ["mainframe"]),
+    (_rx("wso2"),            ["wso2", "integration"]),
+    (_rx("trino"),           ["trino"]),
+    (_rx("dbt"),             ["dbt"]),
+    (_rx("observability", "opentelemetry"), ["observability"]),
+    (_rx("vault"),           ["vault"]),
+    (_rx("mendix"),          ["mendix"]),
+    (_rx("temporal.io", "temporal"), ["temporal"]),
+    (_rx("triton"),          ["gpu"]),
+    (_rx("llm"),             ["ai", "llm"]),
+    (_rx("chatbot"),         ["ai", "chatbot"]),
+    (_rx("nlp"),             ["ai", "nlp"]),
+    (_rx("accessibility", "wcag"), ["accessibility"]),
+    (_rx("microservices"),   ["microservices"]),
+    (_rx("module federation"), ["module-federation"]),
+    (_rx("design system"),   ["design-system"]),
+    (_rx("frontend"),        ["frontend"]),
+    (_rx("backend"),         ["backend"]),
+    (_rx("mavlink", "ros2", "ros1"), ["robotics"]),
+    (_rx("electronic design automation"), ["eda"]),
+    (_rx("compiler"),        ["compiler"]),
+    (_rx("odoo"),            ["odoo", "erp"]),
+    (_rx("erp"),             ["erp"]),
+    (_rx("crm"),             ["crm"]),
+    (_rx("marketplace"),     ["marketplace"]),
+    (_rx("artificial intelligence"), ["ai"]),
+    (re.compile(r"\bai[- ]", re.I),  ["ai"]),
+    (re.compile(r"\bml\b(?!p)", re.I), ["ml"]),
+    # Name-only patterns for repos with no PR/guide data
+    (re.compile(r"\bmca[- ]solution", re.I),                       ["banking", "document-processing"]),
+    (re.compile(r"\bmicrosoft[- ](excel|word|powerpoint)", re.I),  ["office"]),
+    (re.compile(r"\bcreate[- ]excel", re.I),                       ["office"]),
+    (re.compile(r"ai[- ]powered", re.I),                           ["ai"]),
+    (re.compile(r"\bexpense[- ]management", re.I),                 ["finance"]),
+    (re.compile(r"marketplace", re.I),                             ["marketplace"]),
+    (re.compile(r"mobile[- ]app", re.I),                           ["mobile"]),
+    (re.compile(r"mediawiki", re.I),                               ["wiki"]),
+    (re.compile(r"\bpodcast\b", re.I),                             ["media"]),
+    (re.compile(r"blockchain", re.I),                              ["blockchain"]),
+    (re.compile(r"\bcrypto\b", re.I),                              ["crypto"]),
+]
+
+
+def infer_extra_tags(name: str, description: str,
+                     pr_title: str | None, guide_title: str | None) -> set[str]:
+    text = " ".join(filter(None, [name, description, pr_title, guide_title]))
+    tags: set[str] = set()
+    for regex, out_tags in TAG_RULES:
+        if regex.search(text):
+            tags.update(out_tags)
+    return tags
+
+
+def get_latest_blitzy_pr(org: str, repo: str, token: str) -> tuple[str | None, str | None]:
+    """Return (pr_title, head_branch) for the most recent Blitzy PR, or (None, None)."""
+    try:
+        prs = gh(f"/repos/{org}/{repo}/pulls?state=all&per_page=5", token)
+    except urllib.error.HTTPError:
+        return None, None
+    blitzy_prs = [
+        p for p in (prs or [])
+        if (p.get("head") or {}).get("ref", "").startswith("blitzy-")
+        or (p.get("user") or {}).get("login") == "blitzy[bot]"
+    ]
+    if not blitzy_prs:
+        return None, None
+    latest = sorted(blitzy_prs, key=lambda p: p.get("created_at", ""), reverse=True)[0]
+    return latest.get("title"), (latest.get("head") or {}).get("ref")
+
+
+def get_guide_title(org: str, repo: str, branch: str, token: str) -> str | None:
+    if not branch:
+        return None
+    try:
+        data = gh(
+            f"/repos/{org}/{repo}/contents/{urllib.parse.quote('blitzy/documentation/Project Guide.md')}?ref={branch}",
+            token,
+        )
+    except urllib.error.HTTPError:
+        return None
+    if not data or data.get("encoding") != "base64":
+        return None
+    content = base64.b64decode(data["content"]).decode("utf-8", errors="ignore")
+    for line in content.splitlines():
+        if line.startswith("# "):
+            return line[2:].strip()
+    return None
 
 
 def gh(path: str, token: str):
@@ -136,8 +293,15 @@ def build_component(repo: dict, token: str, org: str, verticals: dict) -> dict:
     github_lang = repo.get("language") or get_top_language(org, name, token)
     language_tag = GITHUB_LANG_TO_TAG.get(github_lang) if github_lang else None
 
+    pr_title, pr_branch = get_latest_blitzy_pr(org, name, token)
+    guide_title = get_guide_title(org, name, pr_branch, token) if pr_branch else None
+    extra_tags = infer_extra_tags(name, description, pr_title, guide_title)
+
     topics = repo.get("topics") or []
-    tags = sorted({t for t in topics if re.fullmatch(r"[a-z0-9+#\-]+", t)} | ({language_tag} if language_tag else set()))
+    seed_tags: set[str] = {t for t in topics if re.fullmatch(r"[a-z0-9+#\-]+", t)}
+    if language_tag:
+        seed_tags.add(language_tag)
+    tags = sorted(seed_tags | extra_tags)
 
     entity: dict = {
         "apiVersion": "backstage.io/v1alpha1",
